@@ -30,12 +30,22 @@ if(PIPEPYE_ENABLE_CUDA)
         test_cuda_ops.cu
     )
 
+    set(TEST_CUDA_DEPS
+        pipepye_cuda
+        pipepye_core
+        GTest::gtest_main
+        ${CMAKE_DL_LIBS}
+    )
+    if(TARGET CUDA::nvtx3)
+        list(APPEND TEST_CUDA_DEPS CUDA::nvtx3)
+    endif()
+    if(TARGET CUDA::nvToolsExt)
+        list(APPEND TEST_CUDA_DEPS CUDA::nvToolsExt)
+    endif()
+
     target_link_libraries(test_cuda
         PRIVATE
-            pipepye_cuda
-            pipepye_core
-            GTest::gtest_main
-            ${CMAKE_DL_LIBS}
+            ${TEST_CUDA_DEPS}
     )
 
     set_target_properties(test_cuda PROPERTIES

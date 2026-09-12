@@ -3,6 +3,15 @@ if(NOT PIPEPYE_ENABLE_CUDA)
     return()
 endif()
 
+# Collect any available NVTX library targets from CUDAToolkit
+set(PIPEPYE_CUDA_DEPENDENCIES ${CMAKE_DL_LIBS})
+if(TARGET CUDA::nvtx3)
+    list(APPEND PIPEPYE_CUDA_DEPENDENCIES CUDA::nvtx3)
+endif()
+if(TARGET CUDA::nvToolsExt)
+    list(APPEND PIPEPYE_CUDA_DEPENDENCIES CUDA::nvToolsExt)
+endif()
+
 add_library(pipepye_cuda
     device_info.cu
     kernels/axpy.cu
@@ -17,7 +26,7 @@ target_include_directories(pipepye_cuda
 target_link_libraries(pipepye_cuda
     PUBLIC
         pipepye_core
-        ${CMAKE_DL_LIBS}
+        ${PIPEPYE_CUDA_DEPENDENCIES}
 )
 
 set_target_properties(pipepye_cuda PROPERTIES
@@ -37,7 +46,7 @@ target_link_libraries(pipepye_device_probe
     PRIVATE
         pipepye_cuda
         pipepye_core
-        ${CMAKE_DL_LIBS}
+        ${PIPEPYE_CUDA_DEPENDENCIES}
 )
 
 set_target_properties(pipepye_device_probe PROPERTIES
