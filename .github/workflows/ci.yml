@@ -1,0 +1,74 @@
+name: PipePye CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test-cpu:
+    name: CPU Build & Test (Ubuntu 24.04 C++20)
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build g++
+
+      - name: Configure CMake (CPU Only)
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DPIPEPYE_ENABLE_CUDA=OFF \
+            -DPIPEPYE_BUILD_TESTS=ON \
+            -DPIPEPYE_BUILD_BENCHMARKS=OFF
+
+      - name: Build Targets
+        run: |
+          ninja -C build
+
+      - name: Run Unit Tests
+        run: |
+          ctest --test-dir build --output-on-failure --verbose
+
+  build-and-test-cuda:
+    name: CUDA Compilation & Toolchain Verification
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install CUDA Toolkit
+        uses: Jimver/cuda-toolkit@v0.2.19
+        with:
+          cuda: '12.4.1'
+          method: 'network'
+
+      - name: Install Build Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build g++
+
+      - name: Configure CMake (CUDA sm_86)
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DPIPEPYE_ENABLE_CUDA=ON \
+            -DCMAKE_CUDA_ARCHITECTURES=86 \
+            -DPIPEPYE_BUILD_TESTS=ON \
+            -DPIPEPYE_BUILD_BENCHMARKS=ON
+
+      - name: Build CUDA Libraries & Binaries
+        run: |
+          ninja -C build
+
+      - name: Run Test Suite (GoogleTest CTest)
+        run: |
+          # Headless runner without physical GPU runs CPU tests and safely skips GPU kernel runs via GTEST_SKIP()
+          ctest --test-dir build --output-on-failure --verbose

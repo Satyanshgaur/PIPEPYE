@@ -1,0 +1,47 @@
+# Build directories
+build/
+cmake-build-*/
+out/
+bin/
+lib/
+
+# CMake temporary files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.ninja
+*.ninja_deps
+*.ninja_log
+compile_commands.json
+install_manifest.txt
+
+# Testing & Profiling artifacts
+CTestTestfile.cmake
+Testing/
+*.nsys-rep
+*.sqlite
+*.qdrep
+*.qdstrm
+*.nvprof
+
+# Compiled binaries and libraries
+*.o
+*.obj
+*.so
+*.dylib
+*.dll
+*.a
+*.lib
+*.exe
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# GoogleTest download cache
+_deps/
