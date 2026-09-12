@@ -6,8 +6,31 @@
 #include <vector>
 #include <cmath>
 
-TEST(CudaErrorHandlingTest, CatchesInvalidCallAndThrowsCudaException) {
-    // Deliberately trigger an error with an out-of-range device ID
+TEST(CudaErrorHandlingTest, ExplicitErrorHandlingThrowsCudaException) {
+    EXPECT_THROW({
+        CUDA_CHECK(cudaErrorInvalidValue);
+    }, pipepye::cuda::CudaException);
+
+    try {
+        CUDA_CHECK(cudaErrorInvalidValue);
+    } catch (const pipepye::cuda::CudaException& e) {
+        EXPECT_EQ(e.error_code(), cudaErrorInvalidValue);
+        EXPECT_STREQ(e.function(), __func__);
+        std::string msg = e.what();
+        EXPECT_NE(msg.find("cudaErrorInvalidValue"), std::string::npos);
+        EXPECT_NE(msg.find("invalid argument"), std::string::npos);
+    }
+}
+
+TEST(CudaErrorHandlingTest, SuccessDoesNotThrow) {
+    EXPECT_NO_THROW({
+        CUDA_CHECK(cudaSuccess);
+    });
+}
+
+TEST(CudaErrorHandlingTest, CatchesRuntimeCallFailure) {
+    int dev_count = pipepye::cuda::get_device_count();
+
     EXPECT_THROW({
         CUDA_CHECK(cudaSetDevice(9999));
     }, pipepye::cuda::CudaException);
@@ -15,9 +38,15 @@ TEST(CudaErrorHandlingTest, CatchesInvalidCallAndThrowsCudaException) {
     try {
         CUDA_CHECK(cudaSetDevice(9999));
     } catch (const pipepye::cuda::CudaException& e) {
-        EXPECT_EQ(e.error_code(), cudaErrorInvalidDevice);
+        EXPECT_NE(e.error_code(), cudaSuccess);
+        if (dev_count > 0) {
+            EXPECT_EQ(e.error_code(), cudaErrorInvalidDevice);
+        } else {
+            // On headless CI runners without physical GPU/driver
+            EXPECT_TRUE(e.error_code() == cudaErrorNoDevice ||
+                        e.error_code() == cudaErrorInsufficientDriver);
+        }
         std::string msg = e.what();
-        EXPECT_NE(msg.find("cudaErrorInvalidDevice"), std::string::npos);
         EXPECT_NE(msg.find("cudaSetDevice"), std::string::npos);
     }
     // Clear CUDA error state
