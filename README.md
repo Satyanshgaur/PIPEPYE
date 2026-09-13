@@ -24,16 +24,19 @@ pipepye/
 │       └── utils/              # High-resolution CPUTimer, Logger, ScopedNvtxRange markers
 ├── src/                        # Core C++20 library implementations (libpipepye_core.a)
 ├── cuda/                       # CUDA kernels (DAXPY/SAXPY) & hardware probe (pipepye_device_probe)
-├── tests/                      # GoogleTest suite run via CTest (11 unit and integration tests)
-├── benchmarks/                 # CPU vs GPU micro-benchmark harness (pipepye_microbench_cuda)
+├── tests/                      # GoogleTest suite run via CTest (69 unit and integration tests)
+├── benchmarks/                 # CPU sparse & CUDA micro-benchmark harnesses
 ├── scripts/
 │   └── profile.sh              # One-command NVIDIA Nsight Systems profiling script
-└── docs/                       # Project documentation
+└── docs/                       # Comprehensive project documentation
     ├── environment.md          # Hardware & toolchain specification (RTX 3050, GCC 16, CUDA 13.3)
     ├── build.md                # Build instructions & CMake options
     ├── profiling.md            # Nsight Systems workflow & timeline analysis
     ├── ci.md                   # Continuous integration pipeline details
-    └── architecture.md         # Solver roadmap, algorithm-hardware mapping & milestone plan
+    ├── algorithm-hardware-feasibility.md # Algorithm × hardware feasibility & LP architecture blueprint
+    ├── mps-spec.md             # MPS parser specification & internal model mapping
+    ├── benchmark.md            # CPU & GPU micro-benchmarks, SpMV scaling & bandwidth analysis
+    └── tests.md                # Comprehensive test inventory (69 tests) & numerical verification
 ```
 
 ---
@@ -78,4 +81,7 @@ ctest --test-dir build --output-on-failure
 - [Build & Configuration Guide](docs/build.md)
 - [Profiling Workflow & Timeline](docs/profiling.md)
 - [CI Pipeline Specification](docs/ci.md)
-- [Analytical Architecture & Roadmap](architecture.md)
+- [Algorithm × Hardware Feasibility & LP Architecture](docs/algorithm-hardware-feasibility.md)
+- [MPS Ingestion Specification & Model Mapping](docs/mps-spec.md)
+- [CPU & GPU Performance Benchmarking Report](docs/benchmark.md)
+- [Comprehensive Test Verification Report](docs/tests.md)

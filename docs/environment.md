@@ -37,9 +37,9 @@ This document records the exact development environment, compiler toolchains, CU
 
 ---
 
-## 3. Dependency Architecture
-
-PipePye is built **from scratch** to uphold the sovereignty and auditability requirements specified in `architecture.md`. 
-- **No external solver dependencies**: No linking to GLPK, COIN-OR, SuiteSparse, or proprietary solvers (CPLEX, Gurobi).
-- **Header-only / System-provided profiling**: NVTX3 from the CUDA Toolkit.
-- **Hermetic Testing**: GoogleTest fetched and compiled from pinned Git tags (`v1.15.2`).
+## 3. Dependency Architecture & Technological Sovereignty
+ 
+PipePye is engineered **from scratch** to uphold absolute technological sovereignty, algorithmic transparency, and auditability:
+- **Zero External Solver Dependencies**: PipePye contains no linkage to third-party solvers (GLPK, COIN-OR, HiGHS, SuiteSparse) or proprietary engines (CPLEX, Gurobi, Xpress). All core sparse linear algebra, matrix representations, vector primitives, and solver algorithms are implemented natively from first principles.
+- **System-Provided Profiling**: NVIDIA NVTX v3 provided directly by the CUDA Toolkit (`<nvtx3/nvtx3.hpp>`).
+- **Hermetic Unit & Benchmark Testing**: GoogleTest fetched and compiled from pinned Git tags (`v1.15.2`).

@@ -4,7 +4,7 @@
 
 This document specifies the parsing rules, edge cases, and architectural mapping from external **MPS (Mathematical Programming System)** files into PipePye's internal representation.
 
-In accordance with **Section 7 of `updated_architecture.md`**, PipePye strictly decouples the internal optimization data structure from the input format:
+PipePye's model ingestion architecture strictly decouples the internal optimization data structure from the input format:
 
 ```text
     MPS File (Fixed / Free)

@@ -1,8 +1,8 @@
-# PipePye — Algorithm × Hardware Feasibility Memo & LP MVP Candidate Path
+# PipePye — Algorithm × Hardware Feasibility & LP Architecture
 
 ## 1. Executive Summary: The Candidate Path for the LP MVP
 
-Based on **Section 2.5 ("Development order is not research order")** and **Sections 3, 11, and 12 of `updated_architecture.md`**, PipePye does not attempt to solve every problem with one algorithm, nor does it attempt to build every complex solver simultaneously before an end-to-end pipeline exists.
+PipePye is engineered around a core architectural principle: **development order must follow an empirical engineering progression rather than an exploratory research sequence**. PipePye does not attempt to solve every problem with a single algorithm, nor does it attempt to build multiple complex solver engines concurrently before establishing a verified end-to-end mathematical pipeline.
 
 ### The Candidate Path Sequence
 
