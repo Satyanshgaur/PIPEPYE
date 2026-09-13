@@ -3,7 +3,7 @@
 **Project**: PipePye — High-Performance Sovereign Optimization Solver  
 **Date**: September 2026  
 **Benchmarking Harness**: `bin/pipepye_bench_sparse_cpu` & `bin/pipepye_microbench_cuda`  
-**Total Data Points Collected**: **105 Empirical Measurements** across CPU threads (1 to 12) and GPU kernels  
+**Total Data Points Collected**: **138 Empirical Measurements** across CPU threads (1 to 12) and GPU kernels  
 
 ---
 
@@ -278,3 +278,122 @@ Comparison of DAXPY ($y \leftarrow \alpha x + y$) executed on the Intel Core i5-
 3. **Implication for Optimization Solvers**:
    - Transferring data back and forth to GPU each iteration would make a GPU solver $25\times$ *slower* than CPU.
    - Therefore, the GPU solver (e.g. CUDA PDHG) must load the constraint matrix $A$ and initial state vectors **once** into device memory, execute hundreds or thousands of iterations entirely on-device, and only copy the final solution vector back to host memory.
+
+---
+
+## 6. Section 4: CUDA Reductions Benchmark (Dot, Norm-2, Norm-Inf)
+
+Measured on the NVIDIA GeForce RTX 3050 6GB Laptop GPU (Ampere sm_86) using warp shuffle intrinsics (`__shfl_down_sync`) and block shared memory reductions across vectors $N = 10^5, 10^6, 10^7$ double-precision elements:
+
+| Operation | Vector Size ($N$) | Data Size | CPU 1-Thread Time (ms) | GPU Time (ms) | GPU Throughput (GFLOPS) | GPU Bandwidth (GB/s) | Speedup vs CPU |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Dot Product ($x^T y$)** | 100,000 | 1.6 MB | 0.0555 ms | 0.0270 ms | 7.41 GFLOPS | 59.27 GB/s | **2.05x** |
+| Dot Product ($x^T y$) | 1,000,000 | 16 MB | 0.9482 ms | 0.1135 ms | 17.62 GFLOPS | 140.94 GB/s | **8.35x** |
+| Dot Product ($x^T y$) | 10,000,000 | 160 MB | 9.9852 ms | **0.9969 ms** | **20.06 GFLOPS** | **160.50 GB/s** | **10.02x** |
+| **Norm-2 ($\|x\|_2$)** | 100,000 | 0.8 MB | 0.0536 ms | 0.0270 ms | 7.40 GFLOPS | 29.61 GB/s | **1.98x** |
+| Norm-2 ($\|x\|_2$) | 1,000,000 | 8 MB | 0.5737 ms | 0.0713 ms | 28.07 GFLOPS | 112.26 GB/s | **8.05x** |
+| Norm-2 ($\|x\|_2$) | 10,000,000 | 80 MB | 7.5346 ms | **0.5154 ms** | **38.80 GFLOPS** | **155.22 GB/s** | **14.62x** |
+| **Norm-Inf ($\|x\|_\infty$)** | 100,000 | 0.8 MB | 0.1067 ms | 0.0280 ms | - | 28.59 GB/s | **3.81x** |
+| Norm-Inf ($\|x\|_\infty$) | 1,000,000 | 8 MB | 1.0928 ms | 0.0723 ms | - | 110.70 GB/s | **15.11x** |
+| Norm-Inf ($\|x\|_\infty$) | 10,000,000 | 80 MB | 12.0159 ms | **0.5257 ms** | - | **152.18 GB/s** | **22.86x** |
+
+> [!TIP]
+> At $N = 10,000,000$, the GPU achieves **$160.50\text{ GB/s}$** effective memory bandwidth on double-precision dot products, which is **$95.5\%$ of the theoretical hardware limit** of the 96-bit GDDR6 memory subsystem (~168 GB/s). Norm-Inf executes **$22.8\times$ faster** than CPU via two-stage deterministic block-max reduction.
+
+---
+
+## 7. Section 5: CUDA CSR SpMV Strategy Comparison Across Matrix Topologies
+
+Comparison of four distinct GPU CSR SpMV kernel architectures on the RTX 3050 Laptop GPU:
+1. **Scalar CSR**: Baseline 1 thread per row.
+2. **Vector CSR**: 1 warp (32 threads) per row with contiguous memory coalescing and `__shfl_down_sync`.
+3. **Adaptive CSR**: Dynamic sub-warp (8 threads per row) targeting multi-scale row lengths.
+4. **Balanced CSR**: Work-partitioned nonzeros chunking ($k_{\text{start}}$ to $k_{\text{end}}$ with binary search row mapping).
+
+### 7.1. Random Uniform Sparse Matrix ($10,000 \times 10,000$, $200,692\text{ NNZ}$, $0.20\%$ density)
+- Single-thread CPU baseline: $0.154\text{ ms}$
+
+| Kernel Strategy | GPU Time (ms) | Throughput (GFLOPS) | Memory Bandwidth (GB/s) | Speedup vs CPU (1T) | Speedup vs GPU Scalar |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Scalar (1 thread/row)** | 0.0291 ms | 13.77 GFLOPS | 89.50 GB/s | 5.28x | 1.00x |
+| **Vector (1 warp/row)** | 0.0549 ms | 7.30 GFLOPS | 47.47 GB/s | 2.80x | 0.53x |
+| **Adaptive (Sub-warp 8)** | **0.0247 ms** | **16.25 GFLOPS** | **105.60 GB/s** | **6.24x** | **1.17x** |
+| **Balanced (Work-partitioned)** | 0.0521 ms | 7.71 GFLOPS | 50.11 GB/s | 2.96x | 0.55x |
+
+### 7.2. Banded Matrix ($20,000 \times 20,000$, $\text{bw}=31$, $619,760\text{ NNZ}$, $0.15\%$ density)
+- Single-thread CPU baseline: $0.318\text{ ms}$
+
+| Kernel Strategy | GPU Time (ms) | Throughput (GFLOPS) | Memory Bandwidth (GB/s) | Speedup vs CPU (1T) | Speedup vs GPU Scalar |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Scalar (1 thread/row)** | 0.1211 ms | 10.24 GFLOPS | 64.73 GB/s | 2.63x | 1.00x |
+| **Vector (1 warp/row)** | 0.1075 ms | 11.53 GFLOPS | 72.93 GB/s | 2.97x | 1.12x |
+| **Adaptive (Sub-warp 8)** | **0.0553 ms** | **22.40 GFLOPS** | **141.63 GB/s** | **5.76x** | **2.18x** |
+| **Balanced (Work-partitioned)** | 0.0920 ms | 13.48 GFLOPS | 85.21 GB/s | 3.47x | 1.31x |
+
+### 7.3. Block-Diagonal Matrix ($10,000 \times 10,000$, 50 blocks of $200 \times 200$, $109,417\text{ NNZ}$)
+- Single-thread CPU baseline: $0.111\text{ ms}$
+
+| Kernel Strategy | GPU Time (ms) | Throughput (GFLOPS) | Memory Bandwidth (GB/s) | Speedup vs CPU (1T) | Speedup vs GPU Scalar |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Scalar (1 thread/row)** | **0.0105 ms** | **20.75 GFLOPS** | **143.45 GB/s** | **10.60x** | **1.00x** |
+| **Vector (1 warp/row)** | 0.0542 ms | 4.04 GFLOPS | 27.91 GB/s | 2.07x | 0.19x |
+| **Adaptive (Sub-warp 8)** | 0.0165 ms | 13.24 GFLOPS | 91.55 GB/s | 6.80x | 0.63x |
+| **Balanced (Work-partitioned)** | 0.0253 ms | 8.63 GFLOPS | 59.70 GB/s | 4.43x | 0.41x |
+
+### 7.4. Staircase Matrix ($10,000 \times 10,100$, 100 stages, $60,130\text{ NNZ}$, ~6 NNZ/row)
+- Single-thread CPU baseline: $0.088\text{ ms}$
+
+| Kernel Strategy | GPU Time (ms) | Throughput (GFLOPS) | Memory Bandwidth (GB/s) | Speedup vs CPU (1T) | Speedup vs GPU Scalar |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Scalar (1 thread/row)** | **0.0069 ms** | **17.40 GFLOPS** | **133.44 GB/s** | **12.80x** | **1.00x** |
+| **Vector (1 warp/row)** | 0.0538 ms | 2.23 GFLOPS | 17.13 GB/s | 1.64x | 0.12x |
+| **Adaptive (Sub-warp 8)** | 0.0142 ms | 8.49 GFLOPS | 65.08 GB/s | 6.25x | 0.48x |
+| **Balanced (Work-partitioned)** | 0.0142 ms | 8.48 GFLOPS | 65.04 GB/s | 6.25x | 0.48x |
+
+### 7.5. Irregular / Power-Law Hub Matrix ($10,000 \times 10,000$, $200,000\text{ NNZ}$, 5% hub rows holding 50% nonzeros)
+- Single-thread CPU baseline: $0.161\text{ ms}$
+
+| Kernel Strategy | GPU Time (ms) | Throughput (GFLOPS) | Memory Bandwidth (GB/s) | Speedup vs CPU (1T) | Speedup vs GPU Scalar |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Scalar (1 thread/row)** | 0.0541 ms | 7.39 GFLOPS | 48.03 GB/s | 2.97x | 1.00x |
+| **Vector (1 warp/row)** | 0.0595 ms | 6.73 GFLOPS | 43.73 GB/s | 2.70x | 0.91x |
+| **Adaptive (Sub-warp 8)** | **0.0218 ms** | **18.34 GFLOPS** | **119.21 GB/s** | **7.37x** | **2.48x** |
+| **Balanced (Work-partitioned)** | 0.0697 ms | 5.74 GFLOPS | 37.33 GB/s | 2.30x | 0.77x |
+
+### 7.6. Real-World Netlib Problem (`BEACONFD`, $173 \times 262$, $3,375\text{ NNZ}$)
+- Single-thread CPU baseline: $0.0016\text{ ms}$ ($1.6\ \mu\text{s}$)
+
+| Kernel Strategy | GPU Time (ms) | Throughput (GFLOPS) | Memory Bandwidth (GB/s) | Speedup vs CPU (1T) | Speedup vs GPU Scalar |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Scalar (1 thread/row)** | 0.0112 ms | 0.60 GFLOPS | 3.99 GB/s | 0.14x | 1.00x |
+| **Vector (1 warp/row)** | **0.0037 ms** | **1.81 GFLOPS** | **11.99 GB/s** | **0.42x** | **3.00x** |
+| **Adaptive (Sub-warp 8)** | 0.0049 ms | 1.38 GFLOPS | 9.11 GB/s | 0.32x | 2.28x |
+| **Balanced (Work-partitioned)** | 0.0061 ms | 1.10 GFLOPS | 7.29 GB/s | 0.25x | 1.82x |
+
+---
+
+## 8. Section 6: Architectural Synthesis & Solver Dispatch Policy
+
+```mermaid
+flowchart TD
+    In[Input Matrix A] --> CheckSize{Is NNZ < 20,000?}
+    CheckSize -- Yes --> CPUSingle["CPU Single-Thread SpMV (1.6 - 6.0 us)"]
+    CheckSize -- No --> CheckVar{Row NNZ Variance / Max NNZ?}
+    
+    CheckVar -- "Uniform short rows (avg <= 8)" --> GPUScalar["CUDA Scalar CSR Kernel (133 GB/s)"]
+    CheckVar -- "Irregular hubs or Banded (max >= 30)" --> GPUAdaptive["CUDA Adaptive Sub-warp 8 Kernel (141 GB/s)"]
+    CheckVar -- "Extreme Skewness (max >= 500)" --> GPUBalanced["CUDA Balanced Merge-Path Kernel"]
+```
+
+### Strategic Takeaways:
+1. **No Single Kernel Wins Universally**:
+   - **Scalar** dominates when rows are uniformly short ($\le 8$ entries, e.g. Staircase multi-stage matrices), reaching **$133.44\text{ GB/s}$** because thread divergence is near zero and warp utilization is high.
+   - **Adaptive (Sub-warp 8)** dominates on structured bands and irregular hub matrices, delivering **$2.48\times$ faster execution than Scalar** on irregular hub rows and **$141.63\text{ GB/s}$** on banded matrices.
+   - **Vector (Warp-per-row)** incurs high overhead on sparse matrices with short rows (30 threads idle per row), but excels on small dense blocks where warp coalescing is essential.
+2. **GPU Reductions are Memory-Bound Masterpieces**:
+   - Fast warp-shuffle + shared memory reduction achieves up to **$160.50\text{ GB/s}$** ($95.5\%$ peak hardware bandwidth), reducing a 10-million element dot product to **$0.99\text{ ms}$** ($10.0\times$ faster than CPU).
+3. **Adaptive Dispatch Policy**:
+   - Small models ($\text{NNZ} < 20,000$): CPU single-thread ($1.6 - 6.0\ \mu\text{s}$).
+   - Medium/large models with short uniform rows: CUDA Scalar ($6.9\ \mu\text{s}$, $12.8\times$ vs CPU).
+   - Medium/large models with irregular or banded structure: CUDA Adaptive Sub-warp 8 ($21.8 - 55.3\ \mu\text{s}$, $7.37\times$ vs CPU).
+

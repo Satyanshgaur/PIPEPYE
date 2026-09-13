@@ -35,6 +35,7 @@ gtest_discover_tests(test_core)
 if(PIPEPYE_ENABLE_CUDA)
     add_executable(test_cuda
         test_cuda_ops.cu
+        test_cuda_spmv_and_reductions.cu
     )
 
     set(TEST_CUDA_DEPS

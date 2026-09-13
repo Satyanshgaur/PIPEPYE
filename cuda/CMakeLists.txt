@@ -15,6 +15,8 @@ endif()
 add_library(pipepye_cuda
     device_info.cu
     kernels/axpy.cu
+    kernels/spmv.cu
+    kernels/reductions.cu
 )
 
 target_include_directories(pipepye_cuda

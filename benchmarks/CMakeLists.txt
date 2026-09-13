@@ -39,4 +39,18 @@ if(PIPEPYE_ENABLE_CUDA)
         CUDA_STANDARD 20
         CUDA_STANDARD_REQUIRED ON
     )
+
+    add_executable(pipepye_bench_spmv_cuda
+        bench_spmv_cuda.cu
+    )
+
+    target_link_libraries(pipepye_bench_spmv_cuda
+        PRIVATE
+            ${BENCH_DEPS}
+    )
+
+    set_target_properties(pipepye_bench_spmv_cuda PROPERTIES
+        CUDA_STANDARD 20
+        CUDA_STANDARD_REQUIRED ON
+    )
 endif()

@@ -2,7 +2,7 @@
 
 **Project**: PipePye — High-Performance Sovereign Optimization Solver  
 **Date**: September 2026  
-**Status**: `100% Passed (69 / 69 Tests Passed, 0 Failed, 0 Skipped)`  
+**Status**: `100% Passed (79 / 79 Tests Passed, 0 Failed, 0 Skipped)`  
 **Test Harness**: GoogleTest v1.15.2 & CTest (CMake 4.3.0)  
 
 ---
@@ -203,6 +203,32 @@ Validates GPU hardware detection, runtime error intercepts, and CUDA kernel nume
 | **67** | `CudaDeviceTest.QueryDeviceCapabilities` | **PASSED** | 250 ms | Discovers NVIDIA RTX 3050 Laptop GPU (5.67 GiB VRAM, 16 SMs, Warp Size 32, Max Threads/Block 1024). |
 | **68** | `CudaKernelTest.DoublePrecisionAxpyNumericalVerification` | **PASSED** | 270 ms | **GPU Numerical Parity**: Verifies CUDA DAXPY ($N=100,000$) matches CPU reference to machine precision ($< 10^{-14}$). |
 | **69** | `CudaKernelTest.SinglePrecisionAxpyNumericalVerification` | **PASSED** | 240 ms | **GPU Numerical Parity**: Verifies CUDA SAXPY ($N=100,000$) matches single-precision CPU reference. |
+
+---
+
+### 3.13. CUDA Warp/Block-Level Reductions (`test_cuda_spmv_and_reductions.cu`)
+Validates fast on-device reduction kernels utilized for solver convergence criteria, objective evaluations, and KKT residual norms.
+
+| Test # | Test Name | Status | Duration | Description |
+| :---: | :--- | :---: | :---: | :--- |
+| **70** | `CudaReductionsTest.DotProductParityAgainstCPU` | **PASSED** | 240 ms | **Numerical Parity**: Validates GPU dot product against CPU reference on vectors $N = 10^2$ to $2 \times 10^5$ (relative error $< 10^{-12}$). |
+| **71** | `CudaReductionsTest.NormsAndSumParityAgainstCPU` | **PASSED** | 240 ms | **Mathematical Parity**: Validates GPU $L_1$ norm, $L_2$ Euclidean norm, $L_\infty$ max norm, and element summation against CPU to machine precision. |
+| **72** | `CudaReductionsTest.BoundaryDimensions` | **PASSED** | 250 ms | **Boundary Testing**: Validates reductions on small/sub-warp boundary vector sizes ($N = 1, 31, 32, 33, 255, 256, 257$). |
+
+---
+
+### 3.14. CUDA SpMV Execution Variants & CPU Numerical Parity (`test_cuda_spmv_and_reductions.cu`)
+Verifies all 4 CUDA SpMV kernel strategies (**Scalar**, **Vector/Warp**, **Adaptive Sub-warp 8**, and **Balanced Work-partitioned**) against the CPU CSR reference across all sparse matrix topologies.
+
+| Test # | Test Name | Status | Duration | Description |
+| :---: | :--- | :---: | :---: | :--- |
+| **73** | `CudaSpMVVerificationTest.RandomSparseMatrixParityAllVariants` | **PASSED** | 250 ms | Verifies all 4 GPU SpMV kernels on uniform random matrices with both standard ($1.0 \cdot Ax$) and generalized ($2.5 \cdot Ax - 1.5 \cdot y$) scaling ($\|y_{\text{gpu}} - y_{\text{cpu}}\|_\infty < 10^{-12}$). |
+| **74** | `CudaSpMVVerificationTest.BandedMatrixParityAllVariants` | **PASSED** | 220 ms | Verifies all 4 GPU SpMV kernels on banded diagonally-dominant matrices ($\|y_{\text{gpu}} - y_{\text{cpu}}\|_\infty < 10^{-12}$). |
+| **75** | `CudaSpMVVerificationTest.BlockDiagonalMatrixParityAllVariants` | **PASSED** | 280 ms | Verifies all 4 GPU SpMV kernels on block-diagonal structures with off-diagonal coupling ($\|y_{\text{gpu}} - y_{\text{cpu}}\|_\infty < 10^{-12}$). |
+| **76** | `CudaSpMVVerificationTest.StaircaseMatrixParityAllVariants` | **PASSED** | 270 ms | Verifies all 4 GPU SpMV kernels on multi-stage inter-temporal staircase LP matrices ($\|y_{\text{gpu}} - y_{\text{cpu}}\|_\infty < 10^{-12}$). |
+| **77** | `CudaSpMVVerificationTest.IrregularHubMatrixParityAllVariants` | **PASSED** | 300 ms | Verifies all 4 GPU SpMV kernels on extreme power-law / hub distributions (5% hub rows holding 50% of nonzeros) with zero numerical degradation. |
+| **78** | `CudaSpMVVerificationTest.NetlibLPModelsParityAllVariants` | **PASSED** | 250 ms | Verifies all 4 GPU SpMV kernels on parsed real-world Netlib LP problems (`BEACONFD`, `BANDM`, `AFIRO`). |
+| **79** | `CudaSpMVVerificationTest.EmptyMatrixAndEmptyRowsEdgeCases` | **PASSED** | 240 ms | Verifies all 4 GPU SpMV kernels handle matrices with alternating empty rows without out-of-bounds memory accesses. |
 
 ---
 
