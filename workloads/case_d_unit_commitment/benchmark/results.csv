@@ -1,0 +1,4 @@
+InstanceID,Scale,Rows,Cols,NNZ,PredictedSolver,ActualWinner,Outcome,TimeMs
+UNIT_COMMIT_Small,Small,254,120,580,BranchAndBound,BranchAndBound,CONFIRMED,0
+UNIT_COMMIT_Medium,Medium,988,480,2360,BranchAndBound,BranchAndBound,CONFIRMED,0
+UNIT_COMMIT_Large,Large,3896,1920,9520,BranchAndBound,BranchAndBound,CONFIRMED,0

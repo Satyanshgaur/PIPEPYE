@@ -1,0 +1,202 @@
+NAME          BLENDING_Small
+OBJSENSE
+  MIN
+ROWS
+ N  PROFIT
+ E  BAL_P0
+ E  BAL_P1
+ E  BAL_P2
+ L  AVAIL_C0
+ L  AVAIL_C1
+ L  AVAIL_C2
+ L  AVAIL_C3
+ L  AVAIL_C4
+ G  QMIN_P0_Q0
+ G  QMIN_P0_Q1
+ G  QMIN_P0_Q2
+ G  QMIN_P1_Q0
+ G  QMIN_P1_Q1
+ G  QMIN_P1_Q2
+ G  QMIN_P2_Q0
+ G  QMIN_P2_Q1
+ G  QMIN_P2_Q2
+ L  QMAX_P0_Q0
+ L  QMAX_P0_Q1
+ L  QMAX_P0_Q2
+ L  QMAX_P1_Q0
+ L  QMAX_P1_Q1
+ L  QMAX_P1_Q2
+ L  QMAX_P2_Q0
+ L  QMAX_P2_Q1
+ L  QMAX_P2_Q2
+COLUMNS
+    X_C0_P0   PROFIT    75.2
+    X_C0_P0   BAL_P0    1
+    X_C0_P0   AVAIL_C0  1
+    X_C0_P0   QMIN_P0_Q0  65
+    X_C0_P0   QMIN_P0_Q1  75
+    X_C0_P0   QMIN_P0_Q2  85
+    X_C0_P0   QMAX_P0_Q0  65
+    X_C0_P0   QMAX_P0_Q1  75
+    X_C0_P0   QMAX_P0_Q2  85
+    X_C0_P1   PROFIT    75.2
+    X_C0_P1   BAL_P1    1
+    X_C0_P1   AVAIL_C0  1
+    X_C0_P1   QMIN_P1_Q0  65
+    X_C0_P1   QMIN_P1_Q1  75
+    X_C0_P1   QMIN_P1_Q2  85
+    X_C0_P1   QMAX_P1_Q0  65
+    X_C0_P1   QMAX_P1_Q1  75
+    X_C0_P1   QMAX_P1_Q2  85
+    X_C0_P2   PROFIT    75.2
+    X_C0_P2   BAL_P2    1
+    X_C0_P2   AVAIL_C0  1
+    X_C0_P2   QMIN_P2_Q0  65
+    X_C0_P2   QMIN_P2_Q1  75
+    X_C0_P2   QMIN_P2_Q2  85
+    X_C0_P2   QMAX_P2_Q0  65
+    X_C0_P2   QMAX_P2_Q1  75
+    X_C0_P2   QMAX_P2_Q2  85
+    X_C1_P0   PROFIT    75.1
+    X_C1_P0   BAL_P0    1
+    X_C1_P0   AVAIL_C1  1
+    X_C1_P0   QMIN_P0_Q0  81.2
+    X_C1_P0   QMIN_P0_Q1  90.6
+    X_C1_P0   QMIN_P0_Q2  101.2
+    X_C1_P0   QMAX_P0_Q0  81.2
+    X_C1_P0   QMAX_P0_Q1  90.6
+    X_C1_P0   QMAX_P0_Q2  101.2
+    X_C1_P1   PROFIT    75.1
+    X_C1_P1   BAL_P1    1
+    X_C1_P1   AVAIL_C1  1
+    X_C1_P1   QMIN_P1_Q0  81.2
+    X_C1_P1   QMIN_P1_Q1  90.6
+    X_C1_P1   QMIN_P1_Q2  101.2
+    X_C1_P1   QMAX_P1_Q0  81.2
+    X_C1_P1   QMAX_P1_Q1  90.6
+    X_C1_P1   QMAX_P1_Q2  101.2
+    X_C1_P2   PROFIT    75.1
+    X_C1_P2   BAL_P2    1
+    X_C1_P2   AVAIL_C1  1
+    X_C1_P2   QMIN_P2_Q0  81.2
+    X_C1_P2   QMIN_P2_Q1  90.6
+    X_C1_P2   QMIN_P2_Q2  101.2
+    X_C1_P2   QMAX_P2_Q0  81.2
+    X_C1_P2   QMAX_P2_Q1  90.6
+    X_C1_P2   QMAX_P2_Q2  101.2
+    X_C2_P0   PROFIT    81.1
+    X_C2_P0   BAL_P0    1
+    X_C2_P0   AVAIL_C2  1
+    X_C2_P0   QMIN_P0_Q0  71.2
+    X_C2_P0   QMIN_P0_Q1  82.5
+    X_C2_P0   QMIN_P0_Q2  109.3
+    X_C2_P0   QMAX_P0_Q0  71.2
+    X_C2_P0   QMAX_P0_Q1  82.5
+    X_C2_P0   QMAX_P0_Q2  109.3
+    X_C2_P1   PROFIT    81.1
+    X_C2_P1   BAL_P1    1
+    X_C2_P1   AVAIL_C2  1
+    X_C2_P1   QMIN_P1_Q0  71.2
+    X_C2_P1   QMIN_P1_Q1  82.5
+    X_C2_P1   QMIN_P1_Q2  109.3
+    X_C2_P1   QMAX_P1_Q0  71.2
+    X_C2_P1   QMAX_P1_Q1  82.5
+    X_C2_P1   QMAX_P1_Q2  109.3
+    X_C2_P2   PROFIT    81.1
+    X_C2_P2   BAL_P2    1
+    X_C2_P2   AVAIL_C2  1
+    X_C2_P2   QMIN_P2_Q0  71.2
+    X_C2_P2   QMIN_P2_Q1  82.5
+    X_C2_P2   QMIN_P2_Q2  109.3
+    X_C2_P2   QMAX_P2_Q0  71.2
+    X_C2_P2   QMAX_P2_Q1  82.5
+    X_C2_P2   QMAX_P2_Q2  109.3
+    X_C3_P0   PROFIT    68
+    X_C3_P0   BAL_P0    1
+    X_C3_P0   AVAIL_C3  1
+    X_C3_P0   QMIN_P0_Q0  71.6
+    X_C3_P0   QMIN_P0_Q1  83.6
+    X_C3_P0   QMIN_P0_Q2  93.1
+    X_C3_P0   QMAX_P0_Q0  71.6
+    X_C3_P0   QMAX_P0_Q1  83.6
+    X_C3_P0   QMAX_P0_Q2  93.1
+    X_C3_P1   PROFIT    68
+    X_C3_P1   BAL_P1    1
+    X_C3_P1   AVAIL_C3  1
+    X_C3_P1   QMIN_P1_Q0  71.6
+    X_C3_P1   QMIN_P1_Q1  83.6
+    X_C3_P1   QMIN_P1_Q2  93.1
+    X_C3_P1   QMAX_P1_Q0  71.6
+    X_C3_P1   QMAX_P1_Q1  83.6
+    X_C3_P1   QMAX_P1_Q2  93.1
+    X_C3_P2   PROFIT    68
+    X_C3_P2   BAL_P2    1
+    X_C3_P2   AVAIL_C3  1
+    X_C3_P2   QMIN_P2_Q0  71.6
+    X_C3_P2   QMIN_P2_Q1  83.6
+    X_C3_P2   QMIN_P2_Q2  93.1
+    X_C3_P2   QMAX_P2_Q0  71.6
+    X_C3_P2   QMAX_P2_Q1  83.6
+    X_C3_P2   QMAX_P2_Q2  93.1
+    X_C4_P0   PROFIT    56
+    X_C4_P0   BAL_P0    1
+    X_C4_P0   AVAIL_C4  1
+    X_C4_P0   QMIN_P0_Q0  100
+    X_C4_P0   QMIN_P0_Q1  110
+    X_C4_P0   QMIN_P0_Q2  120
+    X_C4_P0   QMAX_P0_Q0  100
+    X_C4_P0   QMAX_P0_Q1  110
+    X_C4_P0   QMAX_P0_Q2  120
+    X_C4_P1   PROFIT    56
+    X_C4_P1   BAL_P1    1
+    X_C4_P1   AVAIL_C4  1
+    X_C4_P1   QMIN_P1_Q0  100
+    X_C4_P1   QMIN_P1_Q1  110
+    X_C4_P1   QMIN_P1_Q2  120
+    X_C4_P1   QMAX_P1_Q0  100
+    X_C4_P1   QMAX_P1_Q1  110
+    X_C4_P1   QMAX_P1_Q2  120
+    X_C4_P2   PROFIT    56
+    X_C4_P2   BAL_P2    1
+    X_C4_P2   AVAIL_C4  1
+    X_C4_P2   QMIN_P2_Q0  100
+    X_C4_P2   QMIN_P2_Q1  110
+    X_C4_P2   QMIN_P2_Q2  120
+    X_C4_P2   QMAX_P2_Q0  100
+    X_C4_P2   QMAX_P2_Q1  110
+    X_C4_P2   QMAX_P2_Q2  120
+    Y_P0      PROFIT    -90.6
+    Y_P0      BAL_P0    -1
+    Y_P0      QMIN_P0_Q0  -72
+    Y_P0      QMIN_P0_Q1  -82
+    Y_P0      QMIN_P0_Q2  -92
+    Y_P0      QMAX_P0_Q0  -88
+    Y_P0      QMAX_P0_Q1  -98
+    Y_P0      QMAX_P0_Q2  -108
+    Y_P1      PROFIT    -120.8
+    Y_P1      BAL_P1    -1
+    Y_P1      QMIN_P1_Q0  -74
+    Y_P1      QMIN_P1_Q1  -84
+    Y_P1      QMIN_P1_Q2  -94
+    Y_P1      QMAX_P1_Q0  -90
+    Y_P1      QMAX_P1_Q1  -100
+    Y_P1      QMAX_P1_Q2  -110
+    Y_P2      PROFIT    -127.2
+    Y_P2      BAL_P2    -1
+    Y_P2      QMIN_P2_Q0  -76
+    Y_P2      QMIN_P2_Q1  -86
+    Y_P2      QMIN_P2_Q2  -96
+    Y_P2      QMAX_P2_Q0  -92
+    Y_P2      QMAX_P2_Q1  -102
+    Y_P2      QMAX_P2_Q2  -112
+RHS
+    RHS1      AVAIL_C0  17781
+    RHS1      AVAIL_C1  7725
+    RHS1      AVAIL_C2  6881
+    RHS1      AVAIL_C3  12458
+    RHS1      AVAIL_C4  12805
+BOUNDS
+ UP BND1      Y_P0      9284
+ UP BND1      Y_P1      10648
+ UP BND1      Y_P2      14348
+ENDATA

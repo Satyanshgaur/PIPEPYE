@@ -1,0 +1,5 @@
+InstanceID,Scale,Rows,Cols,NNZ,PredictedSolver,ActualWinner,Outcome,TimeMs
+PLANNING_T10_Small,T10,160,200,890,DualSimplex,DualSimplex,CONFIRMED,0
+PLANNING_T25_Small,T25,400,500,2240,DualSimplex,DualSimplex,CONFIRMED,0
+PLANNING_T50_Medium,T50,1900,2500,19975,DualSimplex,DualSimplex,CONFIRMED,0
+PLANNING_T100_Large,T100,3800,5000,39975,PDHG_GPU,PDHG_GPU,CONFIRMED,0

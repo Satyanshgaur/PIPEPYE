@@ -1,0 +1,48 @@
+{
+  "problem_name": "Crude_Blending",
+  "instance_id": "BLENDING_Small",
+  "generator_version": "1.0.0",
+  "random_seed": 42,
+  "scale": "Small",
+  "dimensions": {
+    "rows": 26,
+    "cols": 18,
+    "nnz": 141,
+    "density": 3.012821e-01
+  },
+  "variable_types": {
+    "continuous": 18,
+    "integer": 0,
+    "binary": 0
+  },
+  "ranges": {
+    "min_abs_coeff": 1.000000e+00,
+    "max_abs_coeff": 1.200000e+02,
+    "min_rhs": 0.0000,
+    "max_rhs": 25000.0000,
+    "min_bound": 0.0000,
+    "max_bound": 30000.0000
+  },
+  "structural_statistics": {
+    "row_nnz_avg": 5.42,
+    "row_nnz_stddev": 1.18,
+    "col_nnz_avg": 7.83,
+    "col_nnz_stddev": 0.37,
+    "half_bandwidth": 23,
+    "normalized_bandwidth": 0.8846,
+    "staircase_score": 0.3055,
+    "row_length_gini": 0.0859,
+    "num_connected_components": 1,
+    "coupling_density": 3.0128e-01
+  },
+  "pre_registered_prediction": {
+    "expected_solver": "DualSimplex",
+    "expected_backend": "CPU",
+    "rationale": "Dense quality rows and compact dimensions favor sparse Dual Simplex with fast basis factorization over iterative first-order GPU solvers."
+  },
+  "reference_solution": {
+    "has_reference": false,
+    "objective": 0.0000e+00,
+    "source": ""
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "problem_name": "Multi_Period_Planning",
+  "instance_id": "PLANNING_T10_Small",
+  "generator_version": "1.0.0",
+  "random_seed": 42,
+  "scale": "Small",
+  "dimensions": {
+    "rows": 160,
+    "cols": 200,
+    "nnz": 890,
+    "density": 2.781250e-02
+  },
+  "variable_types": {
+    "continuous": 200,
+    "integer": 0,
+    "binary": 0
+  },
+  "ranges": {
+    "min_abs_coeff": 6.000000e-01,
+    "max_abs_coeff": 3.000000e+00,
+    "min_rhs": 0.0000,
+    "max_rhs": 5000.0000,
+    "min_bound": 0.0000,
+    "max_bound": inf
+  },
+  "structural_statistics": {
+    "row_nnz_avg": 5.56,
+    "row_nnz_stddev": 3.45,
+    "col_nnz_avg": 4.45,
+    "col_nnz_stddev": 1.56,
+    "half_bandwidth": 46,
+    "normalized_bandwidth": 0.2300,
+    "staircase_score": 0.9966,
+    "row_length_gini": 0.3055,
+    "num_connected_components": 1,
+    "coupling_density": 2.7813e-02
+  },
+  "pre_registered_prediction": {
+    "expected_solver": "DualSimplex",
+    "expected_backend": "CPU",
+    "rationale": "Small to moderate period models stay within CPU cache boundaries where low-overhead Simplex pivots outperform iterative first-order GPU solvers."
+  },
+  "reference_solution": {
+    "has_reference": false,
+    "objective": 0.0000e+00,
+    "source": ""
+  }
+}

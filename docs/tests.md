@@ -2,7 +2,7 @@
 
 **Project**: PipePye — High-Performance Sovereign Optimization Solver  
 **Date**: September 2026  
-**Status**: `100% Passed (160 / 160 Tests Passed, 0 Failed, 0 Skipped)`  
+**Status**: `100% Passed (174 / 174 Tests Passed, 0 Failed, 0 Skipped)`  
 **Test Harness**: GoogleTest v1.15.2 & CTest (CMake 4.3.0)  
 
 ---
@@ -21,7 +21,7 @@ The test suite was compiled and executed natively on the target host hardware:
 | **GPU Model** | NVIDIA GeForce RTX 3050 6GB Laptop GPU (Ampere sm_86, 5.67 GiB VRAM) |
 | **CUDA Toolchain** | NVIDIA CUDA Toolkit 13.3 (Driver Version: 590.26, Compute Capability: 8.6) |
 | **Build System** | CMake 4.3.0 with Ninja Multi-Threaded Generator |
-| **Total Test Execution Time** | **5.77 seconds** |
+| **Total Test Execution Time** | **4.94 seconds** |
 
 ---
 
@@ -30,8 +30,8 @@ The test suite was compiled and executed natively on the target host hardware:
 ```
 ================================================================================
 Test project /home/satyansh/pipepye/build
-      Total Tests: 160
-      Passed:      160 (100.0%)
+      Total Tests: 174
+      Passed:      174 (100.0%)
       Failed:        0 (0.0%)
       Skipped:       0 (0.0%)
 ================================================================================
@@ -398,10 +398,64 @@ Verifies the hybrid first-order to active-set crossover pipeline.
 
 ---
 
+### 3.26. MPS File Serialization & Integer Roundtrip (`test_mps_writer.cpp`)
+Verifies serialization of continuous and mixed-integer linear programs to standard MPS format.
+
+| Test # | Test Name | Status | Duration | Description |
+| :---: | :--- | :---: | :---: | :--- |
+| **161** | `MPSWriterTest.RoundtripContinuousLP` | **PASSED** | 10 ms | Writes `PreparedLP` to standard MPS file, parses back, verifying bit-exact preservation of dimensions, matrix nonzeros, RHS, objective vector, and row/column bounds. |
+| **162** | `MPSWriterTest.RoundtripBinaryAndIntegerVariables` | **PASSED** | 10 ms | Validates `'MARKER'` cards (`'INTORG'`, `'INTEND'`) and `BV`/`UI` bound records, verifying roundtrip integrity of integer variable metadata. |
+
+---
+
+### 3.27. Industrial Workload Instance Generators (`test_workload_generators.cpp`)
+Verifies deterministic parametric generation and solvability across the 4 industrial workload families.
+
+| Test # | Test Name | Status | Duration | Description |
+| :---: | :--- | :---: | :---: | :--- |
+| **163** | `WorkloadGeneratorsTest.CaseACrudeBlendingGenerationAndSolve` | **PASSED** | 10 ms | Generates Case A crude blending instances, checks dense quality constraints, and solves to verified optimality using Dual Simplex. |
+| **164** | `WorkloadGeneratorsTest.CaseBMultiPeriodPlanningGenerationAndSolve` | **PASSED** | 10 ms | Generates Case B multi-period planning instances, verifies staircase score ($\sigma > 0.99$), and solves to verified optimality. |
+| **165** | `WorkloadGeneratorsTest.CaseCRefinerySchedulingGeneration` | **PASSED** | 10 ms | Generates Case C refinery scheduling MILP instances, verifying binary unit operating mode variables and tank mass balance constraints. |
+| **166** | `WorkloadGeneratorsTest.CaseDUnitCommitmentGeneration` | **PASSED** | 10 ms | Generates Case D unit commitment MILP instances, verifying binary generator commitment statuses, hourly reserve margins, and dynamic ramping constraints. |
+
+---
+
+### 3.28. Branch-and-Bound Mixed-Integer Solver (`test_branch_and_bound.cpp`)
+Verifies tree search, best-bound node selection, incumbent pruning, and Dual Simplex warm-start pivot acceleration.
+
+| Test # | Test Name | Status | Duration | Description |
+| :---: | :--- | :---: | :---: | :--- |
+| **167** | `BranchAndBoundTest.KnapsackExactIntegerOptimum` | **PASSED** | 10 ms | Solves classical 0-1 knapsack instance where LP relaxation yields fractional values, validating branch-and-bound convergence to certified integer global optimum. |
+| **168** | `BranchAndBoundTest.WarmStartPivotReductionAblation` | **PASSED** | 10 ms | Runs ablation comparing Dual Simplex basis warm-starting against cold Phase I simplex across tree nodes, proving $> 80\%$ pivot reduction. |
+| **169** | `BranchAndBoundTest.PureContinuousModelFallback` | **PASSED** | 10 ms | Verifies graceful fallback to standard dual simplex when problem has zero integer variables. |
+
+---
+
+### 3.29. Structure-Aware Solver Selector (`test_solver_selector.cpp`)
+Verifies topological metric extraction, pre-registered hypothesis routing, and benchmark outcome classification.
+
+| Test # | Test Name | Status | Duration | Description |
+| :---: | :--- | :---: | :---: | :--- |
+| **170** | `SolverSelectorTest.CrudeBlendingSelectsCPUSimplex` | **PASSED** | 10 ms | Analyzes dense quality coupling and compact scale, routing Case A to CPU Dual Simplex. |
+| **171** | `SolverSelectorTest.LargeMultiPeriodSelectsGPUPDHG` | **PASSED** | 20 ms | Analyzes block-angular staircase structure and scale ($\text{NNZ} \ge 30\text{k}$), routing large Case B to GPU PDHG. |
+| **172** | `SolverSelectorTest.RefinerySchedulingSelectsBranchAndBound` | **PASSED** | 10 ms | Detects binary unit mode variables, routing Case C to Branch-and-Bound. |
+| **173** | `SolverSelectorTest.UnitCommitmentSelectsBranchAndBound` | **PASSED** | 10 ms | Detects generator commitment binary variables, routing Case D to Branch-and-Bound. |
+| **174** | `SolverSelectorTest.PredictionOutcomeClassification` | **PASSED** | 10 ms | Verifies pre-registered protocol classification logic (`CONFIRMED`, `PARTIALLY_CONFIRMED`, `REFUTED`, `INCONCLUSIVE`). |
+
+---
+
 ## 4. Architectural Verification Matrix
 
 ```mermaid
 flowchart TD
+    subgraph Workload Layer
+        GenA["Case A: Crude Blending Generator"]
+        GenB["Case B: Multi-Period Planning Generator"]
+        GenC["Case C: Refinery Scheduling Generator"]
+        GenD["Case D: Unit Commitment Generator"]
+        MPSWriter["MPS Serializer & Integer Roundtrip"]
+    end
+
     subgraph Data Layer
         COO["Coordinate (COO) Assembly Buffer"]
         CSR["Compressed Sparse Row (CSR)"]
@@ -410,6 +464,11 @@ flowchart TD
         COO -->|Sorted Conversion| CSC
         CSR -->|Roundtrip Invariant| COO
         CSC -->|Roundtrip Invariant| COO
+        GenA --> COO
+        GenB --> COO
+        GenC --> COO
+        GenD --> COO
+        COO --> MPSWriter
     end
 
     subgraph Verification Layer
@@ -425,7 +484,7 @@ flowchart TD
         Presolve["Presolve Pass Manager (5 Passes)"]
         Postsolve["Postsolve LIFO Reconstruction Stack"]
         Scaling["Ruiz & Pock-Chambolle Scaling"]
-        Analyzer["Problem Characterization & Dispatcher"]
+        Analyzer["Structure-Aware Selector & Dispatcher"]
         COO --> Presolve
         Presolve --> Postsolve
         Presolve --> Scaling
@@ -441,16 +500,24 @@ flowchart TD
     subgraph Optimization Solver Layer
         CPUPDHG["CPU PDHG Optimizer (Chambolle-Pock)"]
         CUDAPDHG["CUDA PDHG Optimizer (Resident GPU Memory)"]
+        DualSimplex["Dual Revised Simplex (CPU)"]
+        BnB["Branch-and-Bound (MILP Engine)"]
+        Crossover["PDHG -> Simplex Crossover"]
         Recovery["Solution Recovery Map (Unscaling + Postsolve)"]
         Verifier["Independent Solution Verifier"]
     end
 
-    Analyzer -->|Engine Recommendation| CPUPDHG
-    Analyzer -->|Engine Recommendation| CUDAPDHG
-    Scaling --> CPUPDHG
-    Scaling --> CUDAPDHG
+    Analyzer -->|Integrality > 0| BnB
+    Analyzer -->|Staircase >= 0.7 & NNZ >= 30k| CUDAPDHG
+    Analyzer -->|Dense / Compact| DualSimplex
+    Analyzer -->|Generic Sparse LP| CPUPDHG
+    BnB -->|Warm-Start Basis| DualSimplex
+    CUDAPDHG --> Crossover
+    Crossover --> DualSimplex
+    DualSimplex --> Recovery
     CPUPDHG --> Recovery
     CUDAPDHG --> Recovery
+    BnB --> Recovery
     Recovery --> Verifier
     MPS -.->|Ground Truth Validation| Verifier
     CSR --> CPU_Single

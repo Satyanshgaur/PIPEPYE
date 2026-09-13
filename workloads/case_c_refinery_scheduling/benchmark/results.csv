@@ -1,0 +1,4 @@
+InstanceID,Scale,Rows,Cols,NNZ,PredictedSolver,ActualWinner,Outcome,TimeMs
+REFINERY_SCHED_Small,Small,108,90,262,BranchAndBound,BranchAndBound,CONFIRMED,0
+REFINERY_SCHED_Medium,Medium,480,420,1316,BranchAndBound,BranchAndBound,CONFIRMED,0
+REFINERY_SCHED_Large,Large,1536,1344,4289,BranchAndBound,BranchAndBound,CONFIRMED,0

@@ -24,11 +24,16 @@ pipepye/
 │       ├── utils/              # High-resolution CPUTimer, Logger, ScopedNvtxRange markers
 │       ├── simplex/            # Basis state, SimplexConfig, Pricing, Ratio test, DualSimplexSolver
 │       ├── factorization/      # DenseLU oracle, SparseLU (Markowitz), BasisFactorization (PFI eta)
-│       └── crossover/          # Active set detection, basis crash & repair, warm-start cleanup
+│       ├── crossover/          # Active set detection, basis crash & repair, warm-start cleanup
+│       ├── milp/               # BranchAndBoundSolver, B&B nodes, warm-start Dual Simplex re-optimization
+│       ├── workloads/          # WorkloadMetadata, Instance ladders, 4 parametric generators
+│       └── analysis/           # SolverSelector (structure-aware solver/hardware router)
 ├── src/                        # Core C++20 library implementations (libpipepye_core.a)
 ├── cuda/                       # CUDA kernels (DAXPY/SAXPY) & hardware probe (pipepye_device_probe)
-├── tests/                      # GoogleTest suite run via CTest (160 unit and integration tests)
-├── benchmarks/                 # CPU sparse, CUDA SpMV, scaling, PDHG (Exps A-G), Simplex (Exps A-I)
+├── tests/                      # GoogleTest suite run via CTest (174 unit and integration tests)
+├── benchmarks/                 # Industrial suite, Simplex (Exps A-I), PDHG (Exps A-G), CUDA SpMV
+├── workloads/                  # Standardized industrial workload packages (Case A, B, C, D)
+├── reports/                    # Aggregated benchmark CSV and JSON outputs
 ├── tools/                      # CLI utilities (pipepye_inspect unified model analyzer with 4-way ablation)
 ├── scripts/
 │   └── profile.sh              # One-command NVIDIA Nsight Systems profiling script
@@ -38,6 +43,9 @@ pipepye/
     ├── phase2summary.md        # Phase 2 presolve, scaling & characterization findings & implications
     ├── phase3summary.md        # Phase 3 PDHG solver findings, crossover map & implications
     ├── phase4summary.md        # Phase 4 Dual Simplex & Crossover findings & strategic pointers
+    ├── phase5summary.md        # Phase 5 Industrial Workload Suite & Structure-Aware Benchmarking
+    ├── industrial_suite.md     # Industrial workload suite architecture & benchmark design
+    ├── workloads/              # Workload case studies & pre-registered predictions protocol
     ├── simplex.md              # Sparse Dual Revised Simplex, PFI, Devex, & Crossover architecture
     ├── pdhg.md                 # Primal-Dual Hybrid Gradient solver architecture, GPU residency & verification
     ├── presolve.md             # Modular presolve pipeline, 5 reduction passes & postsolve reconstruction
@@ -45,7 +53,7 @@ pipepye/
     ├── characterization.md     # Problem analyzer, topological moments, Gini & conditioning proxies
     ├── numerical_robustness.md # First-order PDHG downstream solver 4-way ablation experiment
     ├── benchmark.md            # CPU/GPU micro-benchmarks, SpMV scaling & bandwidth analysis
-    ├── tests.md                # Comprehensive test inventory (160 tests) & numerical verification
+    ├── tests.md                # Comprehensive test inventory (174 tests) & numerical verification
     ├── algorithm-hardware-feasibility.md # Algorithm × hardware feasibility & LP architecture blueprint
     ├── mps-spec.md             # MPS parser specification & internal model mapping
     ├── environment.md          # Hardware & toolchain specification (RTX 3050, GCC 16, CUDA 13.3)
@@ -73,17 +81,22 @@ ninja -C build
 ctest --test-dir build --output-on-failure
 ```
 
-### 3. Run Phase 4 Comprehensive Simplex & Crossover Benchmark (Experiments A through I)
+### 3. Run Phase 5 Industrial Workload Suite Benchmark (4 Workload Ladders & Selector)
+```bash
+./build/bin/pipepye_bench_industrial
+```
+
+### 4. Run Phase 4 Comprehensive Simplex & Crossover Benchmark (Experiments A through I)
 ```bash
 ./build/bin/pipepye_bench_simplex
 ```
 
-### 4. Run Phase 3 Comprehensive PDHG Benchmark (Experiments A through G)
+### 5. Run Phase 3 Comprehensive PDHG Benchmark (Experiments A through G)
 ```bash
 ./build/bin/pipepye_bench_pdhg
 ```
 
-### 5. Inspect LP Models (Single-Line Banner, 4-Way Ablation or Full Report)
+### 6. Inspect LP Models (Single-Line Banner, 4-Way Ablation or Full Report)
 ```bash
 # Print canonical one-line dispatch summary:
 ./build/bin/pipepye_inspect tests/data/mps/netlib/beaconfd.mps --one-line
@@ -98,23 +111,23 @@ ctest --test-dir build --output-on-failure
 ./build/bin/pipepye_inspect tests/data/mps/netlib/beaconfd.mps --before-after
 ```
 
-### 6. Run Automated Before/After Presolve & Scaling Benchmark
+### 7. Run Automated Before/After Presolve & Scaling Benchmark
 ```bash
 ./build/bin/pipepye_bench_presolve_scaling
 ```
 
-### 7. Run Downstream 4-Way Numerical Robustness Experiment (PDHG Simulation)
+### 8. Run Downstream 4-Way Numerical Robustness Experiment (PDHG Simulation)
 ```bash
 ./build/bin/pipepye_bench_numerical_robustness
 ```
 
-### 8. Run Hardware Detection & CUDA Micro-Benchmarks
+### 9. Run Hardware Detection & CUDA Micro-Benchmarks
 ```bash
 ./build/bin/pipepye_device_probe
 ./build/bin/pipepye_microbench_cuda
 ```
 
-### 9. Profile with NVIDIA Nsight Systems
+### 10. Profile with NVIDIA Nsight Systems
 ```bash
 ./scripts/profile.sh
 ```
@@ -129,6 +142,14 @@ ctest --test-dir build --output-on-failure
   - [Phase 2 Summary & Preconditioning Findings](docs/phase2summary.md)
   - [Phase 3 Summary & Empirical Crossover Findings](docs/phase3summary.md)
   - [Phase 4 Summary: Dual Simplex & Crossover](docs/phase4summary.md)
+  - [Phase 5 Summary: Industrial Workloads & Structure-Aware Benchmarking](docs/phase5summary.md)
+- **Phase 5 Industrial Workload Suite**:
+  - [Industrial Workload Suite Overview](docs/industrial_suite.md)
+  - [Pre-Registered Predictions Protocol & Results](docs/workloads/predictions.md)
+  - [Case A: Crude Oil Blending (LP)](docs/workloads/case_a_crude_blending.md)
+  - [Case B: Multi-Period Planning (LP)](docs/workloads/case_b_multi_period_planning.md)
+  - [Case C: Refinery Unit Scheduling (MILP)](docs/workloads/case_c_refinery_scheduling.md)
+  - [Case D: Unit Commitment & Dispatch (MILP)](docs/workloads/case_d_unit_commitment.md)
 - **Phase 4 Simplex & Crossover**:
   - [Sparse Dual Revised Simplex & Basis Crossover](docs/simplex.md)
 - **Phase 3 First-Order Solver**:
@@ -140,7 +161,7 @@ ctest --test-dir build --output-on-failure
   - [Numerical Robustness Experiment](docs/numerical_robustness.md)
 - **Benchmarks & Numerical Verification**:
   - [CPU & GPU Performance Benchmarking Report](docs/benchmark.md)
-  - [Comprehensive Test Verification Report (160 Tests)](docs/tests.md)
+  - [Comprehensive Test Verification Report (174 Tests)](docs/tests.md)
   - [Algorithm × Hardware Feasibility & LP Architecture](docs/algorithm-hardware-feasibility.md)
   - [MPS Ingestion Specification & Model Mapping](docs/mps-spec.md)
 - **Environment & Engineering**:
@@ -148,4 +169,5 @@ ctest --test-dir build --output-on-failure
   - [Build & Configuration Guide](docs/build.md)
   - [Profiling Workflow & Timeline](docs/profiling.md)
   - [CI Pipeline Specification](docs/ci.md)
+
 

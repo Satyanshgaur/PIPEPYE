@@ -1,0 +1,48 @@
+{
+  "problem_name": "Refinery_Scheduling",
+  "instance_id": "REFINERY_SCHED_Small",
+  "generator_version": "1.0.0",
+  "random_seed": 42,
+  "scale": "Small",
+  "dimensions": {
+    "rows": 108,
+    "cols": 90,
+    "nnz": 262,
+    "density": 2.695473e-02
+  },
+  "variable_types": {
+    "continuous": 54,
+    "integer": 0,
+    "binary": 36
+  },
+  "ranges": {
+    "min_abs_coeff": 9.000000e-01,
+    "max_abs_coeff": 3.150000e+02,
+    "min_rhs": 0.0000,
+    "max_rhs": 500.0000,
+    "min_bound": 0.0000,
+    "max_bound": 500.0000
+  },
+  "structural_statistics": {
+    "row_nnz_avg": 2.43,
+    "row_nnz_stddev": 1.21,
+    "col_nnz_avg": 2.91,
+    "col_nnz_stddev": 1.03,
+    "half_bandwidth": 33,
+    "normalized_bandwidth": 0.3056,
+    "staircase_score": 0.9971,
+    "row_length_gini": 0.1568,
+    "num_connected_components": 1,
+    "coupling_density": 2.6955e-02
+  },
+  "pre_registered_prediction": {
+    "expected_solver": "BranchAndBound",
+    "expected_backend": "CPU",
+    "rationale": "Discrete unit commitment and operating modes impose combinatorial search; warm-started Dual Simplex provides crucial pivot efficiency during branch-and-bound exploration."
+  },
+  "reference_solution": {
+    "has_reference": false,
+    "objective": 0.0000e+00,
+    "source": ""
+  }
+}

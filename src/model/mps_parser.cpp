@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cmath>
+#include <iomanip>
 
 namespace pipepye::model {
 
@@ -410,4 +411,198 @@ Status MPSParser::parse_stream(std::istream& in, LinearProgram& out_model) {
     return Status::OK();
 }
 
+Status MPSParser::write_file(const std::string& filepath, const LinearProgram& model) {
+    std::ofstream out(filepath);
+    if (!out.is_open()) {
+        return Status::InvalidArgument("Failed to open file for writing: " + filepath);
+    }
+    return write_stream(out, model);
+}
+
+Status MPSParser::write_stream(std::ostream& out, const LinearProgram& model) {
+    index_t m = model.num_rows();
+    index_t n = model.num_cols();
+
+    // 1. NAME
+    std::string name = model.name.empty() ? "PIPEPYE_LP" : model.name;
+    out << "NAME          " << name << "\n";
+
+    // 2. OBJSENSE
+    out << "OBJSENSE\n";
+    out << (model.is_maximization ? "  MAX\n" : "  MIN\n");
+
+    // Objective row name
+    std::string obj_name = model.obj_name.empty() ? "COST" : model.obj_name;
+
+    // Helper lambda for column and row names
+    auto get_row_name = [&](index_t r) -> std::string {
+        if (r < static_cast<index_t>(model.row_names.size()) && !model.row_names[r].empty()) {
+            return model.row_names[r];
+        }
+        return "R" + std::to_string(r);
+    };
+
+    auto get_col_name = [&](index_t c) -> std::string {
+        if (c < static_cast<index_t>(model.col_names.size()) && !model.col_names[c].empty()) {
+            return model.col_names[c];
+        }
+        return "C" + std::to_string(c);
+    };
+
+    // 3. ROWS
+    out << "ROWS\n";
+    out << " N  " << obj_name << "\n";
+
+    for (index_t r = 0; r < m; ++r) {
+        scalar_t l = r < static_cast<index_t>(model.row_lower.size()) ? model.row_lower[r] : -Infinity;
+        scalar_t u = r < static_cast<index_t>(model.row_upper.size()) ? model.row_upper[r] : Infinity;
+
+        char sense = 'E';
+        if (std::abs(l - u) < 1e-12) {
+            sense = 'E';
+        } else if (l <= -Infinity / 2.0 && u < Infinity / 2.0) {
+            sense = 'L';
+        } else if (l > -Infinity / 2.0 && u >= Infinity / 2.0) {
+            sense = 'G';
+        } else if (l > -Infinity / 2.0 && u < Infinity / 2.0) {
+            sense = 'E'; // Ranged row
+        } else {
+            sense = 'N';
+        }
+        out << " " << sense << "  " << get_row_name(r) << "\n";
+    }
+
+    // 4. COLUMNS
+    out << "COLUMNS\n";
+    // Prepare CSC column access
+    sparse::CSCMatrix csc = model.to_csc();
+    if (csc.col_ptr().empty() || csc.num_cols() != n) {
+        // Build CSC if empty
+        if (!model.A_coo.triplets().empty()) {
+            csc = model.A_coo.to_csc();
+        }
+    }
+
+    int marker_idx = 0;
+    for (index_t j = 0; j < n; ++j) {
+        std::string col_name = get_col_name(j);
+        bool is_int = (j < static_cast<index_t>(model.var_types.size())) &&
+                      (model.var_types[j] == VariableType::Binary || model.var_types[j] == VariableType::Integer);
+
+        if (is_int) {
+            out << "    MARK" << std::setfill('0') << std::setw(4) << (marker_idx++)
+                << "  'MARKER'                 'INTORG'\n" << std::setfill(' ');
+        }
+
+        // Objective coefficient
+        if (j < static_cast<index_t>(model.c.size()) && std::abs(model.c[j]) > 1e-15) {
+            scalar_t cost = model.c[j];
+            out << "    " << std::left << std::setw(8) << col_name << "  "
+                << std::setw(8) << obj_name << "  " << std::setprecision(12) << cost << "\n";
+        }
+
+        // Constraint nonzeros
+        if (j < csc.num_cols()) {
+            auto col = csc.col(j);
+            for (size_t k = 0; k < col.row_indices.size(); ++k) {
+                index_t r = col.row_indices[k];
+                scalar_t val = col.values[k];
+                if (std::abs(val) > 1e-15) {
+                    out << "    " << std::left << std::setw(8) << col_name << "  "
+                        << std::setw(8) << get_row_name(r) << "  " << std::setprecision(12) << val << "\n";
+                }
+            }
+        }
+
+        if (is_int) {
+            out << "    MARK" << std::setfill('0') << std::setw(4) << (marker_idx++)
+                << "  'MARKER'                 'INTEND'\n" << std::setfill(' ');
+        }
+    }
+
+    // 5. RHS
+    out << "RHS\n";
+    for (index_t r = 0; r < m; ++r) {
+        scalar_t l = r < static_cast<index_t>(model.row_lower.size()) ? model.row_lower[r] : -Infinity;
+        scalar_t u = r < static_cast<index_t>(model.row_upper.size()) ? model.row_upper[r] : Infinity;
+
+        scalar_t rhs_val = 0.0;
+        if (std::abs(l - u) < 1e-12) {
+            rhs_val = l;
+        } else if (u < Infinity / 2.0) {
+            rhs_val = u;
+        } else if (l > -Infinity / 2.0) {
+            rhs_val = l;
+        }
+
+        if (std::abs(rhs_val) > 1e-15) {
+            out << "    RHS1      " << std::left << std::setw(8) << get_row_name(r) << "  "
+                << std::setprecision(12) << rhs_val << "\n";
+        }
+    }
+
+    // 6. RANGES (for ranged rows: lower != upper and both finite)
+    bool has_ranges = false;
+    for (index_t r = 0; r < m; ++r) {
+        scalar_t l = r < static_cast<index_t>(model.row_lower.size()) ? model.row_lower[r] : -Infinity;
+        scalar_t u = r < static_cast<index_t>(model.row_upper.size()) ? model.row_upper[r] : Infinity;
+        if (l > -Infinity / 2.0 && u < Infinity / 2.0 && std::abs(l - u) >= 1e-12) {
+            has_ranges = true;
+            break;
+        }
+    }
+    if (has_ranges) {
+        out << "RANGES\n";
+        for (index_t r = 0; r < m; ++r) {
+            scalar_t l = r < static_cast<index_t>(model.row_lower.size()) ? model.row_lower[r] : -Infinity;
+            scalar_t u = r < static_cast<index_t>(model.row_upper.size()) ? model.row_upper[r] : Infinity;
+            if (l > -Infinity / 2.0 && u < Infinity / 2.0 && std::abs(l - u) >= 1e-12) {
+                out << "    RNG1      " << std::left << std::setw(8) << get_row_name(r) << "  "
+                    << std::setprecision(12) << (u - l) << "\n";
+            }
+        }
+    }
+
+    // 7. BOUNDS
+    out << "BOUNDS\n";
+    for (index_t j = 0; j < n; ++j) {
+        std::string col_name = get_col_name(j);
+        scalar_t lj = j < static_cast<index_t>(model.col_lower.size()) ? model.col_lower[j] : 0.0;
+        scalar_t uj = j < static_cast<index_t>(model.col_upper.size()) ? model.col_upper[j] : Infinity;
+        VariableType vt = j < static_cast<index_t>(model.var_types.size()) ? model.var_types[j] : VariableType::Continuous;
+
+        if (vt == VariableType::Binary) {
+            out << " BV BND1      " << col_name << "\n";
+        } else if (std::abs(lj - uj) < 1e-12) {
+            out << " FX BND1      " << std::left << std::setw(8) << col_name << "  "
+                << std::setprecision(12) << lj << "\n";
+        } else {
+            if (lj <= -Infinity / 2.0 && uj >= Infinity / 2.0) {
+                out << " FR BND1      " << col_name << "\n";
+            } else {
+                if (lj <= -Infinity / 2.0) {
+                    out << " MI BND1      " << col_name << "\n";
+                } else if (std::abs(lj) > 1e-12) {
+                    out << " LO BND1      " << std::left << std::setw(8) << col_name << "  "
+                        << std::setprecision(12) << lj << "\n";
+                }
+                if (uj < Infinity / 2.0) {
+                    if (vt == VariableType::Integer) {
+                        out << " UI BND1      " << std::left << std::setw(8) << col_name << "  "
+                            << std::setprecision(12) << uj << "\n";
+                    } else {
+                        out << " UP BND1      " << std::left << std::setw(8) << col_name << "  "
+                            << std::setprecision(12) << uj << "\n";
+                    }
+                }
+            }
+        }
+    }
+
+    // 8. ENDATA
+    out << "ENDATA\n";
+    return Status::OK();
+}
+
 } // namespace pipepye::model
+

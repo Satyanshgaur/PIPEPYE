@@ -15,6 +15,12 @@ public:
 
     /// @brief Parses an MPS model from an input stream into a LinearProgram model.
     static Status parse_stream(std::istream& in, LinearProgram& out_model);
+
+    /// @brief Writes a LinearProgram model to disk in standard MPS format.
+    static Status write_file(const std::string& filepath, const LinearProgram& model);
+
+    /// @brief Writes a LinearProgram model to an output stream in standard MPS format.
+    static Status write_stream(std::ostream& out, const LinearProgram& model);
 };
 
 } // namespace pipepye::model

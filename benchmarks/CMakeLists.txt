@@ -122,3 +122,23 @@ if(PIPEPYE_ENABLE_CUDA)
     )
 endif()
 
+# Phase 5 Industrial Workload Suite Benchmark Harness
+add_executable(pipepye_bench_industrial
+    bench_industrial.cpp
+)
+if(PIPEPYE_ENABLE_CUDA)
+    target_link_libraries(pipepye_bench_industrial
+        PRIVATE
+            ${BENCH_DEPS}
+    )
+else()
+    target_link_libraries(pipepye_bench_industrial
+        PRIVATE
+            pipepye_core
+    )
+endif()
+set_target_properties(pipepye_bench_industrial PROPERTIES
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+

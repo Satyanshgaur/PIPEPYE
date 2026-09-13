@@ -32,6 +32,10 @@ add_executable(test_core
     test_basis_factorization.cpp
     test_dual_simplex.cpp
     test_crossover.cpp
+    test_mps_writer.cpp
+    test_workload_generators.cpp
+    test_branch_and_bound.cpp
+    test_solver_selector.cpp
 )
 
 target_link_libraries(test_core

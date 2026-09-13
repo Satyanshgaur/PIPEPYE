@@ -27,6 +27,12 @@ add_library(pipepye_core
     factorization/basis_factorization.cpp
     simplex/dual_simplex.cpp
     crossover/pdhg_crossover.cpp
+    milp/branch_and_bound.cpp
+    workloads/case_a_crude_blending.cpp
+    workloads/case_b_multi_period_planning.cpp
+    workloads/case_c_refinery_scheduling.cpp
+    workloads/case_d_unit_commitment.cpp
+    analysis/solver_selector.cpp
 )
 
 target_include_directories(pipepye_core

@@ -1,0 +1,48 @@
+{
+  "problem_name": "Unit_Commitment",
+  "instance_id": "UNIT_COMMIT_Small",
+  "generator_version": "1.0.0",
+  "random_seed": 42,
+  "scale": "Small",
+  "dimensions": {
+    "rows": 254,
+    "cols": 120,
+    "nnz": 580,
+    "density": 1.902887e-02
+  },
+  "variable_types": {
+    "continuous": 60,
+    "integer": 0,
+    "binary": 60
+  },
+  "ranges": {
+    "min_abs_coeff": 1.000000e+00,
+    "max_abs_coeff": 2.560000e+02,
+    "min_rhs": 0.0000,
+    "max_rhs": 562.5000,
+    "min_bound": 0.0000,
+    "max_bound": 300.0000
+  },
+  "structural_statistics": {
+    "row_nnz_avg": 2.28,
+    "row_nnz_stddev": 0.88,
+    "col_nnz_avg": 4.83,
+    "col_nnz_stddev": 1.91,
+    "half_bandwidth": 144,
+    "normalized_bandwidth": 0.5669,
+    "staircase_score": 0.9934,
+    "row_length_gini": 0.1124,
+    "num_connected_components": 1,
+    "coupling_density": 1.9029e-02
+  },
+  "pre_registered_prediction": {
+    "expected_solver": "BranchAndBound",
+    "expected_backend": "CPU",
+    "rationale": "Time-indexed generator commitment requires discrete branching; continuous dispatch subproblems are efficiently resolved via warm-started Dual Simplex."
+  },
+  "reference_solution": {
+    "has_reference": false,
+    "objective": 0.0000e+00,
+    "source": ""
+  }
+}
