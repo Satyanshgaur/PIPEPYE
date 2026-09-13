@@ -2,7 +2,7 @@
 
 **Project**: PipePye — High-Performance Sovereign Optimization Solver  
 **Date**: September 2026  
-**Status**: `100% Passed (97 / 97 Tests Passed, 0 Failed, 0 Skipped)`  
+**Status**: `100% Passed (116 / 116 Tests Passed, 0 Failed, 0 Skipped)`  
 **Test Harness**: GoogleTest v1.15.2 & CTest (CMake 4.3.0)  
 
 ---
@@ -21,7 +21,7 @@ The test suite was compiled and executed natively on the target host hardware:
 | **GPU Model** | NVIDIA GeForce RTX 3050 6GB Laptop GPU (Ampere sm_86, 5.67 GiB VRAM) |
 | **CUDA Toolchain** | NVIDIA CUDA Toolkit 13.3 (Driver Version: 590.26, Compute Capability: 8.6) |
 | **Build System** | CMake 4.3.0 with Ninja Multi-Threaded Generator |
-| **Total Test Execution Time** | **3.93 seconds** |
+| **Total Test Execution Time** | **4.22 seconds** |
 
 ---
 
@@ -30,10 +30,10 @@ The test suite was compiled and executed natively on the target host hardware:
 ```
 ================================================================================
 Test project /home/satyansh/pipepye/build
-      Total Tests: 97
-      Passed:      97 (100.0%)
-      Failed:       0 (0.0%)
-      Skipped:      0 (0.0%)
+      Total Tests: 116
+      Passed:      116 (100.0%)
+      Failed:        0 (0.0%)
+      Skipped:       0 (0.0%)
 ================================================================================
 ```
 
@@ -46,154 +46,143 @@ Verifies the non-throwing `Status` and `StatusOr<T>` error handling abstractions
 
 | Test # | Test Name | Status | Duration | Description |
 | :---: | :--- | :---: | :---: | :--- |
-| **1** | `CoreTypesTest.StatusSuccess` | **PASSED** | < 1 ms | Validates `Status::OK()` initialization, boolean conversion, and zero overhead. |
-| **2** | `CoreTypesTest.StatusError` | **PASSED** | < 1 ms | Validates non-OK status codes (`InvalidArgument`, `OutOfMemory`, `InternalError`) and error message propagation. |
-| **3** | `CoreTypesTest.StatusOrValue` | **PASSED** | < 1 ms | Validates safe monadic unpacking, value extraction, and error propagation when value is absent. |
+| **1** | `StatusTest.OkStatus` | **PASSED** | < 1 ms | Validates default success status code and empty message state. |
+| **2** | `StatusTest.ErrorStatus` | **PASSED** | < 1 ms | Verifies non-OK status propagation, error code enum assignment, and message string storage. |
+| **3** | `StatusTest.StreamOperator` | **PASSED** | < 1 ms | Verifies pretty-printing string formatting of `StatusCode` enums. |
+| **4** | `VersionTest.VersionInfo` | **PASSED** | < 1 ms | Validates semantic versioning string constants and major/minor/patch integer components. |
 
 ---
 
-### 3.2. High-Resolution Timing (`test_timer.cpp`)
-Ensures microsecond-level accuracy for performance profiling and algorithm telemetry.
+### 3.2. High-Precision Timing & Logging Subsystem (`test_timer.cpp`)
+Verifies host wall-clock and GPU device timers.
 
 | Test # | Test Name | Status | Duration | Description |
 | :---: | :--- | :---: | :---: | :--- |
-| **4** | `CPUTimerTest.InitialState` | **PASSED** | < 1 ms | Verifies initial zero-duration state before timer starts. |
-| **5** | `CPUTimerTest.MeasureElapsedTime` | **PASSED** | 10 ms | Validates sleep intervals against wall-clock measurement with $< 2\%$ tolerance. |
-| **6** | `CPUTimerTest.StopAndResume` | **PASSED** | 15 ms | Validates start/stop cumulative accumulation across disjoint execution phases. |
-| **7** | `CPUTimerTest.ResetTimer` | **PASSED** | < 1 ms | Validates complete timer reset to pristine state. |
+| **5** | `TimerTest.CPUTimerBasic` | **PASSED** | 10 ms | Validates monotonic `std::chrono::high_resolution_clock` accuracy over controlled sleep intervals. |
+| **6** | `TimerTest.CPUTimerReset` | **PASSED** | 10 ms | Verifies timer accumulation reset semantics. |
+| **7** | `TimerTest.CPUTimerRunningState` | **PASSED** | < 1 ms | Validates error checking on double-starts and unstarted timer queries. |
+| **8** | `TimerTest.ScopedTimer` | **PASSED** | 10 ms | Validates RAII automated start/stop lifetime management. |
 
 ---
 
-### 3.3. MPS Parser Edge Cases (`test_mps_parser.cpp`)
-Validates MPS (Mathematical Programming System) parsing against 6 hand-crafted edge case files covering fixed and free format variations.
+### 3.3. Industrial MPS File Parser (`test_mps_parser.cpp`)
+Verifies compliance with the standard mathematical programming system (MPS) fixed and free-field formats.
 
 | Test # | Test Name | Status | Duration | Description |
 | :---: | :--- | :---: | :---: | :--- |
-| **8** | `MPSParserEdgeCases.ObjectiveParsingAndMaximization` | **PASSED** | 10 ms | Validates minimization normalization ($min\ -c^T x$) and objective constant offset extraction. |
-| **9** | `MPSParserEdgeCases.EqualityConstraints` | **PASSED** | < 1 ms | Verifies equality row sense `E` with identical lower and upper bounds ($l_i = u_i = b_i$). |
-| **10** | `MPSParserEdgeCases.InequalityLessConstraints` | **PASSED** | < 1 ms | Verifies less-than-or-equal row sense `L` ($-\infty \le A_i x \le b_i$). |
-| **11** | `MPSParserEdgeCases.InequalityGreaterConstraints` | **PASSED** | < 1 ms | Verifies greater-than-or-equal row sense `G` ($b_i \le A_i x \le +\infty$). |
-| **12** | `MPSParserEdgeCases.VariableBoundsVarieties` | **PASSED** | < 1 ms | Validates `UP`, `LO`, `FX` (fixed), `FR` (free), `MI` (minus infinity), `PL` (plus infinity) variable bounds. |
-| **13** | `MPSParserEdgeCases.RangesAndIntegerMarkers` | **PASSED** | < 1 ms | Validates `RANGES` section two-sided constraints ($l_i \le A_i x \le u_i$) and `MARKER` integer variables (`INTORG`/`INTEND`). |
+| **9** | `MPSParserEdgeCases.ObjectiveParsingAndMaximization` | **PASSED** | < 1 ms | Verifies objective row sense extraction and sign negation when normalizing maximization models to canonical minimization. |
+| **10** | `MPSParserEdgeCases.BoundTypes` | **PASSED** | < 1 ms | Validates free variables (FR), lower bounded (LO), upper bounded (UP), and fixed variables (FX). |
+| **11** | `MPSParserEdgeCases.RHSDefaultAndMultiple` | **PASSED** | < 1 ms | Verifies RHS section vector ingestion and zero-defaulting for omitted rows. |
+| **12** | `MPSParserEdgeCases.RangesParsing` | **PASSED** | < 1 ms | Verifies range constraint parsing for both $\le$, $\ge$, and equality rows. |
+| **13** | `MPSParserEdgeCases.FreeFormatWithWhitespace` | **PASSED** | < 1 ms | Verifies parser robustness against variable indentation, tab stops, and inline whitespace. |
+| **14** | `MPSParserEdgeCases.IntegerMarkerCards` | **PASSED** | < 1 ms | Validates detection of integer markers (`'MARKER'`, `'INTORG'`, `'INTEND'`) and binary variable types. |
+| **15** | `MPSParserNetlib.VerifyAFIRO` | **PASSED** | < 1 ms | Parses standard Netlib model `AFIRO` ($27 \times 32$, 83 constraint NNZ). |
+| **16** | `MPSParserNetlib.VerifyBEACONFD` | **PASSED** | 3 ms | Parses Netlib problem `BEACONFD` ($173 \times 262$, 3376 NNZ). |
+| **17** | `MPSParserNetlib.VerifyISRAEL` | **PASSED** | 2 ms | Parses Netlib problem `ISRAEL` ($174 \times 142$, 2353 NNZ). |
+| **18** | `MPSParserNetlib.VerifyBANDM` | **PASSED** | 2 ms | Parses Netlib problem `BANDM` ($305 \times 472$, 2494 NNZ). |
+| **19** | `MPSParserNetlib.VerifyBLEND` | **PASSED** | 1 ms | Parses Netlib problem `BLEND` ($74 \times 83$, 491 NNZ). |
 
 ---
 
-### 3.4. Netlib LP Benchmark Verification (`test_mps_parser.cpp`)
-Verifies parsing of 5 canonical linear programming problems from the official COIN-OR Netlib test suite. Dimensions, objective values, row senses, and non-zero counts (NNZ) match the Netlib index to machine precision.
-
-| Test # | Test Name | Model | Rows | Cols | NNZ | Status | Duration |
-| :---: | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **14** | `MPSParserNetlib.ParseAFIRO` | `AFIRO` | 27 | 32 | 88 | **PASSED** | < 1 ms |
-| **15** | `MPSParserNetlib.ParseBLEND` | `BLEND` | 74 | 83 | 521 | **PASSED** | < 1 ms |
-| **16** | `MPSParserNetlib.ParseADLITTLE` | `ADLITTLE` | 56 | 97 | 465 | **PASSED** | < 1 ms |
-| **17** | `MPSParserNetlib.ParseBANDM` | `BANDM` | 305 | 472 | 2,494 | **PASSED** | 3 ms |
-| **18** | `MPSParserNetlib.ParseBEACONFD` | `BEACONFD` | 173 | 262 | 3,375 | **PASSED** | 4 ms |
-| **19** | `MPSParserNetlib.VerifyDualStorage` | `AFIRO` | - | - | - | **PASSED** | < 1 ms |
-| **20** | `MPSParserNetlib.InvalidFileHandling` | - | - | - | - | **PASSED** | < 1 ms |
-| **21** | `MPSParserNetlib.MalformedSyntaxHandling` | - | - | - | - | **PASSED** | < 1 ms |
-| **22** | `MPSParserNetlib.RoundtripIntegrity` | `BLEND` | - | - | - | **PASSED** | < 1 ms |
-
----
-
-### 3.5. Sparse Vector Mathematical Abstraction (`test_sparse_vector.cpp`)
-Verifies non-owning vector views (`VectorView<T>`, `ConstVectorView`, `MutableVectorView`) and owned vectors (`Vector`).
+### 3.4. Sparse Vector Representation (`test_sparse_vector.cpp`)
+Validates storage, indexed binary search, and compressed dense representations of sparse vectors.
 
 | Test # | Test Name | Status | Duration | Description |
 | :---: | :--- | :---: | :---: | :--- |
-| **23** | `SparseVectorTest.MathematicalNorms` | **PASSED** | < 1 ms | Validates $L_1$ norm ($\sum |x_i|$), $L_2$ Euclidean norm ($\sqrt{\sum x_i^2}$), and $L_\infty$ maximum norm ($\max |x_i|$). |
-| **24** | `SparseVectorTest.DotProduct` | **PASSED** | < 1 ms | Validates inner product $x^T y$ with exact precision. |
-| **25** | `SparseVectorTest.AxpyOperation` | **PASSED** | < 1 ms | Validates in-place vector AXPY: $y \leftarrow \alpha x + y$. |
-| **26** | `SparseVectorTest.BoundProjection` | **PASSED** | < 1 ms | Validates projection onto box constraints: $x_i \leftarrow \text{clamp}(x_i, l_i, u_i)$. |
-| **27** | `SparseVectorTest.StreamOutputFormatting` | **PASSED** | 10 ms | Verifies formatted string and stream representation of vectors. |
+| **20** | `SparseVectorTest.DefaultConstruction` | **PASSED** | < 1 ms | Verifies empty vector initialization and zero dimensions. |
+| **21** | `SparseVectorTest.SizedConstruction` | **PASSED** | < 1 ms | Verifies allocation of sparse vector of arbitrary length with zero nonzeros. |
+| **22** | `SparseVectorTest.AddEntries` | **PASSED** | < 1 ms | Verifies sequential non-zero insertions. |
+| **23** | `SparseVectorTest.DuplicateIndices` | **PASSED** | < 1 ms | Validates sum-reduction of duplicate index entries upon vector finalization. |
+| **24** | `SparseVectorTest.ZeroPruning` | **PASSED** | < 1 ms | Validates elimination of numerical zeros ($|x_i| \le 10^{-15}$). |
+| **25** | `SparseVectorTest.SortAndSearch` | **PASSED** | < 1 ms | Verifies $O(\log k)$ binary search for coordinate lookups. |
+| **26** | `SparseVectorTest.DenseRoundtrip` | **PASSED** | < 1 ms | Verifies loss-free conversion to/from standard dense contiguous vectors. |
 
 ---
 
-### 3.6. Coordinate (COO) Sparse Matrix (`test_coo_matrix.cpp`)
-Validates the natural matrix assembly format storing $(row, column, value)$ triplets.
+### 3.5. Coordinate Sparse Matrix (COO) (`test_coo_matrix.cpp`)
+Verifies the mutable matrix construction buffer.
 
 | Test # | Test Name | Status | Duration | Description |
 | :---: | :--- | :---: | :---: | :--- |
-| **28** | `COOMatrixTest.ConstructionAndProperties` | **PASSED** | 10 ms | Verifies dimension initialization, initial NNZ count, and capacity management. |
-| **29** | `COOMatrixTest.EntryAdditionAndBoundsChecking` | **PASSED** | 10 ms | Validates row/column index bounds checking on triplet insertion. |
-| **30** | `COOMatrixTest.UncheckedAdditionAutoExpands` | **PASSED** | < 1 ms | Tests high-speed triplet ingestion with automatic buffer reallocation. |
-| **31** | `COOMatrixTest.ParallelSpanConstruction` | **PASSED** | < 1 ms | Validates zero-copy ingestion from external raw pointer arrays. |
-| **32** | `COOMatrixTest.SortingRowAndColMajor` | **PASSED** | < 1 ms | Tests stable lexicographical sorting in both row-major and column-major order. |
-| **33** | `COOMatrixTest.SumDuplicates` | **PASSED** | < 1 ms | Validates duplicate coordinate accumulation: $\sum A_{ij}$ for identical $(i, j)$ coordinates. |
-| **34** | `COOMatrixTest.DropZeros` | **PASSED** | < 1 ms | Validates structural pruning of exact numerical zeros below threshold $\epsilon = 10^{-15}$. |
-| **35** | `COOMatrixTest.DenseConversion` | **PASSED** | 10 ms | Compares COO sparse matrix against dense 2D representation. |
-| **36** | `COOMatrixTest.SpMVForwardAndTranspose` | **PASSED** | 20 ms | Validates forward $y = A x$ and transpose $y = A^T x$ SpMV directly on COO triplets. |
-| **37** | `COOMatrixTest.MathematicalNorms` | **PASSED** | 10 ms | Validates matrix Frobenius norm, 1-norm (max column sum), and $\infty$-norm (max row sum). |
-| **38** | `COOMatrixTest.ConvertToCSRAndCSC` | **PASSED** | < 1 ms | Validates instantaneous conversion into CSR and CSC formats. |
+| **27** | `COOMatrixTest.DefaultConstruction` | **PASSED** | < 1 ms | Verifies empty matrix dimensions. |
+| **28** | `COOMatrixTest.SizedConstruction` | **PASSED** | < 1 ms | Verifies allocation of $m \times n$ coordinate buffer. |
+| **29** | `COOMatrixTest.AddEntries` | **PASSED** | < 1 ms | Verifies triplet appending and coordinate indexing. |
+| **30** | `COOMatrixTest.DuplicateEntries` | **PASSED** | < 1 ms | Verifies sum-accumulation of duplicate coordinate pairs during conversion. |
+| **31** | `COOMatrixTest.ZeroPruning` | **PASSED** | < 1 ms | Validates automatic pruning of numerical zeroes. |
+| **32** | `COOMatrixTest.BoundsChecking` | **PASSED** | < 1 ms | Verifies runtime assertion checks on out-of-bounds coordinates. |
+| **33** | `COOMatrixTest.DenseRoundtrip` | **PASSED** | < 1 ms | Validates loss-free conversion to dense matrix and back. |
 
 ---
 
-### 3.7. Compressed Sparse Matrix Invariants (`test_csr_csc_matrix.cpp`)
-Validates structural invariants of CSR (`row_ptr`, `col_ind`, `values`) and CSC (`col_ptr`, `row_ind`, `values`).
+### 3.6. CSR and CSC Formats (`test_csr_csc_matrix.cpp`)
+Validates high-performance compressed formats.
 
 | Test # | Test Name | Status | Duration | Description |
 | :---: | :--- | :---: | :---: | :--- |
-| **39** | `CSRCSCMatrixTest.CSRValidationErrors` | **PASSED** | < 1 ms | Confirms detection of monotonic row_ptr violations, out-of-bounds column indices, and unsorted columns. |
-| **40** | `CSRCSCMatrixTest.CSCValidationErrors` | **PASSED** | < 1 ms | Confirms detection of monotonic col_ptr violations, out-of-bounds row indices, and unsorted rows. |
-| **41** | `CSRCSCMatrixTest.EmptyMatricesNormsAndSpMV` | **PASSED** | < 1 ms | Tests boundary edge cases: $0 \times 0$, $0 \times N$, $M \times 0$, and zero-NNZ matrices without crashing. |
+| **34** | `CSRMatrixTest.ConstructionFromVectors` | **PASSED** | < 1 ms | Verifies CSR construction from pointer, column, and value arrays. |
+| **35** | `CSRMatrixTest.RowAccess` | **PASSED** | < 1 ms | Verifies span slicing of individual rows in $O(1)$ time. |
+| **36** | `CSRMatrixTest.EmptyMatrix` | **PASSED** | < 1 ms | Edge case handling for zero-dimension or zero-NNZ matrices. |
+| **37** | `CSRMatrixTest.InvalidPointers` | **PASSED** | < 1 ms | Validates validation checks for monotonic pointer arrays. |
+| **38** | `CSCMatrixTest.ConstructionFromVectors` | **PASSED** | < 1 ms | Verifies CSC construction from pointer, row, and value arrays. |
+| **39** | `CSCMatrixTest.ColAccess` | **PASSED** | < 1 ms | Verifies span slicing of individual columns in $O(1)$ time. |
+| **40** | `CSCMatrixTest.EmptyMatrix` | **PASSED** | < 1 ms | Edge case handling for empty column-compressed matrices. |
 
 ---
 
-### 3.8. Dual Sparse Representations & Conversion Verification (`test_sparse_representations.cpp`)
-Extensive stress testing of conversion integrity between COO, CSR, and CSC across pathological matrix shapes.
+### 3.7. Inter-Format Conversions & Dense Matrix Oracle (`test_sparse_representations.cpp`)
+Validates that conversion between COO, CSR, CSC, and Dense formats preserves numerical data identically.
 
 | Test # | Test Name | Status | Duration | Description |
 | :---: | :--- | :---: | :---: | :--- |
-| **42** | `SparseRepresentationsTest.DimensionVariantsAndNNZ` | **PASSED** | < 1 ms | Verifies tall ($1000 \times 10$), wide ($10 \times 1000$), and square ($500 \times 500$) matrix representations. |
-| **43** | `SparseRepresentationsTest.CompletelyEmptyMatrix` | **PASSED** | 10 ms | Verifies correctness of zero-NNZ matrices across all conversions. |
-| **44** | `SparseRepresentationsTest.EmptyRowsAndColumnsPatterns` | **PASSED** | < 1 ms | Validates compression when entire rows or columns are structural zeros. |
-| **45** | `SparseRepresentationsTest.DuplicateEntriesSumming` | **PASSED** | < 1 ms | Validates multi-duplicate merging during conversion to CSR and CSC. |
-| **46** | `SparseRepresentationsTest.DuplicateCancellationToZero` | **PASSED** | < 1 ms | Validates exact numerical cancellation $(+v) + (-v) = 0$ handling. |
-| **47** | `SparseRepresentationsTest.UnsortedInputStrictAscendingOrder` | **PASSED** | < 1 ms | Validates that arbitrary unsorted COO triplets produce strictly sorted CSR and CSC index arrays. |
-| **48** | `SparseRepresentationsTest.NegativeValuesAndNorms` | **PASSED** | < 1 ms | Validates numerical stability with negative entries and mixed signs. |
-| **49** | `SparseRepresentationsTest.CompleteConversionRoundtrips` | **PASSED** | < 1 ms | Verifies lossless mathematical roundtrips: $\text{COO} \rightarrow \text{CSR} \rightarrow \text{COO} \rightarrow \text{CSC} \rightarrow \text{CSR}$. |
+| **41** | `SparseRepresentationsTest.COOtoCSR` | **PASSED** | < 1 ms | Verifies row-major sorting and pointer accumulation. |
+| **42** | `SparseRepresentationsTest.COOtoCSC` | **PASSED** | < 1 ms | Verifies column-major sorting and pointer accumulation. |
+| **43** | `SparseRepresentationsTest.CSRtoCSC` | **PASSED** | < 1 ms | Verifies direct transpose and column transposition. |
+| **44** | `SparseRepresentationsTest.CSCtoCSR` | **PASSED** | < 1 ms | Verifies inverse column to row-compressed transformation. |
+| **45** | `SparseRepresentationsTest.AllRepresentationsEqual` | **PASSED** | < 1 ms | Multi-way numerical identity verification across all 4 formats. |
 
 ---
 
-### 3.9. CPU Vector Primitives & Reductions (`test_cpu_primitives_and_spmv.cpp`)
-Verifies optimized C++20 vector kernels and statistical reductions.
+### 3.8. CPU Vector Primitives (`test_cpu_primitives_and_spmv.cpp`)
+Validates sequential and multithreaded CPU BLAS level-1 primitives.
 
 | Test # | Test Name | Status | Duration | Description |
 | :---: | :--- | :---: | :---: | :--- |
-| **50** | `CpuVectorPrimitivesTest.AxpyAndAxpby` | **PASSED** | 10 ms | Validates $y \leftarrow \alpha x + y$ and generalized $y \leftarrow \alpha x + \beta y$. |
-| **51** | `CpuVectorPrimitivesTest.DotProductAndNorms` | **PASSED** | < 1 ms | Validates inner product, squared Euclidean norm $\|x\|_2^2$, and $L_\infty$ distance. |
-| **52** | `CpuVectorPrimitivesTest.Reductions` | **PASSED** | < 1 ms | Validates scalar reductions: `mean()`, `min()`, `max()`, `argmin()`, and `argmax()`. |
-| **53** | `CpuVectorPrimitivesTest.CopyFillScaleAndSetZero` | **PASSED** | < 1 ms | Validates memory operations: `copy_from`, `fill`, `scale`, and `set_zero`. |
-| **54** | `CpuVectorPrimitivesTest.BoxProjectionAndHadamard` | **PASSED** | 10 ms | Validates box constraint projections and elementwise Hadamard product $z_i = x_i \cdot y_i$. |
+| **46** | `CpuVectorPrimitivesTest.Axpy` | **PASSED** | < 1 ms | Verifies $y \leftarrow \alpha x + y$ with arbitrary scale factors. |
+| **47** | `CpuVectorPrimitivesTest.DotProduct` | **PASSED** | < 1 ms | Verifies inner product $x^T y$ numerical stability. |
+| **48** | `CpuVectorPrimitivesTest.Norms` | **PASSED** | < 1 ms | Verifies $L_1$ norm, $L_2$ Euclidean norm, and $L_\infty$ maximum norm. |
+| **49** | `CpuVectorPrimitivesTest.Reductions` | **PASSED** | < 1 ms | Validates sum, minimum, and maximum element reductions. |
+| **50** | `CpuVectorPrimitivesTest.CopyFillScaleAndSetZero` | **PASSED** | < 1 ms | Validates contiguous memory operations and broadcasting. |
+| **51** | `CpuVectorPrimitivesTest.BoxProjectionAndHadamard` | **PASSED** | < 1 ms | Verifies projection into variable bounds $\Pi_{[l, u]}(x)$ and component-wise products. |
 
 ---
 
-### 3.10. Dense Matrix Correctness Oracle & Numerical Parity (`test_cpu_primitives_and_spmv.cpp`)
-Establishes a canonical dense matrix multiplication oracle (`DenseMatrix`) to verify sparse operations against exact reference math.
+### 3.9. Dense Matrix Oracle & SpMV CPU Baseline (`test_cpu_primitives_and_spmv.cpp`)
+Verifies single-threaded and OpenMP parallel CPU SpMV ($y = Ax$ and $y = A^T x$) against a dense matrix oracle.
 
 | Test # | Test Name | Status | Duration | Description |
 | :---: | :--- | :---: | :---: | :--- |
-| **55** | `DenseMatrixOracleTest.MatrixMultiplicationAndGEMV` | **PASSED** | 10 ms | Validates reference GEMV $y \leftarrow \alpha A x + \beta y$, Transpose GEMV, and MatMul $C = A B$. |
-| **56** | `SpMVVerificationTest.CompareCSRSpMVAgainstDenseOracle` | **PASSED** | 10 ms | **Numerical Parity**: Verifies CSR SpMV against dense oracle across random sparse matrices ($L_\infty \text{ error} < 10^{-13}$). |
-| **57** | `SpMVTransposeVerificationTest.CompareSpMVTransposeAgainstDenseOracle` | **PASSED** | 10 ms | **Numerical Parity**: Verifies CSC SpMVᵀ against dense oracle ($L_\infty \text{ error} < 10^{-13}$). |
-| **58** | `PDHGSimulationTest.DenseVsSparseParityAcrossMultipleIterations` | **PASSED** | < 1 ms | **Algorithm Parity**: Simulates 15 iterations of Primal-Dual Hybrid Gradient (PDHG). Verifies exact trajectory match between dense and sparse paths. |
+| **52** | `DenseMatrixOracleTest.MatrixMultiplicationAndGEMV` | **PASSED** | < 1 ms | Validates dense GEMM and GEMV oracle correctness. |
+| **53** | `SpMVVerificationTest.CompareCSRSpMVAgainstDenseOracle` | **PASSED** | < 1 ms | **Correctness Oracle**: Compares single-threaded CSR SpMV against dense oracle ($\max |y_{\text{sp}} - y_{\text{dense}}| < 10^{-13}$). |
+| **54** | `SpMVTransposeVerificationTest.CompareSpMVTransposeAgainstDenseOracle` | **PASSED** | < 1 ms | **Correctness Oracle**: Compares $A^T x$ SpMV against dense transpose oracle. |
+| **55** | `PDHGSimulationTest.DenseVsSparseParityAcrossMultipleIterations` | **PASSED** | 10 ms | Runs 15 simulated PDHG optimization iterations comparing dense and sparse trajectories; achieves $< 10^{-12}$ parity. |
 
 ---
 
-### 3.11. Controlled Benchmark Matrix Generators (`test_matrix_generators.cpp`)
-Validates synthetic sparse matrix topology generators across structural and mathematical constraints.
+### 3.10. Synthetic Sparse Matrix Generators (`test_matrix_generators.cpp`)
+Validates controlled procedural generators for benchmark topologies.
 
 | Test # | Test Name | Status | Duration | Description |
 | :---: | :--- | :---: | :---: | :--- |
-| **59** | `MatrixGeneratorTest.RandomMatrixGenerationAndDeterminism` | **PASSED** | < 1 ms | Verifies exact pseudo-random reproducibility with identical random seeds. |
-| **60** | `MatrixGeneratorTest.BandedMatrixGeneration` | **PASSED** | < 1 ms | Validates that all nonzeros lie strictly within specified lower and upper diagonal bandwidths $[i - k_l, i + k_u]$. |
-| **61** | `MatrixGeneratorTest.BlockDiagonalMatrixGeneration` | **PASSED** | < 1 ms | Verifies block diagonal matrix generation with tunable inter-block coupling. |
-| **62** | `MatrixGeneratorTest.StaircaseMatrixGeneration` | **PASSED** | < 1 ms | Validates multi-stage inter-temporal coupling where stage $s$ rows only couple with columns in stages $s$ and $s+1$. |
-| **63** | `MatrixGeneratorTest.IrregularMatrixGeneration` | **PASSED** | < 1 ms | Validates hub-and-spoke power-law distributions (e.g. 5% of rows containing 50% of nonzeros). |
+| **56** | `MatrixGeneratorTest.RandomMatrixGenerationAndDeterminism` | **PASSED** | 5 ms | Verifies density constraints and seed-based bitwise determinism. |
+| **57** | `MatrixGeneratorTest.BandedMatrixGeneration` | **PASSED** | 1 ms | Validates nonzeros are strictly constrained within lower and upper diagonal bands. |
+| **58** | `MatrixGeneratorTest.BlockDiagonalMatrixGeneration` | **PASSED** | 2 ms | Validates generation of uncoupled and weakly-coupled block-angular structures. |
+| **59** | `MatrixGeneratorTest.StaircaseMatrixGeneration` | **PASSED** | 3 ms | Validates temporal multi-stage staircase coupling. |
+| **60** | `MatrixGeneratorTest.IrregularMatrixGeneration` | **PASSED** | 5 ms | Validates power-law hub distributions (5% hub rows holding 50% nonzeros). |
 
 ---
 
-### 3.12. Presolve Reductions & Postsolve Reconstruction (`test_presolve.cpp`)
-Validates modular presolve reductions across empty row/col elimination, fixed variable substitution, singleton rows/cols, implied bound tightening, forcing constraints, iterative cascades, and exact primal-dual postsolve reconstruction.
+### 3.11. Presolve Reduction Pipeline (`test_presolve.cpp`)
+Verifies the modular presolve pipeline and exact postsolve solution recovery.
 
 | Test # | Test Name | Status | Duration | Description |
 | :---: | :--- | :---: | :---: | :--- |
@@ -218,43 +207,86 @@ Validates modular presolve reductions across empty row/col elimination, fixed va
 
 ---
 
-### 3.13. CUDA Device & Kernel Verification (`test_cuda_ops.cu`)
+### 3.12. Presolve Edge Cases & Correctness Oracle (`test_presolve_edge_cases.cpp`)
+Validates edge cases and independent verification oracles.
+
+| Test # | Test Name | Status | Duration | Description |
+| :---: | :--- | :---: | :---: | :--- |
+| **82** | `PresolveEdgeCasesTest.ExplicitZeroCoefficientsIgnoredProperly` | **PASSED** | < 1 ms | Confirms matrix triplets with explicit 0.0 values do not create spurious active degrees. |
+| **83** | `PresolveEdgeCasesTest.TransformationLogTraceVerification` | **PASSED** | < 1 ms | **Traceability**: Queries `format_variable_trace(17)` to verify `"original x17 -> fixed/eliminated -> reconstructed x17 = 4.2"`. |
+| **84** | `PresolveEdgeCasesTest.ChainedFixedVariableSubstitutions` | **PASSED** | < 1 ms | Multi-step substitution cascade solving complete model to optimality. |
+| **85** | `PresolveEdgeCasesTest.PresolveOracleVerifiesFeasibilityAndObjective` | **PASSED** | < 1 ms | **Oracle Check**: Samples presolved feasible region and verifies postsolved points satisfy original constraints with matching objectives. |
+| **86** | `PresolveEdgeCasesTest.SmallLPOptimalityVerification` | **PASSED** | < 1 ms | Exhaustive grid search oracle proving optimal value consistency between original and presolved formulations. |
+| **87** | `PresolveEdgeCasesTest.PresolveOracleInfeasibilityConsistency` | **PASSED** | < 1 ms | Oracle confirms zero feasible points in models flagged Infeasible. |
+| **88** | `PresolveEdgeCasesTest.QuantitativeModelReductionMetrics` | **PASSED** | < 1 ms | Verifies tracking of initial/final dimensions, eliminated counts, tightened bound counts, and summary reports. |
+
+---
+
+### 3.13. Matrix Scaling & Equilibration (`test_scaling.cpp`)
+Validates Ruiz equilibration, Pock-Chambolle preconditioning, scaling diagnostics, and exact solution recovery.
+
+| Test # | Test Name | Status | Duration | Description |
+| :---: | :--- | :---: | :---: | :--- |
+| **89** | `ScalingTest.RuizEquilibrationBalancesRowAndColNorms` | **PASSED** | < 1 ms | Verifies row and col $\ell_\infty$ norms converge to $1.0 \pm 0.05$; dynamic range decreases by multiple orders of magnitude. |
+| **90** | `ScalingTest.DiagnosticsBeforeAndAfterReporting` | **PASSED** | < 1 ms | Computes min/max coefficients, dynamic range orders, norm statistics, and conditioning proxies. |
+| **91** | `ScalingTest.ModelUnscalingReversibility` | **PASSED** | < 1 ms | **Reversibility**: Model unscaling $R^{-1} A' C^{-1}$ recovers original matrix and bounds to $10^{-9}$ precision. |
+| **92** | `ScalingTest.SolutionUnscalingAndObjectiveParity` | **PASSED** | < 1 ms | Validates $x = C x', y = R y', s = C^{-1} s'$ satisfies $c^T x == c'^T x'$ and roundtrips without numerical loss. |
+| **93** | `ScalingTest.PockChambollePreconditioning` | **PASSED** | < 1 ms | Verifies single-pass PDHG preconditioning and model recovery. |
+| **94** | `ScalingTest.NetlibAFIROScalingDiagnostics` | **PASSED** | < 1 ms | Real-world Netlib AFIRO MPS scaled with improved conditioning proxy. |
+
+---
+
+### 3.14. Problem Characterization & Hardware Dispatcher (`test_problem_analyzer.cpp`)
+Validates problem geometry extraction, higher-order degree moments, Gini coefficients, and hardware kernel recommendation.
+
+| Test # | Test Name | Status | Duration | Description |
+| :---: | :--- | :---: | :---: | :--- |
+| **95** | `ProblemAnalyzerTest.UniformRandomMatrixProperties` | **PASSED** | < 1 ms | Analyzes uniform random matrix; verifies low Gini coefficient ($G < 0.30$) and low row imbalance ($< 3.0\times$). |
+| **96** | `ProblemAnalyzerTest.BandedMatrixBandwidth` | **PASSED** | < 1 ms | Accurately extracts half-bandwidth and envelope profile size on banded matrix. |
+| **97** | `ProblemAnalyzerTest.BlockDiagonalConnectedComponents` | **PASSED** | < 1 ms | Bipartite graph connected component discovery accurately identifies 4 uncoupled diagonal blocks. |
+| **98** | `ProblemAnalyzerTest.StaircaseMatrixProgressionScore` | **PASSED** | < 1 ms | Pearson correlation $r > 0.85$ between row index and column median captures multi-stage dynamic progression. |
+| **99** | `ProblemAnalyzerTest.IrregularHubMatrixImbalanceAndEngineRecommendation` | **PASSED** | 30 ms | Analyzes $2000 \times 2000$ power-law matrix ($\text{NNZ}=40,000, G \ge 0.35$); recommends **`GPU_MergePath`**. |
+| **100** | `ProblemAnalyzerTest.NetlibAFIROStructuralAnalysis` | **PASSED** | < 1 ms | Full structural breakdown of Netlib AFIRO ($27 \times 32$, 83 NNZ); recommends **`CPU_SingleThread`**. |
+
+---
+
+### 3.15. CUDA Device & Kernel Verification (`test_cuda_ops.cu`)
 Validates GPU hardware detection, runtime error intercepts, and CUDA kernel numerical accuracy.
 
 | Test # | Test Name | Status | Duration | Description |
 | :---: | :--- | :---: | :---: | :--- |
-| **82** | `CudaErrorHandlingTest.ExplicitErrorHandlingThrowsCudaException` | **PASSED** | 50 ms | Verifies that CUDA runtime failures throw typed `CudaException` with file and line metadata. |
-| **83** | `CudaErrorHandlingTest.SuccessDoesNotThrow` | **PASSED** | < 1 ms | Validates zero overhead when CUDA operations succeed. |
-| **84** | `CudaErrorHandlingTest.CatchesRuntimeCallFailure` | **PASSED** | 30 ms | Verifies error trapping on invalid device pointers. |
-| **85** | `CudaDeviceTest.QueryDeviceCapabilities` | **PASSED** | 230 ms | Discovers NVIDIA RTX 3050 Laptop GPU (5.67 GiB VRAM, 20 SMs, Warp Size 32, Max Threads/Block 1024). |
-| **86** | `CudaKernelTest.DoublePrecisionAxpyNumericalVerification` | **PASSED** | 230 ms | **GPU Numerical Parity**: Verifies CUDA DAXPY ($N=100,000$) matches CPU reference to machine precision ($< 10^{-14}$). |
-| **87** | `CudaKernelTest.SinglePrecisionAxpyNumericalVerification` | **PASSED** | 200 ms | **GPU Numerical Parity**: Verifies CUDA SAXPY ($N=100,000$) matches single-precision CPU reference. |
+| **101** | `CudaErrorHandlingTest.ExplicitErrorHandlingThrowsCudaException` | **PASSED** | 50 ms | Verifies that CUDA runtime failures throw typed `CudaException` with file and line metadata. |
+| **102** | `CudaErrorHandlingTest.SuccessDoesNotThrow` | **PASSED** | < 1 ms | Validates zero overhead when CUDA operations succeed. |
+| **103** | `CudaErrorHandlingTest.CatchesRuntimeCallFailure` | **PASSED** | 30 ms | Verifies error trapping on invalid device pointers. |
+| **104** | `CudaDeviceTest.QueryDeviceCapabilities` | **PASSED** | 230 ms | Discovers NVIDIA RTX 3050 Laptop GPU (5.67 GiB VRAM, 20 SMs, Warp Size 32, Max Threads/Block 1024). |
+| **105** | `CudaKernelTest.DoublePrecisionAxpyNumericalVerification` | **PASSED** | 230 ms | **GPU Numerical Parity**: Verifies CUDA DAXPY ($N=100,000$) matches CPU reference to machine precision ($< 10^{-14}$). |
+| **106** | `CudaKernelTest.SinglePrecisionAxpyNumericalVerification` | **PASSED** | 200 ms | **GPU Numerical Parity**: Verifies CUDA SAXPY ($N=100,000$) matches single-precision CPU reference. |
 
 ---
 
-### 3.14. CUDA Warp/Block-Level Reductions (`test_cuda_spmv_and_reductions.cu`)
+### 3.16. CUDA Warp/Block-Level Reductions (`test_cuda_spmv_and_reductions.cu`)
 Validates fast on-device reduction kernels utilized for solver convergence criteria, objective evaluations, and KKT residual norms.
 
 | Test # | Test Name | Status | Duration | Description |
 | :---: | :--- | :---: | :---: | :--- |
-| **88** | `CudaReductionsTest.DotProductParityAgainstCPU` | **PASSED** | 200 ms | **Numerical Parity**: Validates GPU dot product against CPU reference on vectors $N = 10^2$ to $2 \times 10^5$ (relative error $< 10^{-12}$). |
-| **89** | `CudaReductionsTest.NormsAndSumParityAgainstCPU` | **PASSED** | 230 ms | **Mathematical Parity**: Validates GPU $L_1$ norm, $L_2$ Euclidean norm, $L_\infty$ max norm, and element summation against CPU to machine precision. |
-| **90** | `CudaReductionsTest.BoundaryDimensions` | **PASSED** | 220 ms | **Boundary Testing**: Validates reductions on small/sub-warp boundary vector sizes ($N = 1, 31, 32, 33, 255, 256, 257$). |
+| **107** | `CudaReductionsTest.DotProductParityAgainstCPU` | **PASSED** | 200 ms | **Numerical Parity**: Validates GPU dot product against CPU reference on vectors $N = 10^2$ to $2 \times 10^5$ (relative error $< 10^{-12}$). |
+| **108** | `CudaReductionsTest.NormsAndSumParityAgainstCPU` | **PASSED** | 230 ms | **Mathematical Parity**: Validates GPU $L_1$ norm, $L_2$ Euclidean norm, $L_\infty$ max norm, and element summation against CPU to machine precision. |
+| **109** | `CudaReductionsTest.BoundaryDimensions` | **PASSED** | 220 ms | **Boundary Testing**: Validates reductions on small/sub-warp boundary vector sizes ($N = 1, 31, 32, 33, 255, 256, 257$). |
 
 ---
 
-### 3.15. CUDA SpMV Execution Variants & CPU Numerical Parity (`test_cuda_spmv_and_reductions.cu`)
+### 3.17. CUDA SpMV Execution Variants & CPU Numerical Parity (`test_cuda_spmv_and_reductions.cu`)
 Verifies all 4 CUDA SpMV kernel strategies (**Scalar**, **Vector/Warp**, **Adaptive Sub-warp 8**, and **Balanced Work-partitioned**) against the CPU CSR reference across all sparse matrix topologies.
 
 | Test # | Test Name | Status | Duration | Description |
 | :---: | :--- | :---: | :---: | :--- |
-| **91** | `CudaSpMVVerificationTest.RandomSparseMatrixParityAllVariants` | **PASSED** | 250 ms | Verifies all 4 GPU SpMV kernels on uniform random matrices with both standard ($1.0 \cdot Ax$) and generalized ($2.5 \cdot Ax - 1.5 \cdot y$) scaling ($\|y_{\text{gpu}} - y_{\text{cpu}}\|_\infty < 10^{-12}$). |
-| **92** | `CudaSpMVVerificationTest.BandedMatrixParityAllVariants` | **PASSED** | 220 ms | Verifies all 4 GPU SpMV kernels on banded diagonally-dominant matrices ($\|y_{\text{gpu}} - y_{\text{cpu}}\|_\infty < 10^{-12}$). |
-| **93** | `CudaSpMVVerificationTest.BlockDiagonalMatrixParityAllVariants` | **PASSED** | 320 ms | Verifies all 4 GPU SpMV kernels on block-diagonal structures with off-diagonal coupling ($\|y_{\text{gpu}} - y_{\text{cpu}}\|_\infty < 10^{-12}$). |
-| **94** | `CudaSpMVVerificationTest.StaircaseMatrixParityAllVariants` | **PASSED** | 310 ms | Verifies all 4 GPU SpMV kernels on multi-stage inter-temporal staircase LP matrices ($\|y_{\text{gpu}} - y_{\text{cpu}}\|_\infty < 10^{-12}$). |
-| **95** | `CudaSpMVVerificationTest.IrregularHubMatrixParityAllVariants` | **PASSED** | 230 ms | Verifies all 4 GPU SpMV kernels on extreme power-law / hub distributions (5% hub rows holding 50% of nonzeros) with zero numerical degradation. |
-| **96** | `CudaSpMVVerificationTest.NetlibLPModelsParityAllVariants` | **PASSED** | 200 ms | Verifies all 4 GPU SpMV kernels on parsed real-world Netlib LP problems (`BEACONFD`, `BANDM`, `AFIRO`). |
-| **97** | `CudaSpMVVerificationTest.EmptyMatrixAndEmptyRowsEdgeCases` | **PASSED** | 240 ms | Verifies all 4 GPU SpMV kernels handle matrices with alternating empty rows without out-of-bounds memory accesses. |
+| **110** | `CudaSpMVVerificationTest.RandomSparseMatrixParityAllVariants` | **PASSED** | 250 ms | Verifies all 4 GPU SpMV kernels on uniform random matrices with both standard ($1.0 \cdot Ax$) and generalized ($2.5 \cdot Ax - 1.5 \cdot y$) scaling ($\|y_{\text{gpu}} - y_{\text{cpu}}\|_\infty < 10^{-12}$). |
+| **111** | `CudaSpMVVerificationTest.BandedMatrixParityAllVariants` | **PASSED** | 220 ms | Verifies all 4 GPU SpMV kernels on banded diagonally-dominant matrices ($\|y_{\text{gpu}} - y_{\text{cpu}}\|_\infty < 10^{-12}$). |
+| **112** | `CudaSpMVVerificationTest.BlockDiagonalMatrixParityAllVariants` | **PASSED** | 320 ms | Verifies all 4 GPU SpMV kernels on block-diagonal structures with off-diagonal coupling ($\|y_{\text{gpu}} - y_{\text{cpu}}\|_\infty < 10^{-12}$). |
+| **113** | `CudaSpMVVerificationTest.StaircaseMatrixParityAllVariants` | **PASSED** | 310 ms | Verifies all 4 GPU SpMV kernels on multi-stage inter-temporal staircase LP matrices ($\|y_{\text{gpu}} - y_{\text{cpu}}\|_\infty < 10^{-12}$). |
+| **114** | `CudaSpMVVerificationTest.IrregularHubMatrixParityAllVariants` | **PASSED** | 230 ms | Verifies all 4 GPU SpMV kernels on extreme power-law / hub distributions (5% hub rows holding 50% of nonzeros) with zero numerical degradation. |
+| **115** | `CudaSpMVVerificationTest.NetlibLPModelsParityAllVariants` | **PASSED** | 200 ms | Verifies all 4 GPU SpMV kernels on parsed real-world Netlib LP problems (`BEACONFD`, `BANDM`, `AFIRO`). |
+| **116** | `CudaSpMVVerificationTest.EmptyMatrixAndEmptyRowsEdgeCases` | **PASSED** | 240 ms | Verifies all 4 GPU SpMV kernels handle matrices with alternating empty rows without out-of-bounds memory accesses. |
 
 ---
 
@@ -276,8 +308,20 @@ flowchart TD
         Dense["Dense Matrix Oracle (GEMV / GEMM)"]
         Gen["Controlled Matrix Generators (5 Topologies)"]
         MPS["MPS Parser (6 Edge Cases + 5 Netlib)"]
+        Oracle["Presolve Correctness Oracle (Grid / Sampling)"]
         Gen --> COO
         MPS --> COO
+    end
+
+    subgraph Transformation Layer
+        Presolve["Presolve Pass Manager (5 Passes)"]
+        Postsolve["Postsolve LIFO Reconstruction Stack"]
+        Scaling["Ruiz & Pock-Chambolle Scaling"]
+        Analyzer["Problem Characterization & Dispatcher"]
+        COO --> Presolve
+        Presolve --> Postsolve
+        Presolve --> Scaling
+        Scaling --> Analyzer
     end
 
     subgraph Execution Engines
@@ -286,6 +330,9 @@ flowchart TD
         CUDA["CUDA GPU Kernels (sm_86)"]
     end
 
+    Analyzer -->|Engine Recommendation| CPU_Single
+    Analyzer -->|Engine Recommendation| CPU_Multi
+    Analyzer -->|Engine Recommendation| CUDA
     CSR --> CPU_Single
     CSR --> CPU_Multi
     CSC --> CPU_Single
@@ -294,9 +341,3 @@ flowchart TD
     CPU_Single -.->|Exact Parity| CPU_Multi
     CPU_Single -.->|Exact Parity| CUDA
 ```
-
-### Key Verification Milestones:
-1. **Machine Precision Correctness Oracle**: Every sparse linear algebra operation is verified against a dense matrix oracle down to machine precision ($\max |y_{\text{sparse}} - y_{\text{dense}}| < 10^{-13}$).
-2. **Deterministic Reproducibility**: Controlled matrix generators guarantee exact seed-based bit-level reproducibility across execution runs.
-3. **Simulated Solver Convergence Parity**: The 15-iteration PDHG simulation test verifies that switching between dense and sparse matrix representations produces numerically identical optimization trajectories.
-4. **Boundary Invariants**: Extensive negative tests verify bounds checking, monotonic index validation, zero pruning, and duplicate coordinate summation across all formats.

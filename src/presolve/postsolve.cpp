@@ -137,6 +137,15 @@ StatusOr<PrimalDualSolution> PostsolveManager::postsolve(
     }
 
     sol.is_feasible = feasible;
+
+    // 5. Update transformation log with reconstructed primal and dual variables
+    for (index_t j = 0; j < orig_cols_; ++j) {
+        log_.record_reconstructed_variable(j, sol.x[j], sol.s[j]);
+    }
+    for (index_t i = 0; i < orig_rows_; ++i) {
+        log_.record_reconstructed_constraint(i, sol.y[i]);
+    }
+
     return sol;
 }
 

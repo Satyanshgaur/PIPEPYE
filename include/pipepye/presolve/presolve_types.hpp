@@ -74,6 +74,36 @@ struct PresolveStats {
 
     std::vector<PassStats> pass_history;
 
+    [[nodiscard]] index_t eliminated_rows() const noexcept {
+        return (initial_rows >= final_rows) ? (initial_rows - final_rows) : 0;
+    }
+
+    [[nodiscard]] index_t eliminated_cols() const noexcept {
+        return (initial_cols >= final_cols) ? (initial_cols - final_cols) : 0;
+    }
+
+    [[nodiscard]] size_t eliminated_nonzeros() const noexcept {
+        return (initial_nnz >= final_nnz) ? (initial_nnz - final_nnz) : 0;
+    }
+
+    [[nodiscard]] index_t total_bounds_tightened() const noexcept {
+        index_t total = 0;
+        for (const auto& p : pass_history) total += p.bounds_tightened;
+        return total;
+    }
+
+    [[nodiscard]] index_t total_variables_fixed() const noexcept {
+        index_t total = 0;
+        for (const auto& p : pass_history) total += p.variables_fixed;
+        return total;
+    }
+
+    [[nodiscard]] index_t total_redundant_rows() const noexcept {
+        index_t total = 0;
+        for (const auto& p : pass_history) total += p.redundant_rows;
+        return total;
+    }
+
     [[nodiscard]] double row_reduction_pct() const noexcept {
         if (initial_rows == 0) return 0.0;
         return (1.0 - static_cast<double>(final_rows) / initial_rows) * 100.0;
@@ -87,6 +117,27 @@ struct PresolveStats {
     [[nodiscard]] double nnz_reduction_pct() const noexcept {
         if (initial_nnz == 0) return 0.0;
         return (1.0 - static_cast<double>(final_nnz) / initial_nnz) * 100.0;
+    }
+
+    [[nodiscard]] std::string format_summary() const {
+        std::string s;
+        s += "=== PIPEPYE PRESOLVE REDUCTION SUMMARY ===\n";
+        s += "  Rows: " + std::to_string(initial_rows) + " -> " + std::to_string(final_rows) +
+             " (eliminated: " + std::to_string(eliminated_rows()) + ", " +
+             std::to_string(row_reduction_pct()) + "% reduction)\n";
+        s += "  Cols: " + std::to_string(initial_cols) + " -> " + std::to_string(final_cols) +
+             " (eliminated: " + std::to_string(eliminated_cols()) + ", " +
+             std::to_string(col_reduction_pct()) + "% reduction)\n";
+        s += "  NNZ:  " + std::to_string(initial_nnz) + " -> " + std::to_string(final_nnz) +
+             " (eliminated: " + std::to_string(eliminated_nonzeros()) + ", " +
+             std::to_string(nnz_reduction_pct()) + "% reduction)\n";
+        s += "  Bounds Tightened: " + std::to_string(total_bounds_tightened()) + "\n";
+        s += "  Variables Fixed:  " + std::to_string(total_variables_fixed()) + "\n";
+        s += "  Redundant Rows:   " + std::to_string(total_redundant_rows()) + "\n";
+        s += "  Passes Executed:  " + std::to_string(total_passes_executed) + "\n";
+        s += "  Elapsed Time:     " + std::to_string(total_elapsed_ms) + " ms\n";
+        s += "========================================\n";
+        return s;
     }
 };
 

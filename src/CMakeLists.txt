@@ -14,6 +14,9 @@ add_library(pipepye_core
     presolve/presolve_context.cpp
     presolve/presolve_pass.cpp
     presolve/presolve_pass_manager.cpp
+    presolve/presolve_oracle.cpp
+    scaling/equilibrator.cpp
+    analysis/problem_analyzer.cpp
 )
 
 target_include_directories(pipepye_core

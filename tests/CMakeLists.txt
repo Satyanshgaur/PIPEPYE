@@ -22,6 +22,9 @@ add_executable(test_core
     test_cpu_primitives_and_spmv.cpp
     test_matrix_generators.cpp
     test_presolve.cpp
+    test_presolve_edge_cases.cpp
+    test_scaling.cpp
+    test_problem_analyzer.cpp
 )
 
 target_link_libraries(test_core

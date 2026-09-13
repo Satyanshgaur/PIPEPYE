@@ -7,6 +7,7 @@
 #include <pipepye/core/status.hpp>
 #include <pipepye/model/lp_model.hpp>
 #include <pipepye/presolve/presolve_types.hpp>
+#include <pipepye/presolve/transformation_log.hpp>
 
 namespace pipepye::presolve {
 
@@ -171,6 +172,14 @@ public:
         return actions_.size();
     }
 
+    [[nodiscard]] const TransformationLog& log() const noexcept {
+        return log_;
+    }
+
+    TransformationLog& log() noexcept {
+        return log_;
+    }
+
     /// @brief Reconstructs the original solution from the presolved solution.
     [[nodiscard]] StatusOr<PrimalDualSolution> postsolve(
         const model::LinearProgram& original_lp,
@@ -182,6 +191,7 @@ private:
     std::vector<index_t> orig_to_presolved_col_;
     std::vector<index_t> orig_to_presolved_row_;
     std::vector<std::shared_ptr<PostsolveAction>> actions_;
+    mutable TransformationLog log_;
 };
 
 } // namespace pipepye::presolve

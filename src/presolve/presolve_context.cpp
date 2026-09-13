@@ -23,6 +23,7 @@ PresolveContext::PresolveContext(const model::LinearProgram& lp, PresolveOptions
     row_adj_.resize(num_rows_);
     col_adj_.resize(num_cols_);
     postsolve_mgr_.set_dimensions(num_rows_, num_cols_);
+    postsolve_mgr_.log().init(num_rows_, num_cols_, lp.row_names, lp.col_names);
 
     if (!lp.csr_row_ptr.empty()) {
         for (index_t i = 0; i < num_rows_; ++i) {
@@ -120,6 +121,7 @@ void PresolveContext::fix_variable(index_t j, scalar_t val) {
         }
     }
 
+    postsolve_mgr_.log().record_var_fixed(j, val, "Fixed to bound value");
     postsolve_mgr_.add_action(std::make_unique<FixedVariableAction>(j, val, c_[j]));
     remove_col(j);
 }
@@ -138,6 +140,7 @@ model::LinearProgram PresolveContext::to_presolved_lp() {
         if (col_active_[j]) {
             orig_to_new_col[j] = new_col_idx++;
             postsolve_mgr_.set_col_mapping(j, orig_to_new_col[j]);
+            postsolve_mgr_.log().record_var_mapping(j, orig_to_new_col[j]);
 
             pre_lp.col_names.push_back(original_lp_.col_names[j]);
             pre_lp.col_name_to_idx[original_lp_.col_names[j]] = orig_to_new_col[j];
@@ -147,6 +150,7 @@ model::LinearProgram PresolveContext::to_presolved_lp() {
             pre_lp.var_types.push_back(original_lp_.var_types[j]);
         } else {
             postsolve_mgr_.set_col_mapping(j, -1);
+            postsolve_mgr_.log().record_var_mapping(j, -1);
         }
     }
 
@@ -157,6 +161,7 @@ model::LinearProgram PresolveContext::to_presolved_lp() {
         if (row_active_[i]) {
             orig_to_new_row[i] = new_row_idx++;
             postsolve_mgr_.set_row_mapping(i, orig_to_new_row[i]);
+            postsolve_mgr_.log().record_row_mapping(i, orig_to_new_row[i]);
 
             pre_lp.row_names.push_back(original_lp_.row_names[i]);
             pre_lp.row_name_to_idx[original_lp_.row_names[i]] = orig_to_new_row[i];
@@ -165,6 +170,7 @@ model::LinearProgram PresolveContext::to_presolved_lp() {
             pre_lp.row_senses.push_back(original_lp_.row_senses[i]);
         } else {
             postsolve_mgr_.set_row_mapping(i, -1);
+            postsolve_mgr_.log().record_row_mapping(i, -1);
         }
     }
 

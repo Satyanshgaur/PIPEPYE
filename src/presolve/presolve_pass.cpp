@@ -24,6 +24,7 @@ StatusOr<PassStats> EmptyRowColPass::run(PresolveContext& ctx) {
         if (lb <= eps && ub >= -eps) {
             // Satisfied vacuously -> redundant
             ctx.remove_row(i);
+            ctx.postsolve_mgr().log().record_row_eliminated(i, ConstraintStatus::EliminatedEmpty, "Empty row bounds contain 0.0");
             ctx.postsolve_mgr().add_action(std::make_unique<RedundantRowAction>(i));
             ++stats.rows_removed;
             ++stats.redundant_rows;
@@ -167,6 +168,8 @@ StatusOr<PassStats> SingletonPass::run(PresolveContext& ctx) {
             ++stats.bounds_tightened;
         }
 
+        ctx.postsolve_mgr().log().record_row_eliminated(
+            i, ConstraintStatus::EliminatedSingleton, "Singleton row tightened variable " + std::to_string(col));
         ctx.postsolve_mgr().add_action(
             std::make_unique<SingletonRowAction>(i, col, a, row_l, row_u));
         ctx.remove_row(i);
@@ -231,6 +234,8 @@ StatusOr<PassStats> SingletonPass::run(PresolveContext& ctx) {
             ctx.set_row_lower(row, new_row_l);
             ctx.set_row_upper(row, new_row_u);
 
+            ctx.postsolve_mgr().log().record_var_eliminated(
+                j, VariableStatus::EliminatedSingleton, "Singleton column substituted via row " + std::to_string(row));
             ctx.postsolve_mgr().add_action(
                 std::make_unique<SingletonColumnAction>(j, row, a, cost_j, rhs, others));
 
@@ -293,6 +298,8 @@ StatusOr<PassStats> ForcingRedundancyPass::run(PresolveContext& ctx) {
         if (min_inf_count == 0 && max_inf_count == 0) {
             if (min_act >= row_l - eps && max_act <= row_u + eps) {
                 ctx.remove_row(i);
+                ctx.postsolve_mgr().log().record_row_eliminated(
+                    i, ConstraintStatus::EliminatedRedundant, "Constraint activity bounds fall within row bounds");
                 ctx.postsolve_mgr().add_action(std::make_unique<RedundantRowAction>(i));
                 ++stats.rows_removed;
                 ++stats.redundant_rows;
@@ -398,6 +405,8 @@ StatusOr<PassStats> BoundTighteningPass::run(PresolveContext& ctx) {
                         ctx.set_col_upper(k, implied_ub);
                         ++stats.bounds_tightened;
                         ub = implied_ub;
+                        ctx.postsolve_mgr().log().record_var_bound_tightened(
+                            k, lb, ub, "Upper bound tightened via row " + std::to_string(i));
                     }
                 }
 
@@ -410,6 +419,8 @@ StatusOr<PassStats> BoundTighteningPass::run(PresolveContext& ctx) {
                         ctx.set_col_lower(k, implied_lb);
                         ++stats.bounds_tightened;
                         lb = implied_lb;
+                        ctx.postsolve_mgr().log().record_var_bound_tightened(
+                            k, lb, ub, "Lower bound tightened via row " + std::to_string(i));
                     }
                 }
             } else { // a < 0.0
@@ -422,6 +433,8 @@ StatusOr<PassStats> BoundTighteningPass::run(PresolveContext& ctx) {
                         ctx.set_col_lower(k, implied_lb);
                         ++stats.bounds_tightened;
                         lb = implied_lb;
+                        ctx.postsolve_mgr().log().record_var_bound_tightened(
+                            k, lb, ub, "Lower bound tightened via row " + std::to_string(i));
                     }
                 }
 
@@ -434,6 +447,8 @@ StatusOr<PassStats> BoundTighteningPass::run(PresolveContext& ctx) {
                         ctx.set_col_upper(k, implied_ub);
                         ++stats.bounds_tightened;
                         ub = implied_ub;
+                        ctx.postsolve_mgr().log().record_var_bound_tightened(
+                            k, lb, ub, "Upper bound tightened via row " + std::to_string(i));
                     }
                 }
             }
