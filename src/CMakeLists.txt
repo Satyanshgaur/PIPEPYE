@@ -9,6 +9,7 @@ add_library(pipepye_core
     sparse/csc_matrix.cpp
     sparse/dense_matrix.cpp
     sparse/cpu_ops.cpp
+    sparse/matrix_generator.cpp
 )
 
 target_include_directories(pipepye_core
@@ -18,6 +19,11 @@ target_include_directories(pipepye_core
 )
 
 target_compile_features(pipepye_core PUBLIC cxx_std_20)
+
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(pipepye_core PUBLIC OpenMP::OpenMP_CXX)
+endif()
 
 if(PIPEPYE_ENABLE_CUDA)
     target_compile_definitions(pipepye_core PUBLIC PIPEPYE_CUDA_ENABLED)

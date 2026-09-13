@@ -129,4 +129,23 @@ void spmv_csc(scalar_t alpha, const CSCMatrix& A, ConstVectorView x, scalar_t be
 /// @brief CPU SpMV Transpose using CSC: y = alpha * A^T * x + beta * y
 void spmv_transpose_csc(scalar_t alpha, const CSCMatrix& A, ConstVectorView x, scalar_t beta, MutableVectorView y);
 
+// =============================================================================
+// Multithreaded Parallel Operations (OpenMP / Core-scaling)
+// =============================================================================
+
+/// @brief Returns the maximum number of hardware execution threads available
+[[nodiscard]] int get_max_threads() noexcept;
+
+/// @brief Multithreaded parallel CPU SpMV using CSR: y = alpha * A * x + beta * y
+void spmv_csr_parallel(scalar_t alpha, const CSRMatrix& A, ConstVectorView x, scalar_t beta, MutableVectorView y, int num_threads = 0);
+
+/// @brief Multithreaded parallel CPU SpMV Transpose using CSC: y = alpha * A^T * x + beta * y
+void spmv_transpose_csc_parallel(scalar_t alpha, const CSCMatrix& A, ConstVectorView x, scalar_t beta, MutableVectorView y, int num_threads = 0);
+
+/// @brief Multithreaded parallel AXPY: y = alpha * x + y
+void axpy_parallel(scalar_t alpha, ConstVectorView x, MutableVectorView y, int num_threads = 0);
+
+/// @brief Multithreaded parallel dot product: x^T y
+[[nodiscard]] scalar_t dot_parallel(ConstVectorView x, ConstVectorView y, int num_threads = 0);
+
 } // namespace pipepye::sparse::cpu_ops
