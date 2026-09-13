@@ -3,7 +3,7 @@
 namespace pipepye::utils {
 
 CPUTimer::CPUTimer() {
-    reset();
+    start();
 }
 
 void CPUTimer::start() noexcept {

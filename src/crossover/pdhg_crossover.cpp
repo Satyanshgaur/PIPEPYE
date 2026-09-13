@@ -21,6 +21,7 @@ CrossoverResult PDHGCrossover::run(
     const CrossoverConfig& config) {
 
     utils::CPUTimer total_timer;
+    total_timer.start();
     CrossoverResult result;
 
     const index_t m = lp.num_rows();
@@ -41,6 +42,7 @@ CrossoverResult PDHGCrossover::run(
 
     // Step 1: Active Set Detection and Variable Interiority Scoring
     utils::CPUTimer crash_timer;
+    crash_timer.start();
 
     // Compute slacks s = A * x
     std::vector<scalar_t> s_val(m, 0.0);
@@ -206,6 +208,7 @@ CrossoverResult PDHGCrossover::run(
 
     // Step 3: Warm-started Simplex Clean-up
     utils::CPUTimer cleanup_timer;
+    cleanup_timer.start();
     simplex::DualSimplexSolver simplex_solver(config.simplex_config);
     simplex::SimplexResult sim_res = simplex_solver.solve(lp, crashed_basis);
     result.simplex_cleanup_time_ms = cleanup_timer.elapsed_milliseconds();

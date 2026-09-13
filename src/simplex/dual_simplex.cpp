@@ -40,6 +40,7 @@ SimplexResult DualSimplexSolver::solve(
     const model::LinearProgram& lp,
     const std::optional<Basis>& initial_basis) {
     utils::CPUTimer timer;
+    timer.start();
     SimplexResult result;
 
     const index_t m = lp.num_rows();

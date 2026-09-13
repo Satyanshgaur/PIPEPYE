@@ -39,6 +39,7 @@ inline MILPTerminationStatus map_simplex_status(solver::TerminationStatus s) {
 MILPResult BranchAndBoundSolver::solve(const model::LinearProgram& milp_model) {
     MILPResult result;
     utils::CPUTimer timer;
+    timer.start();
 
     index_t n = milp_model.num_cols();
 
@@ -75,6 +76,7 @@ MILPResult BranchAndBoundSolver::solve(const model::LinearProgram& milp_model) {
 
     // 2. Solve Root LP Relaxation
     utils::CPUTimer root_timer;
+    root_timer.start();
     model::LinearProgram lp = milp_model;
     auto root_res = simplex.solve(lp, std::nullopt);
     result.root_relaxation_time_ms = root_timer.elapsed_milliseconds();
