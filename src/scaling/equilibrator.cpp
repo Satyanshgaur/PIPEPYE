@@ -106,13 +106,17 @@ ScalingDiagnostics Equilibrator::compute_diagnostics(const model::LinearProgram&
 }
 
 StatusOr<ScaledModel> Equilibrator::scale(const model::LinearProgram& lp) const {
+    StatusOr<ScaledModel> res = Status::OK();
     switch (options_.method) {
         case ScalingMethod::Ruiz:
-            return scale_ruiz(lp);
+            res = scale_ruiz(lp);
+            break;
         case ScalingMethod::PockChambolle:
-            return scale_pock_chambolle(lp);
+            res = scale_pock_chambolle(lp);
+            break;
         case ScalingMethod::L2Equilibration:
-            return scale_l2(lp);
+            res = scale_l2(lp);
+            break;
         case ScalingMethod::None: {
             ScaledModel model;
             model.lp = lp;
@@ -124,10 +128,14 @@ StatusOr<ScaledModel> Equilibrator::scale(const model::LinearProgram& lp) const 
             model.inv_col_scale_C.assign(n, 1.0);
             model.diag_before = compute_diagnostics(lp);
             model.diag_after = model.diag_before;
-            return model;
+            res = model;
+            break;
         }
     }
-    return scale_ruiz(lp);
+    if (res.is_ok()) {
+        res.value().options_snapshot = options_;
+    }
+    return res;
 }
 
 StatusOr<ScaledModel> Equilibrator::scale_ruiz(const model::LinearProgram& lp) const {

@@ -1,7 +1,7 @@
 # PipePye Presolve Engine & Reversible Postsolve Architecture
 
 **Module**: `pipepye::presolve`  
-**Status**: Implemented, Verified, Integrated into CMake & CTest (18 / 18 Presolve Tests, 97 / 97 Total Tests Passing)  
+**Status**: Implemented, Verified, Integrated into CMake & CTest (18 / 18 Presolve Tests, 125 / 125 Total Tests Passing)  
 **Authors**: PipePye Numerical Core Team  
 **Date**: September 2026  
 

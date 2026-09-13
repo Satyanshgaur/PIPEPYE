@@ -30,6 +30,19 @@ struct SolverMetrics {
     bool converged{false};
     bool diverged{false};
     double solver_ms{0.0};
+    std::vector<scalar_t> x;
+    std::vector<scalar_t> y;
+};
+
+struct AblationModeResult {
+    PipelineMode mode{PipelineMode::RAW};
+    SolverMetrics solver_metrics;
+    double prep_ms{0.0};
+    double total_ms{0.0};
+    index_t final_rows{0};
+    index_t final_cols{0};
+    size_t final_nnz{0};
+    scalar_t recovered_obj{0.0};
 };
 
 struct RobustnessComparison {
@@ -39,10 +52,7 @@ struct RobustnessComparison {
     index_t orig_cols{0};
     size_t orig_nnz{0};
 
-    SolverMetrics raw_metrics;
-    SolverMetrics prepared_metrics;
-    double pipeline_prep_ms{0.0};
-    double total_prepared_ms{0.0};
+    std::vector<AblationModeResult> ablations;
 };
 
 /// @brief Lightweight first-order Primal-Dual Hybrid Gradient (PDHG / Chambolle-Pock) solver
@@ -226,6 +236,8 @@ SolverMetrics solve_pdhg(const LinearProgram& lp, int max_iters = 1000, scalar_t
     scalar_t obj = lp.obj_offset;
     for (index_t j = 0; j < n; ++j) obj += lp.c[j] * x[j];
     metrics.objective_value = obj;
+    metrics.x = std::move(x);
+    metrics.y = std::move(y);
 
     return metrics;
 }
@@ -359,25 +371,51 @@ RobustnessComparison evaluate_model(const std::string& category, const LinearPro
     comp.orig_cols = orig_lp.num_cols();
     comp.orig_nnz = orig_lp.num_nonzeros();
 
-    // 1. Solve Raw Unmodified LP
-    comp.raw_metrics = solve_pdhg(orig_lp, 500, 1e-4);
+    std::vector<PipelineMode> modes = {
+        PipelineMode::RAW,
+        PipelineMode::PRESOLVE_ONLY,
+        PipelineMode::SCALING_ONLY,
+        PipelineMode::PRESOLVE_AND_SCALING
+    };
 
-    // 2. Prepare LP through Phase 2 Pipeline (Presolve + Ruiz)
-    PipelineConfig cfg;
-    cfg.enable_presolve = true;
-    cfg.enable_scaling = true;
-    cfg.compute_characterization = true;
+    for (auto m : modes) {
+        PipelineConfig cfg;
+        cfg.set_mode(m);
+        cfg.compute_characterization = true;
 
-    utils::CPUTimer prep_timer;
-    prep_timer.start();
-    auto prep_res = ModelPipeline::prepare(orig_lp, cfg);
-    prep_timer.stop();
-    comp.pipeline_prep_ms = prep_timer.elapsed_milliseconds();
+        utils::CPUTimer prep_timer;
+        prep_timer.start();
+        auto prep_res = ModelPipeline::prepare(orig_lp, cfg);
+        prep_timer.stop();
 
-    if (prep_res.is_ok()) {
-        const auto& prepared = prep_res.value();
-        comp.prepared_metrics = solve_pdhg(prepared.lp, 500, 1e-4);
-        comp.total_prepared_ms = comp.pipeline_prep_ms + comp.prepared_metrics.solver_ms;
+        AblationModeResult mres;
+        mres.mode = m;
+        mres.prep_ms = prep_timer.elapsed_milliseconds();
+
+        if (prep_res.is_ok()) {
+            const auto& prepared = prep_res.value();
+            mres.final_rows = prepared.lp.num_rows();
+            mres.final_cols = prepared.lp.num_cols();
+            mres.final_nnz = prepared.lp.num_nonzeros();
+
+            mres.solver_metrics = solve_pdhg(prepared.lp, 500, 1e-4);
+            mres.total_ms = mres.prep_ms + mres.solver_metrics.solver_ms;
+
+            // Attempt solution recovery to verify original objective
+            PrimalDualSolution sol;
+            sol.x = mres.solver_metrics.x;
+            sol.y = mres.solver_metrics.y;
+            sol.s.assign(prepared.lp.num_cols(), 0.0);
+            sol.is_feasible = mres.solver_metrics.converged;
+
+            auto rec_res = prepared.recover_solution(sol, orig_lp);
+            if (rec_res.is_ok()) {
+                mres.recovered_obj = rec_res.value().objective_value;
+            } else {
+                mres.recovered_obj = mres.solver_metrics.objective_value;
+            }
+        }
+        comp.ablations.push_back(std::move(mres));
     }
 
     return comp;
@@ -387,7 +425,7 @@ RobustnessComparison evaluate_model(const std::string& category, const LinearPro
 
 int main() {
     std::cout << "================================================================================\n";
-    std::cout << "             PIPEPYE NUMERICAL ROBUSTNESS EXPERIMENT SUITE                      \n";
+    std::cout << "         PIPEPYE NUMERICAL ROBUSTNESS 4-WAY ABLATION EXPERIMENT SUITE           \n";
     std::cout << "================================================================================\n";
 
     std::vector<std::pair<std::string, LinearProgram>> suite;
@@ -421,54 +459,109 @@ int main() {
 
     std::vector<RobustnessComparison> results;
     for (const auto& [cat, lp] : suite) {
-        std::cout << "Evaluating downstream robustness on [" << cat << "] " << lp.name << "..." << std::flush;
+        std::cout << "Evaluating 4-way ablation on [" << cat << "] " << lp.name << "..." << std::flush;
         auto res = evaluate_model(cat, lp);
         results.push_back(res);
         std::cout << " Done.\n";
     }
 
-    // Summary Table
-    std::cout << "\n========================================================================================================================\n";
-    std::cout << "                                  NUMERICAL ROBUSTNESS RESULTS SUMMARY                                                  \n";
-    std::cout << "========================================================================================================================\n";
-    std::cout << std::left << std::setw(22) << "Model"
-              << std::setw(16) << "Category"
-              << std::setw(12) << "Raw Iters"
-              << std::setw(12) << "Prep Iters"
-              << std::setw(16) << "Raw P-Res"
-              << std::setw(16) << "Prep P-Res"
-              << std::setw(12) << "Raw Conv?"
-              << std::setw(12) << "Prep Conv?"
-              << std::setw(10) << "Speedup" << "\n";
-    std::cout << "------------------------------------------------------------------------------------------------------------------------\n";
+    // Print Comprehensive Ablation Table
+    std::cout << "\n====================================================================================================================================================\n";
+    std::cout << "                                              4-WAY ABLATION DETAILED RESULTS                                                       \n";
+    std::cout << "====================================================================================================================================================\n";
+    std::cout << std::left << std::setw(20) << "Model"
+              << std::setw(22) << "Pipeline Mode"
+              << std::setw(14) << "Final Size"
+              << std::setw(10) << "NNZ"
+              << std::setw(8)  << "Iters"
+              << std::setw(12) << "Status"
+              << std::setw(14) << "Primal-Res"
+              << std::setw(14) << "Dual-Res"
+              << std::setw(16) << "Recovered Obj"
+              << std::setw(12) << "Prep (ms)"
+              << std::setw(12) << "Solve (ms)"
+              << std::setw(12) << "Total (ms)" << "\n";
+    std::cout << "----------------------------------------------------------------------------------------------------------------------------------------------------\n";
 
     for (const auto& r : results) {
-        std::ostringstream s_raw_pres, s_prep_pres;
-        s_raw_pres << std::scientific << std::setprecision(2) << r.raw_metrics.primal_residual;
-        s_prep_pres << std::scientific << std::setprecision(2) << r.prepared_metrics.primal_residual;
+        for (const auto& ab : r.ablations) {
+            std::ostringstream sz_str, pres_str, dres_str, obj_str;
+            sz_str << ab.final_rows << "x" << ab.final_cols;
+            pres_str << std::scientific << std::setprecision(2) << ab.solver_metrics.primal_residual;
+            dres_str << std::scientific << std::setprecision(2) << ab.solver_metrics.dual_residual;
+            obj_str << std::scientific << std::setprecision(3) << ab.recovered_obj;
 
-        std::string raw_status = r.raw_metrics.diverged ? "DIVERGED" : (r.raw_metrics.converged ? "CONV" : "MAX_ITER");
-        std::string prep_status = r.prepared_metrics.diverged ? "DIVERGED" : (r.prepared_metrics.converged ? "CONV" : "MAX_ITER");
+            std::string status = ab.solver_metrics.diverged ? "DIVERGED" : (ab.solver_metrics.converged ? "CONVERGED" : "MAX_ITER");
 
-        double speedup = r.raw_metrics.solver_ms / std::max(r.total_prepared_ms, 0.001);
-        std::ostringstream sp_str;
-        if (r.raw_metrics.diverged) {
-            sp_str << "N/A (Div)";
-        } else {
-            sp_str << std::fixed << std::setprecision(2) << speedup << "x";
+            std::cout << std::left << std::setw(20) << r.model_name
+                      << std::setw(22) << to_string(ab.mode)
+                      << std::setw(14) << sz_str.str()
+                      << std::setw(10) << ab.final_nnz
+                      << std::setw(8)  << ab.solver_metrics.iterations
+                      << std::setw(12) << status
+                      << std::setw(14) << pres_str.str()
+                      << std::setw(14) << dres_str.str()
+                      << std::setw(16) << obj_str.str()
+                      << std::setw(12) << std::fixed << std::setprecision(2) << ab.prep_ms
+                      << std::setw(12) << std::fixed << std::setprecision(2) << ab.solver_metrics.solver_ms
+                      << std::setw(12) << std::fixed << std::setprecision(2) << ab.total_ms << "\n";
+        }
+        std::cout << "----------------------------------------------------------------------------------------------------------------------------------------------------\n";
+    }
+    std::cout << "====================================================================================================================================================\n";
+
+    // Summary Statistics per Mode
+    std::cout << "\n================================================================================================\n";
+    std::cout << "                                ABLATION MODE SUMMARY COMPARISON                                \n";
+    std::cout << "================================================================================================\n";
+    std::cout << std::left << std::setw(24) << "Pipeline Mode"
+              << std::setw(16) << "Convergence"
+              << std::setw(16) << "Divergence"
+              << std::setw(18) << "Avg Prep (ms)"
+              << std::setw(18) << "Avg Solve (ms)"
+              << std::setw(18) << "Avg Total (ms)" << "\n";
+    std::cout << "------------------------------------------------------------------------------------------------\n";
+
+    std::vector<PipelineMode> modes = {
+        PipelineMode::RAW,
+        PipelineMode::PRESOLVE_ONLY,
+        PipelineMode::SCALING_ONLY,
+        PipelineMode::PRESOLVE_AND_SCALING
+    };
+
+    for (auto m : modes) {
+        int converged_cnt = 0;
+        int diverged_cnt = 0;
+        double sum_prep = 0.0;
+        double sum_solve = 0.0;
+        double sum_total = 0.0;
+        int count = 0;
+
+        for (const auto& r : results) {
+            for (const auto& ab : r.ablations) {
+                if (ab.mode == m) {
+                    count++;
+                    if (ab.solver_metrics.converged) converged_cnt++;
+                    if (ab.solver_metrics.diverged) diverged_cnt++;
+                    sum_prep += ab.prep_ms;
+                    sum_solve += ab.solver_metrics.solver_ms;
+                    sum_total += ab.total_ms;
+                }
+            }
         }
 
-        std::cout << std::left << std::setw(22) << r.model_name
-                  << std::setw(16) << r.category
-                  << std::setw(12) << r.raw_metrics.iterations
-                  << std::setw(12) << r.prepared_metrics.iterations
-                  << std::setw(16) << s_raw_pres.str()
-                  << std::setw(16) << s_prep_pres.str()
-                  << std::setw(12) << raw_status
-                  << std::setw(12) << prep_status
-                  << std::setw(10) << sp_str.str() << "\n";
+        std::ostringstream conv_str, div_str;
+        conv_str << converged_cnt << "/" << count;
+        div_str << diverged_cnt << "/" << count;
+
+        std::cout << std::left << std::setw(24) << to_string(m)
+                  << std::setw(16) << conv_str.str()
+                  << std::setw(16) << div_str.str()
+                  << std::setw(18) << std::fixed << std::setprecision(2) << (count > 0 ? sum_prep / count : 0.0)
+                  << std::setw(18) << std::fixed << std::setprecision(2) << (count > 0 ? sum_solve / count : 0.0)
+                  << std::setw(18) << std::fixed << std::setprecision(2) << (count > 0 ? sum_total / count : 0.0) << "\n";
     }
-    std::cout << "========================================================================================================================\n";
+    std::cout << "================================================================================================\n";
 
     // Machine-readable exports
     std::filesystem::create_directories("reports");
@@ -476,18 +569,19 @@ int main() {
     // CSV
     std::ofstream csv("reports/numerical_robustness.csv");
     if (csv.is_open()) {
-        csv << "model_name,category,orig_rows,orig_cols,orig_nnz,"
-            << "raw_iters,raw_converged,raw_diverged,raw_primal_res,raw_dual_res,raw_obj,raw_time_ms,"
-            << "prep_iters,prep_converged,prep_diverged,prep_primal_res,prep_dual_res,prep_obj,prep_solver_ms,prep_pipeline_ms,prep_total_ms\n";
+        csv << "model_name,category,orig_rows,orig_cols,orig_nnz,mode,"
+            << "final_rows,final_cols,final_nnz,iterations,converged,diverged,"
+            << "primal_res,dual_res,recovered_obj,prep_ms,solver_ms,total_ms\n";
 
         for (const auto& r : results) {
-            csv << r.model_name << "," << r.category << "," << r.orig_rows << "," << r.orig_cols << "," << r.orig_nnz << ","
-                << r.raw_metrics.iterations << "," << r.raw_metrics.converged << "," << r.raw_metrics.diverged << ","
-                << r.raw_metrics.primal_residual << "," << r.raw_metrics.dual_residual << "," << r.raw_metrics.objective_value << ","
-                << r.raw_metrics.solver_ms << ","
-                << r.prepared_metrics.iterations << "," << r.prepared_metrics.converged << "," << r.prepared_metrics.diverged << ","
-                << r.prepared_metrics.primal_residual << "," << r.prepared_metrics.dual_residual << "," << r.prepared_metrics.objective_value << ","
-                << r.prepared_metrics.solver_ms << "," << r.pipeline_prep_ms << "," << r.total_prepared_ms << "\n";
+            for (const auto& ab : r.ablations) {
+                csv << r.model_name << "," << r.category << "," << r.orig_rows << "," << r.orig_cols << "," << r.orig_nnz << ","
+                    << to_string(ab.mode) << "," << ab.final_rows << "," << ab.final_cols << "," << ab.final_nnz << ","
+                    << ab.solver_metrics.iterations << "," << (ab.solver_metrics.converged ? 1 : 0) << ","
+                    << (ab.solver_metrics.diverged ? 1 : 0) << "," << ab.solver_metrics.primal_residual << ","
+                    << ab.solver_metrics.dual_residual << "," << ab.recovered_obj << ","
+                    << ab.prep_ms << "," << ab.solver_metrics.solver_ms << "," << ab.total_ms << "\n";
+            }
         }
         std::cout << "\nWrote CSV results to: reports/numerical_robustness.csv\n";
     }
@@ -501,15 +595,28 @@ int main() {
             json << "  {\n"
                  << "    \"model_name\": \"" << r.model_name << "\",\n"
                  << "    \"category\": \"" << r.category << "\",\n"
-                 << "    \"dimensions\": {\"rows\": " << r.orig_rows << ", \"cols\": " << r.orig_cols << ", \"nnz\": " << r.orig_nnz << "},\n"
-                 << "    \"raw\": {\"iterations\": " << r.raw_metrics.iterations << ", \"converged\": " << (r.raw_metrics.converged ? "true" : "false")
-                 << ", \"diverged\": " << (r.raw_metrics.diverged ? "true" : "false") << ", \"primal_res\": " << r.raw_metrics.primal_residual
-                 << ", \"dual_res\": " << r.raw_metrics.dual_residual << ", \"obj\": " << r.raw_metrics.objective_value << ", \"time_ms\": " << r.raw_metrics.solver_ms << "},\n"
-                 << "    \"prepared\": {\"iterations\": " << r.prepared_metrics.iterations << ", \"converged\": " << (r.prepared_metrics.converged ? "true" : "false")
-                 << ", \"diverged\": " << (r.prepared_metrics.diverged ? "true" : "false") << ", \"primal_res\": " << r.prepared_metrics.primal_residual
-                 << ", \"dual_res\": " << r.prepared_metrics.dual_residual << ", \"obj\": " << r.prepared_metrics.objective_value
-                 << ", \"solver_ms\": " << r.prepared_metrics.solver_ms << ", \"prep_ms\": " << r.pipeline_prep_ms << ", \"total_ms\": " << r.total_prepared_ms << "}\n"
-                 << "  }" << (i + 1 < results.size() ? "," : "") << "\n";
+                 << "    \"dimensions\": {\"orig_rows\": " << r.orig_rows << ", \"orig_cols\": " << r.orig_cols << ", \"orig_nnz\": " << r.orig_nnz << "},\n"
+                 << "    \"ablations\": [\n";
+            for (size_t j = 0; j < r.ablations.size(); ++j) {
+                const auto& ab = r.ablations[j];
+                json << "      {\n"
+                     << "        \"mode\": \"" << to_string(ab.mode) << "\",\n"
+                     << "        \"final_rows\": " << ab.final_rows << ",\n"
+                     << "        \"final_cols\": " << ab.final_cols << ",\n"
+                     << "        \"final_nnz\": " << ab.final_nnz << ",\n"
+                     << "        \"iterations\": " << ab.solver_metrics.iterations << ",\n"
+                     << "        \"converged\": " << (ab.solver_metrics.converged ? "true" : "false") << ",\n"
+                     << "        \"diverged\": " << (ab.solver_metrics.diverged ? "true" : "false") << ",\n"
+                     << "        \"primal_res\": " << ab.solver_metrics.primal_residual << ",\n"
+                     << "        \"dual_res\": " << ab.solver_metrics.dual_residual << ",\n"
+                     << "        \"recovered_obj\": " << ab.recovered_obj << ",\n"
+                     << "        \"prep_ms\": " << ab.prep_ms << ",\n"
+                     << "        \"solver_ms\": " << ab.solver_metrics.solver_ms << ",\n"
+                     << "        \"total_ms\": " << ab.total_ms << "\n"
+                     << "      }" << (j + 1 < r.ablations.size() ? ",\n" : "\n");
+            }
+            json << "    ]\n"
+                 << "  }" << (i + 1 < results.size() ? ",\n" : "\n");
         }
         json << "]\n";
         std::cout << "Wrote JSON results to: reports/numerical_robustness.json\n";

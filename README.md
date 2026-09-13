@@ -24,9 +24,9 @@ pipepye/
 │       └── utils/              # High-resolution CPUTimer, Logger, ScopedNvtxRange markers
 ├── src/                        # Core C++20 library implementations (libpipepye_core.a)
 ├── cuda/                       # CUDA kernels (DAXPY/SAXPY) & hardware probe (pipepye_device_probe)
-├── tests/                      # GoogleTest suite run via CTest (120 unit and integration tests)
-├── benchmarks/                 # CPU sparse, CUDA SpMV, scaling, and numerical robustness benchmarks
-├── tools/                      # CLI utilities (pipepye_inspect unified model analyzer)
+├── tests/                      # GoogleTest suite run via CTest (125 unit and integration tests)
+├── benchmarks/                 # CPU sparse, CUDA SpMV, scaling, and 4-way ablation numerical robustness benchmarks
+├── tools/                      # CLI utilities (pipepye_inspect unified model analyzer with 4-way ablation)
 ├── scripts/
 │   └── profile.sh              # One-command NVIDIA Nsight Systems profiling script
 └── docs/                       # Comprehensive project documentation
@@ -36,9 +36,9 @@ pipepye/
     ├── presolve.md             # Modular presolve pipeline, 5 reduction passes & postsolve reconstruction
     ├── scaling.md              # Ruiz equilibration, Pock-Chambolle scaling & unscaling
     ├── characterization.md     # Problem analyzer, topological moments, Gini & conditioning proxies
-    ├── numerical_robustness.md # First-order PDHG downstream solver robustness experiment
+    ├── numerical_robustness.md # First-order PDHG downstream solver 4-way ablation experiment
     ├── benchmark.md            # CPU/GPU micro-benchmarks, SpMV scaling & bandwidth analysis
-    ├── tests.md                # Comprehensive test inventory (120 tests) & numerical verification
+    ├── tests.md                # Comprehensive test inventory (125 tests) & numerical verification
     ├── algorithm-hardware-feasibility.md # Algorithm × hardware feasibility & LP architecture blueprint
     ├── mps-spec.md             # MPS parser specification & internal model mapping
     ├── environment.md          # Hardware & toolchain specification (RTX 3050, GCC 16, CUDA 13.3)
@@ -66,10 +66,16 @@ ninja -C build
 ctest --test-dir build --output-on-failure
 ```
 
-### 3. Inspect LP Models (Single-Line Banner or Full Report)
+### 3. Inspect LP Models (Single-Line Banner, 4-Way Ablation or Full Report)
 ```bash
 # Print canonical one-line dispatch summary:
 ./build/bin/pipepye_inspect tests/data/mps/netlib/beaconfd.mps --one-line
+
+# 4-way ablation study table (RAW vs PRESOLVE_ONLY vs SCALING_ONLY vs PRESOLVE_AND_SCALING):
+./build/bin/pipepye_inspect tests/data/mps/netlib/beaconfd.mps --ablation
+
+# Run specific ablation mode:
+./build/bin/pipepye_inspect tests/data/mps/netlib/beaconfd.mps --mode PRESOLVE_ONLY
 
 # Full before/after Phase 2 pipeline comparison:
 ./build/bin/pipepye_inspect tests/data/mps/netlib/beaconfd.mps --before-after
@@ -80,7 +86,7 @@ ctest --test-dir build --output-on-failure
 ./build/bin/pipepye_bench_presolve_scaling
 ```
 
-### 5. Run Downstream Numerical Robustness Experiment (PDHG Simulation)
+### 5. Run Downstream 4-Way Numerical Robustness Experiment (PDHG Simulation)
 ```bash
 ./build/bin/pipepye_bench_numerical_robustness
 ```
@@ -111,7 +117,7 @@ ctest --test-dir build --output-on-failure
   - [Numerical Robustness Experiment](docs/numerical_robustness.md)
 - **Benchmarks & Numerical Verification**:
   - [CPU & GPU Performance Benchmarking Report](docs/benchmark.md)
-  - [Comprehensive Test Verification Report (120 Tests)](docs/tests.md)
+  - [Comprehensive Test Verification Report (125 Tests)](docs/tests.md)
   - [Algorithm × Hardware Feasibility & LP Architecture](docs/algorithm-hardware-feasibility.md)
   - [MPS Ingestion Specification & Model Mapping](docs/mps-spec.md)
 - **Environment & Engineering**:

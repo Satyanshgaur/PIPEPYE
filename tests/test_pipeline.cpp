@@ -127,18 +127,175 @@ TEST(ConditioningProxyTest, MagnitudeAndSpectralProxies) {
     EXPECT_NE(summary.find("estimated VRAM"), std::string::npos);
 }
 
+TEST(PipelineTypesTest, StringParsingAndRoundTrip) {
+    auto r_raw = parse_pipeline_mode("RAW");
+    ASSERT_TRUE(r_raw.is_ok());
+    EXPECT_EQ(r_raw.value(), PipelineMode::RAW);
+    EXPECT_EQ(to_string(PipelineMode::RAW), "RAW");
+
+    auto r_raw_lower = parse_pipeline_mode("raw");
+    ASSERT_TRUE(r_raw_lower.is_ok());
+    EXPECT_EQ(r_raw_lower.value(), PipelineMode::RAW);
+
+    auto r_p = parse_pipeline_mode("PRESOLVE_ONLY");
+    ASSERT_TRUE(r_p.is_ok());
+    EXPECT_EQ(r_p.value(), PipelineMode::PRESOLVE_ONLY);
+    EXPECT_EQ(to_string(PipelineMode::PRESOLVE_ONLY), "PRESOLVE_ONLY");
+
+    auto r_p_alias = parse_pipeline_mode("presolve");
+    ASSERT_TRUE(r_p_alias.is_ok());
+    EXPECT_EQ(r_p_alias.value(), PipelineMode::PRESOLVE_ONLY);
+
+    auto r_s = parse_pipeline_mode("SCALING_ONLY");
+    ASSERT_TRUE(r_s.is_ok());
+    EXPECT_EQ(r_s.value(), PipelineMode::SCALING_ONLY);
+    EXPECT_EQ(to_string(PipelineMode::SCALING_ONLY), "SCALING_ONLY");
+
+    auto r_s_alias = parse_pipeline_mode("scaling");
+    ASSERT_TRUE(r_s_alias.is_ok());
+    EXPECT_EQ(r_s_alias.value(), PipelineMode::SCALING_ONLY);
+
+    auto r_full = parse_pipeline_mode("PRESOLVE_AND_SCALING");
+    ASSERT_TRUE(r_full.is_ok());
+    EXPECT_EQ(r_full.value(), PipelineMode::PRESOLVE_AND_SCALING);
+    EXPECT_EQ(to_string(PipelineMode::PRESOLVE_AND_SCALING), "PRESOLVE_AND_SCALING");
+
+    auto r_full_alias = parse_pipeline_mode("full");
+    ASSERT_TRUE(r_full_alias.is_ok());
+    EXPECT_EQ(r_full_alias.value(), PipelineMode::PRESOLVE_AND_SCALING);
+
+    auto r_bad = parse_pipeline_mode("UNKNOWN_MODE_XYZ");
+    EXPECT_FALSE(r_bad.is_ok());
+}
+
+TEST(ModelPipelineTest, AblationModeRaw) {
+    LinearProgram orig_lp = make_small_solvable_lp();
+
+    PipelineConfig config = PipelineConfig::Raw();
+    EXPECT_FALSE(config.presolve_enabled());
+    EXPECT_FALSE(config.scaling_enabled());
+    EXPECT_EQ(config.mode, PipelineMode::RAW);
+
+    auto prep_res = ModelPipeline::prepare(orig_lp, config);
+    ASSERT_TRUE(prep_res.is_ok());
+
+    const auto& prepared = prep_res.value();
+    EXPECT_EQ(prepared.mode_applied, PipelineMode::RAW);
+    EXPECT_FALSE(prepared.recovery_map.was_presolved());
+    EXPECT_FALSE(prepared.recovery_map.was_scaled());
+
+    // Dimensions must be untouched
+    EXPECT_EQ(prepared.lp.num_cols(), orig_lp.num_cols());
+    EXPECT_EQ(prepared.lp.num_rows(), orig_lp.num_rows());
+    EXPECT_EQ(prepared.lp.num_nonzeros(), orig_lp.num_nonzeros());
+
+    // Solution recovery is pure identity pass-through
+    PrimalDualSolution solver_sol;
+    solver_sol.x = {2.0, 2.0, 5.0};
+    solver_sol.y = {0.0, 0.0};
+    solver_sol.s = {0.0, 0.0, 0.0};
+    solver_sol.is_feasible = true;
+
+    auto rec_res = prepared.recover_solution(solver_sol, orig_lp);
+    ASSERT_TRUE(rec_res.is_ok());
+    const auto& rec = rec_res.value();
+    ASSERT_EQ(rec.x.size(), 3);
+    EXPECT_DOUBLE_EQ(rec.x[0], 2.0);
+    EXPECT_DOUBLE_EQ(rec.x[1], 2.0);
+    EXPECT_DOUBLE_EQ(rec.x[2], 5.0);
+    EXPECT_DOUBLE_EQ(rec.objective_value, 60.0);
+}
+
+TEST(ModelPipelineTest, AblationModePresolveOnly) {
+    LinearProgram orig_lp = make_small_solvable_lp();
+
+    PipelineConfig config = PipelineConfig::PresolveOnly();
+    EXPECT_TRUE(config.presolve_enabled());
+    EXPECT_FALSE(config.scaling_enabled());
+    EXPECT_EQ(config.mode, PipelineMode::PRESOLVE_ONLY);
+
+    auto prep_res = ModelPipeline::prepare(orig_lp, config);
+    ASSERT_TRUE(prep_res.is_ok());
+
+    const auto& prepared = prep_res.value();
+    EXPECT_EQ(prepared.mode_applied, PipelineMode::PRESOLVE_ONLY);
+    EXPECT_TRUE(prepared.recovery_map.was_presolved());
+    EXPECT_FALSE(prepared.recovery_map.was_scaled());
+
+    // Fixed variable x2 eliminated
+    EXPECT_EQ(prepared.lp.num_cols(), 2);
+    EXPECT_EQ(prepared.presolve_stats.total_variables_fixed(), 1);
+
+    // Unscaled solver coordinates
+    PrimalDualSolution solver_sol;
+    solver_sol.x = {2.0, 2.0};
+    solver_sol.y = {0.0, 0.0};
+    solver_sol.s = {0.0, 0.0};
+    solver_sol.is_feasible = true;
+
+    auto rec_res = prepared.recover_solution(solver_sol, orig_lp);
+    ASSERT_TRUE(rec_res.is_ok());
+    const auto& rec = rec_res.value();
+    ASSERT_EQ(rec.x.size(), 3);
+    EXPECT_NEAR(rec.x[0], 2.0, 1e-6);
+    EXPECT_NEAR(rec.x[1], 2.0, 1e-6);
+    EXPECT_NEAR(rec.x[2], 5.0, 1e-6); // Restored fixed variable
+    EXPECT_NEAR(rec.objective_value, 60.0, 1e-6);
+}
+
+TEST(ModelPipelineTest, AblationModeScalingOnly) {
+    LinearProgram orig_lp = make_small_solvable_lp();
+
+    PipelineConfig config = PipelineConfig::ScalingOnly();
+    EXPECT_FALSE(config.presolve_enabled());
+    EXPECT_TRUE(config.scaling_enabled());
+    EXPECT_EQ(config.mode, PipelineMode::SCALING_ONLY);
+
+    auto prep_res = ModelPipeline::prepare(orig_lp, config);
+    ASSERT_TRUE(prep_res.is_ok());
+
+    const auto& prepared = prep_res.value();
+    EXPECT_EQ(prepared.mode_applied, PipelineMode::SCALING_ONLY);
+    EXPECT_FALSE(prepared.recovery_map.was_presolved());
+    EXPECT_TRUE(prepared.recovery_map.was_scaled());
+
+    // Dimensions unchanged because presolve was skipped
+    EXPECT_EQ(prepared.lp.num_cols(), 3);
+
+    // Scaling applied
+    ASSERT_EQ(prepared.scaling.col_scale_C.size(), 3);
+    ASSERT_EQ(prepared.scaling.row_scale_R.size(), 2);
+
+    // Scaled solver solution: x_prep = x / C[j]
+    PrimalDualSolution solver_sol;
+    solver_sol.x = {2.0 / prepared.scaling.col_scale_C[0],
+                    2.0 / prepared.scaling.col_scale_C[1],
+                    5.0 / prepared.scaling.col_scale_C[2]};
+    solver_sol.y = {0.0, 0.0};
+    solver_sol.s = {0.0, 0.0, 0.0};
+    solver_sol.is_feasible = true;
+
+    auto rec_res = prepared.recover_solution(solver_sol, orig_lp);
+    ASSERT_TRUE(rec_res.is_ok());
+    const auto& rec = rec_res.value();
+    ASSERT_EQ(rec.x.size(), 3);
+    EXPECT_NEAR(rec.x[0], 2.0, 1e-5);
+    EXPECT_NEAR(rec.x[1], 2.0, 1e-5);
+    EXPECT_NEAR(rec.x[2], 5.0, 1e-5);
+    EXPECT_NEAR(rec.objective_value, 60.0, 1e-5);
+}
+
 TEST(ModelPipelineTest, FullPreparationAndSolutionRecovery) {
     LinearProgram lp = make_small_solvable_lp();
 
-    PipelineConfig config;
-    config.enable_presolve = true;
-    config.enable_scaling = true;
+    PipelineConfig config = PipelineConfig::PresolveAndScaling();
     config.compute_characterization = true;
 
     auto prep_res = ModelPipeline::prepare(lp, config);
     ASSERT_TRUE(prep_res.is_ok());
 
     const auto& prepared = prep_res.value();
+    EXPECT_EQ(prepared.mode_applied, PipelineMode::PRESOLVE_AND_SCALING);
     // Fixed variable x2 should be eliminated by presolve
     EXPECT_EQ(prepared.lp.num_cols(), 2);
     EXPECT_EQ(prepared.presolve_stats.total_variables_fixed(), 1);
@@ -149,14 +306,15 @@ TEST(ModelPipelineTest, FullPreparationAndSolutionRecovery) {
     EXPECT_EQ(prepared.problem_stats.num_cols, 2);
     EXPECT_GT(prepared.problem_stats.density, 0.0);
 
+    // Summary formatting test
+    std::string summary = prepared.format_pipeline_summary();
+    EXPECT_NE(summary.find("PRESOLVE_AND_SCALING"), std::string::npos);
+    EXPECT_NE(summary.find("REDUCED"), std::string::npos);
+
     // Simulate downstream solver solution on the prepared LP
-    // Suppose solver finds transformed solution:
-    // First, let's figure out the unscaled values: x0 = 2.0, x1 = 2.0
-    // If scaled, x_scaled = C^{-1} * x
     PrimalDualSolution solver_sol;
     solver_sol.x.resize(prepared.lp.num_cols());
     for (index_t j = 0; j < prepared.lp.num_cols(); ++j) {
-        // In the scaled coordinates, x_prep = x / C[j]
         scalar_t unscaled_val = 2.0;
         scalar_t c_scale = prepared.scaling.col_scale_C.empty() ? 1.0 : prepared.scaling.col_scale_C[j];
         solver_sol.x[j] = unscaled_val / c_scale;
@@ -180,6 +338,44 @@ TEST(ModelPipelineTest, FullPreparationAndSolutionRecovery) {
     EXPECT_NEAR(rec.objective_value, 60.0, 1e-4);
 }
 
+TEST(ModelPipelineTest, ReproducibilityBitIdenticalOutputs) {
+    LinearProgram lp = make_small_solvable_lp();
+
+    PipelineConfig config = PipelineConfig::PresolveAndScaling();
+    config.random_seed = 12345;
+
+    auto res1 = ModelPipeline::prepare(lp, config);
+    auto res2 = ModelPipeline::prepare(lp, config);
+
+    ASSERT_TRUE(res1.is_ok());
+    ASSERT_TRUE(res2.is_ok());
+
+    const auto& p1 = res1.value();
+    const auto& p2 = res2.value();
+
+    // Check bit-identical CSR matrices
+    EXPECT_EQ(p1.lp.csr_row_ptr, p2.lp.csr_row_ptr);
+    EXPECT_EQ(p1.lp.csr_col_ind, p2.lp.csr_col_ind);
+    EXPECT_EQ(p1.lp.csr_values, p2.lp.csr_values);
+
+    // Check bit-identical vectors
+    EXPECT_EQ(p1.lp.c, p2.lp.c);
+    EXPECT_EQ(p1.lp.col_lower, p2.lp.col_lower);
+    EXPECT_EQ(p1.lp.col_upper, p2.lp.col_upper);
+    EXPECT_EQ(p1.lp.row_lower, p2.lp.row_lower);
+    EXPECT_EQ(p1.lp.row_upper, p2.lp.row_upper);
+    EXPECT_EQ(p1.lp.obj_offset, p2.lp.obj_offset);
+
+    // Check bit-identical scaling factors
+    EXPECT_EQ(p1.scaling.col_scale_C, p2.scaling.col_scale_C);
+    EXPECT_EQ(p1.scaling.row_scale_R, p2.scaling.row_scale_R);
+
+    // Check presolve statistics
+    EXPECT_EQ(p1.presolve_stats.eliminated_rows(), p2.presolve_stats.eliminated_rows());
+    EXPECT_EQ(p1.presolve_stats.eliminated_cols(), p2.presolve_stats.eliminated_cols());
+    EXPECT_EQ(p1.presolve_stats.eliminated_nonzeros(), p2.presolve_stats.eliminated_nonzeros());
+}
+
 TEST(ModelPipelineTest, NetlibAfiroPipeline) {
     std::string filepath = find_netlib_file("afiro.mps");
     if (filepath.empty()) {
@@ -190,9 +386,7 @@ TEST(ModelPipelineTest, NetlibAfiroPipeline) {
     auto parse_res = MPSParser::parse_file(filepath, orig_lp);
     ASSERT_TRUE(parse_res.is_ok());
 
-    PipelineConfig config;
-    config.enable_presolve = true;
-    config.enable_scaling = true;
+    PipelineConfig config = PipelineConfig::PresolveAndScaling();
     config.compute_characterization = true;
 
     auto prep_res = ModelPipeline::prepare(orig_lp, config);
@@ -218,9 +412,7 @@ TEST(ModelPipelineTest, InfeasibleModelDetection) {
     lp.col_name_to_idx = {{"x0", 0}};
     lp.var_types = {VariableType::Continuous};
 
-    PipelineConfig config;
-    config.enable_presolve = true;
-    config.enable_scaling = true;
+    PipelineConfig config = PipelineConfig::PresolveAndScaling();
 
     auto prep_res = ModelPipeline::prepare(lp, config);
     ASSERT_TRUE(prep_res.is_ok());

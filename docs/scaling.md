@@ -1,7 +1,7 @@
 # PipePye Matrix Equilibration & Numerical Scaling Architecture
 
 **Module**: `pipepye::scaling`  
-**Status**: Implemented, Verified, Integrated into CMake & CTest (6 / 6 Scaling Tests, 116 / 116 Total Tests Passing)  
+**Status**: Implemented, Verified, Integrated into CMake & CTest (6 / 6 Scaling Tests, 125 / 125 Total Tests Passing)  
 **Authors**: PipePye Numerical Core Team  
 **Date**: September 2026  
 

@@ -96,6 +96,7 @@ struct ScaledModel {
     ScalingDiagnostics diag_after;
     int iterations_performed{0};
     double elapsed_ms{0.0};
+    ScalingOptions options_snapshot;
 
     /// @brief Recovers original unscaled primal-dual solution from scaled solution.
     /// x = C * x_scaled, y = R * y_scaled, s = C^{-1} * s_scaled.

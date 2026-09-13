@@ -8,6 +8,7 @@
 #include <pipepye/presolve/postsolve.hpp>
 #include <pipepye/scaling/scaling_types.hpp>
 #include <pipepye/analysis/problem_stats.hpp>
+#include <pipepye/pipeline/pipeline_types.hpp>
 
 namespace pipepye::pipeline {
 
@@ -77,9 +78,56 @@ struct PreparedLP {
     analysis::ProblemStats problem_stats;           ///< Sparsity geometry and recommended GPU/CPU engine
     SolutionRecoveryMap recovery_map;               ///< Reversible 1-step solution recovery pipeline
 
+    PipelineMode mode_applied{PipelineMode::PRESOLVE_AND_SCALING};
+    double pipeline_elapsed_ms{0.0};                ///< Total execution time spent in prepare() in milliseconds
+
     bool is_solved_by_presolve{false};              ///< True if presolve eliminated all variables to optimality
     bool is_infeasible{false};                      ///< True if presolve proved the model has no feasible point
     bool is_unbounded{false};                       ///< True if presolve proved the problem is unbounded
+
+    /// @brief Formats an executive multi-line summary of the preparation run and applied ablation mode.
+    [[nodiscard]] std::string format_pipeline_summary() const {
+        std::ostringstream ss;
+        ss << "================================================================================\n";
+        ss << "                   PIPEPYE MODEL PREPARATION SUMMARY                            \n";
+        ss << "================================================================================\n";
+        ss << "  Ablation Mode:        " << to_string(mode_applied) << "\n";
+        ss << "  Total Prep Time:      " << std::fixed << std::setprecision(2) << pipeline_elapsed_ms << " ms\n";
+        ss << "  Final Dimensions:     " << lp.num_rows() << " rows, " << lp.num_cols() << " cols, "
+           << lp.num_nonzeros() << " nonzeros\n";
+        ss << "  Presolve Status:      ";
+        if (is_solved_by_presolve) ss << "OPTIMAL_SOLVED_BY_PRESOLVE\n";
+        else if (is_infeasible)    ss << "INFEASIBLE\n";
+        else if (is_unbounded)     ss << "UNBOUNDED\n";
+        else if (recovery_map.was_presolved()) ss << "REDUCED\n";
+        else ss << "SKIPPED_OR_UNCHANGED\n";
+
+        if (recovery_map.was_presolved()) {
+            ss << "  Presolve Reductions:  Rows: -" << presolve_stats.eliminated_rows()
+               << " (" << std::setprecision(1) << presolve_stats.row_reduction_pct() << "%), "
+               << "Cols: -" << presolve_stats.eliminated_cols()
+               << " (" << std::setprecision(1) << presolve_stats.col_reduction_pct() << "%), "
+               << "NNZ: -" << presolve_stats.eliminated_nonzeros()
+               << " (" << std::setprecision(1) << presolve_stats.nnz_reduction_pct() << "%)\n";
+            ss << "  Presolve Detail:      " << presolve_stats.total_variables_fixed() << " fixed vars, "
+               << presolve_stats.total_bounds_tightened() << " tightened bounds, "
+               << presolve_stats.total_passes_executed << " passes in "
+               << std::setprecision(2) << presolve_stats.total_elapsed_ms << " ms\n";
+        }
+
+        if (recovery_map.was_scaled()) {
+            ss << "  Matrix Scaling:       " << to_string(scaling.options_snapshot.method) << " ("
+               << scaling.iterations_performed << " iterations in "
+               << std::setprecision(2) << scaling.elapsed_ms << " ms)\n";
+            ss << "  Dynamic Range:        " << std::scientific << std::setprecision(2)
+               << scaling.diag_before.dynamic_range << " -> " << scaling.diag_after.dynamic_range << "\n";
+        }
+
+        ss << "  Recommended Engine:   " << to_string(problem_stats.recommended_engine) << "\n";
+        ss << "  One-Line Banner:      " << problem_stats.format_one_line_summary() << "\n";
+        ss << "================================================================================\n";
+        return ss.str();
+    }
 
     /// @brief Recovers the original solution in one call.
     [[nodiscard]] StatusOr<presolve::PrimalDualSolution> recover_solution(

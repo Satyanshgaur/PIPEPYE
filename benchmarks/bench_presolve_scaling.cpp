@@ -180,9 +180,7 @@ ExperimentResult run_experiment(const std::string& category, const LinearProgram
     res.raw_spectral_norm = raw_stats.conditioning_proxy.spectral_norm_estimate;
 
     // Path B: Presolve + Scaling Pipeline
-    PipelineConfig cfg;
-    cfg.enable_presolve = true;
-    cfg.enable_scaling = true;
+    PipelineConfig cfg = PipelineConfig::PresolveAndScaling();
     cfg.compute_characterization = true;
 
     utils::CPUTimer timer;

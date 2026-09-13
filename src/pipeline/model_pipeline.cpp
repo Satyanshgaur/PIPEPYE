@@ -1,16 +1,21 @@
 #include <pipepye/pipeline/model_pipeline.hpp>
+#include <pipepye/utils/timer.hpp>
 
 namespace pipepye::pipeline {
 
 StatusOr<PreparedLP> ModelPipeline::prepare(const model::LinearProgram& original_lp) const {
+    utils::CPUTimer total_timer;
+    total_timer.start();
+
     PreparedLP out;
+    out.mode_applied = config_.mode;
     model::LinearProgram current_lp = original_lp;
     std::shared_ptr<presolve::PostsolveManager> postsolve_mgr = nullptr;
     bool was_presolved = false;
     bool was_scaled = false;
 
-    // 1. Presolve Reduction Pass Pipeline
-    if (config_.enable_presolve) {
+    // 1. Presolve Reduction Pass Pipeline (active in PRESOLVE_ONLY and PRESOLVE_AND_SCALING)
+    if (config_.presolve_enabled()) {
         presolve::PresolvePassManager pm(config_.presolve_options);
         auto presolve_res = pm.run(original_lp);
         if (!presolve_res.is_ok()) {
@@ -33,14 +38,16 @@ StatusOr<PreparedLP> ModelPipeline::prepare(const model::LinearProgram& original
             if (config_.compute_characterization && current_lp.num_cols() > 0 && current_lp.num_rows() > 0) {
                 out.problem_stats = analysis::ProblemAnalyzer::analyze(current_lp);
             }
+            total_timer.stop();
+            out.pipeline_elapsed_ms = total_timer.elapsed_milliseconds();
             out.recovery_map = SolutionRecoveryMap(postsolve_mgr, {}, was_presolved, false);
             out.lp = std::move(current_lp);
             return out;
         }
     }
 
-    // 2. Matrix Scaling & Equilibration
-    if (config_.enable_scaling &&
+    // 2. Matrix Scaling & Equilibration (active in SCALING_ONLY and PRESOLVE_AND_SCALING)
+    if (config_.scaling_enabled() &&
         current_lp.num_cols() > 0 &&
         current_lp.num_rows() > 0 &&
         current_lp.num_nonzeros() > 0) {
@@ -62,6 +69,9 @@ StatusOr<PreparedLP> ModelPipeline::prepare(const model::LinearProgram& original
         current_lp.num_rows() > 0) {
         out.problem_stats = analysis::ProblemAnalyzer::analyze(current_lp);
     }
+
+    total_timer.stop();
+    out.pipeline_elapsed_ms = total_timer.elapsed_milliseconds();
 
     // 4. Finalize Prepared Container and Recovery Pipeline
     out.recovery_map = SolutionRecoveryMap(postsolve_mgr, out.scaling, was_presolved, was_scaled);

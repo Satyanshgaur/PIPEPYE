@@ -27,6 +27,8 @@ void print_help(const char* prog) {
               << "  --one-line           Print only the canonical single-line summary banner\n"
               << "  --full               Print full multi-section analytical report (default)\n"
               << "  --before-after       Run presolve + scaling pipeline and report before/after comparison\n"
+              << "  --mode <MODE>        Pipeline mode: RAW, PRESOLVE_ONLY, SCALING_ONLY, PRESOLVE_AND_SCALING\n"
+              << "  --ablation           Run all 4 pipeline modes and print 4-column side-by-side comparison table\n"
               << "  --json <file>        Save machine-readable characterization JSON to file\n"
               << "  --synth <pattern>    Generate synthetic matrix (random, banded, block, staircase, irregular)\n"
               << "  --rows <N>           Synthetic rows (default: 5000)\n"
@@ -121,6 +123,25 @@ std::string stats_to_json(const std::string& name, const ProblemStats& s) {
     return ss.str();
 }
 
+std::string prepared_to_json(const PreparedLP& p) {
+    std::ostringstream ss;
+    ss << "{\n"
+       << "  \"mode_applied\": \"" << to_string(p.mode_applied) << "\",\n"
+       << "  \"pipeline_elapsed_ms\": " << p.pipeline_elapsed_ms << ",\n"
+       << "  \"was_presolved\": " << (p.recovery_map.was_presolved() ? "true" : "false") << ",\n"
+       << "  \"was_scaled\": " << (p.recovery_map.was_scaled() ? "true" : "false") << ",\n"
+       << "  \"eliminated_rows\": " << p.presolve_stats.eliminated_rows() << ",\n"
+       << "  \"eliminated_cols\": " << p.presolve_stats.eliminated_cols() << ",\n"
+       << "  \"eliminated_nonzeros\": " << p.presolve_stats.eliminated_nonzeros() << ",\n"
+       << "  \"fixed_vars\": " << p.presolve_stats.total_variables_fixed() << ",\n"
+       << "  \"tightened_bounds\": " << p.presolve_stats.total_bounds_tightened() << ",\n"
+       << "  \"scaling_iterations\": " << p.scaling.iterations_performed << ",\n"
+       << "  \"scaling_elapsed_ms\": " << p.scaling.elapsed_ms << ",\n"
+       << "  \"problem_stats\": " << stats_to_json(p.lp.name, p.problem_stats) << "\n"
+       << "}";
+    return ss.str();
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {
@@ -136,6 +157,8 @@ int main(int argc, char* argv[]) {
     double synth_density = 0.005;
     bool one_line_only = false;
     bool before_after = false;
+    bool run_ablation = false;
+    std::string explicit_mode_str;
     std::string json_output_file;
 
     for (int i = 1; i < argc; ++i) {
@@ -149,6 +172,10 @@ int main(int argc, char* argv[]) {
             one_line_only = false;
         } else if (arg == "--before-after") {
             before_after = true;
+        } else if (arg == "--ablation") {
+            run_ablation = true;
+        } else if (arg == "--mode" && i + 1 < argc) {
+            explicit_mode_str = argv[++i];
         } else if (arg == "--json" && i + 1 < argc) {
             json_output_file = argv[++i];
         } else if (arg == "--synth" && i + 1 < argc) {
@@ -181,18 +208,100 @@ int main(int argc, char* argv[]) {
 
     ProblemStats raw_stats = ProblemAnalyzer::analyze(lp);
 
-    if (one_line_only && !before_after) {
+    if (one_line_only && !before_after && !run_ablation && explicit_mode_str.empty()) {
         std::cout << raw_stats.format_one_line_summary() << "\n";
         return 0;
     }
 
-    std::cout << raw_stats.format_report() << "\n";
+    if (!one_line_only) {
+        std::cout << raw_stats.format_report() << "\n";
+    }
 
     PreparedLP prep;
-    if (before_after) {
+    std::vector<PreparedLP> ablation_preps;
+    std::vector<PipelineMode> modes = {
+        PipelineMode::RAW,
+        PipelineMode::PRESOLVE_ONLY,
+        PipelineMode::SCALING_ONLY,
+        PipelineMode::PRESOLVE_AND_SCALING
+    };
+
+    if (run_ablation) {
+        std::cout << "\n========================================================================================================================\n";
+        std::cout << "                                  PIPELINE 4-WAY ABLATION STUDY                                                        \n";
+        std::cout << "========================================================================================================================\n";
+        std::cout << std::left << std::setw(26) << "Metric"
+                  << std::setw(22) << "RAW"
+                  << std::setw(22) << "PRESOLVE_ONLY"
+                  << std::setw(22) << "SCALING_ONLY"
+                  << std::setw(26) << "PRESOLVE_AND_SCALING" << "\n";
+        std::cout << "------------------------------------------------------------------------------------------------------------------------\n";
+
+        for (auto m : modes) {
+            PipelineConfig cfg;
+            cfg.set_mode(m);
+            cfg.compute_characterization = true;
+            auto res = ModelPipeline::prepare(lp, cfg);
+            if (!res.is_ok()) {
+                std::cerr << "Error preparing mode " << to_string(m) << ": " << res.status().to_string() << "\n";
+                return 1;
+            }
+            ablation_preps.push_back(res.value());
+        }
+
+        auto print_ablation_idx = [&](const std::string& label, auto fn) {
+            std::cout << std::left << std::setw(26) << label;
+            for (size_t i = 0; i < ablation_preps.size(); ++i) {
+                std::cout << std::left << std::setw(i == 3 ? 26 : 22) << fn(ablation_preps[i]);
+            }
+            std::cout << "\n";
+        };
+        auto print_ablation_sci = [&](const std::string& label, auto fn) {
+            std::cout << std::left << std::setw(26) << label;
+            for (size_t i = 0; i < ablation_preps.size(); ++i) {
+                std::ostringstream ss;
+                ss << std::scientific << std::setprecision(2) << fn(ablation_preps[i]);
+                std::cout << std::left << std::setw(i == 3 ? 26 : 22) << ss.str();
+            }
+            std::cout << "\n";
+        };
+
+        print_ablation_idx("Variables (Cols)", [](const PreparedLP& p) { return std::to_string(p.problem_stats.num_cols); });
+        print_ablation_idx("Constraints (Rows)", [](const PreparedLP& p) { return std::to_string(p.problem_stats.num_rows); });
+        print_ablation_idx("Nonzeros (NNZ)", [](const PreparedLP& p) { return std::to_string(p.problem_stats.num_nonzeros); });
+        print_ablation_idx("Density (%)", [](const PreparedLP& p) {
+            std::ostringstream ss;
+            ss << std::fixed << std::setprecision(3) << (p.problem_stats.density * 100.0) << "%";
+            return ss.str();
+        });
+        print_ablation_sci("Dynamic Range Proxy", [](const PreparedLP& p) { return p.problem_stats.dynamic_range; });
+        print_ablation_sci("Row Norm Ratio Proxy", [](const PreparedLP& p) { return p.problem_stats.conditioning_proxy.row_norm_ratio_proxy; });
+        print_ablation_sci("Col Norm Ratio Proxy", [](const PreparedLP& p) { return p.problem_stats.conditioning_proxy.col_norm_ratio_proxy; });
+        print_ablation_sci("Spectral Norm Proxy", [](const PreparedLP& p) { return p.problem_stats.conditioning_proxy.spectral_norm_estimate; });
+        print_ablation_idx("Eliminated Rows", [](const PreparedLP& p) { return std::to_string(p.presolve_stats.eliminated_rows()); });
+        print_ablation_idx("Eliminated Cols", [](const PreparedLP& p) { return std::to_string(p.presolve_stats.eliminated_cols()); });
+        print_ablation_idx("Fixed Variables", [](const PreparedLP& p) { return std::to_string(p.presolve_stats.total_variables_fixed()); });
+        print_ablation_idx("Ruiz Iterations", [](const PreparedLP& p) { return std::to_string(p.scaling.iterations_performed); });
+        print_ablation_idx("Prep Time (ms)", [](const PreparedLP& p) {
+            std::ostringstream ss;
+            ss << std::fixed << std::setprecision(2) << p.pipeline_elapsed_ms << " ms";
+            return ss.str();
+        });
+        print_ablation_idx("Recommended Engine", [](const PreparedLP& p) { return to_string(p.problem_stats.recommended_engine); });
+
+        std::cout << "========================================================================================================================\n";
+    } else if (before_after || !explicit_mode_str.empty()) {
         PipelineConfig cfg;
-        cfg.enable_presolve = true;
-        cfg.enable_scaling = true;
+        if (!explicit_mode_str.empty()) {
+            auto m_res = parse_pipeline_mode(explicit_mode_str);
+            if (!m_res.is_ok()) {
+                std::cerr << "Invalid mode: " << m_res.status().to_string() << "\n";
+                return 1;
+            }
+            cfg.set_mode(m_res.value());
+        } else {
+            cfg.set_mode(PipelineMode::PRESOLVE_AND_SCALING);
+        }
         cfg.compute_characterization = true;
 
         auto prep_res = ModelPipeline::prepare(lp, cfg);
@@ -205,9 +314,12 @@ int main(int argc, char* argv[]) {
         std::cout << "\n================================================================================\n";
         std::cout << "                 BEFORE / AFTER PIPELINE COMPARISON REPORT                      \n";
         std::cout << "================================================================================\n";
+        std::cout << "Mode: " << to_string(prep.mode_applied) << " (Prep time: "
+                  << std::fixed << std::setprecision(2) << prep.pipeline_elapsed_ms << " ms)\n";
+        std::cout << "--------------------------------------------------------------------------------\n";
         std::cout << std::left << std::setw(28) << "Metric"
                   << std::setw(25) << "Before (Raw)"
-                  << std::setw(25) << "After (Presolve + Ruiz)" << "\n";
+                  << std::setw(25) << ("After (" + to_string(prep.mode_applied) + ")") << "\n";
         std::cout << "--------------------------------------------------------------------------------\n";
 
         auto print_row_str = [](const std::string& name, const std::string& b, const std::string& a) {
@@ -267,10 +379,19 @@ int main(int argc, char* argv[]) {
     if (!json_output_file.empty()) {
         std::ofstream ofs(json_output_file);
         if (ofs.is_open()) {
-            if (before_after) {
+            if (run_ablation) {
                 ofs << "{\n"
                     << "  \"raw\": " << stats_to_json(lp.name, raw_stats) << ",\n"
-                    << "  \"prepared\": " << stats_to_json(lp.name + "_prep", prep.problem_stats) << "\n"
+                    << "  \"ablation\": [\n";
+                for (size_t i = 0; i < ablation_preps.size(); ++i) {
+                    ofs << "    " << prepared_to_json(ablation_preps[i])
+                        << (i + 1 < ablation_preps.size() ? ",\n" : "\n");
+                }
+                ofs << "  ]\n}\n";
+            } else if (before_after || !explicit_mode_str.empty()) {
+                ofs << "{\n"
+                    << "  \"raw\": " << stats_to_json(lp.name, raw_stats) << ",\n"
+                    << "  \"prepared\": " << prepared_to_json(prep) << "\n"
                     << "}\n";
             } else {
                 ofs << stats_to_json(lp.name, raw_stats) << "\n";
