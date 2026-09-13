@@ -3,6 +3,7 @@ add_library(pipepye_core
     core/status.cpp
     utils/timer.cpp
     utils/logger.cpp
+    model/mps_parser.cpp
 )
 
 target_include_directories(pipepye_core

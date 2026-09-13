@@ -14,6 +14,7 @@ include(GoogleTest)
 add_executable(test_core
     test_core_types.cpp
     test_timer.cpp
+    test_mps_parser.cpp
 )
 
 target_link_libraries(test_core
