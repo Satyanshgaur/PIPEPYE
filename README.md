@@ -24,19 +24,27 @@ pipepye/
 │       └── utils/              # High-resolution CPUTimer, Logger, ScopedNvtxRange markers
 ├── src/                        # Core C++20 library implementations (libpipepye_core.a)
 ├── cuda/                       # CUDA kernels (DAXPY/SAXPY) & hardware probe (pipepye_device_probe)
-├── tests/                      # GoogleTest suite run via CTest (69 unit and integration tests)
-├── benchmarks/                 # CPU sparse & CUDA micro-benchmark harnesses
+├── tests/                      # GoogleTest suite run via CTest (120 unit and integration tests)
+├── benchmarks/                 # CPU sparse, CUDA SpMV, scaling, and numerical robustness benchmarks
+├── tools/                      # CLI utilities (pipepye_inspect unified model analyzer)
 ├── scripts/
 │   └── profile.sh              # One-command NVIDIA Nsight Systems profiling script
 └── docs/                       # Comprehensive project documentation
+    ├── architecture.md         # Master optimization solver architecture & development roadmap
+    ├── phase1summary.md        # Phase 1 sparse numerical core empirical findings & implications
+    ├── phase2summary.md        # Phase 2 presolve, scaling & characterization findings & implications
+    ├── presolve.md             # Modular presolve pipeline, 5 reduction passes & postsolve reconstruction
+    ├── scaling.md              # Ruiz equilibration, Pock-Chambolle scaling & unscaling
+    ├── characterization.md     # Problem analyzer, topological moments, Gini & conditioning proxies
+    ├── numerical_robustness.md # First-order PDHG downstream solver robustness experiment
+    ├── benchmark.md            # CPU/GPU micro-benchmarks, SpMV scaling & bandwidth analysis
+    ├── tests.md                # Comprehensive test inventory (120 tests) & numerical verification
+    ├── algorithm-hardware-feasibility.md # Algorithm × hardware feasibility & LP architecture blueprint
+    ├── mps-spec.md             # MPS parser specification & internal model mapping
     ├── environment.md          # Hardware & toolchain specification (RTX 3050, GCC 16, CUDA 13.3)
     ├── build.md                # Build instructions & CMake options
     ├── profiling.md            # Nsight Systems workflow & timeline analysis
-    ├── ci.md                   # Continuous integration pipeline details
-    ├── algorithm-hardware-feasibility.md # Algorithm × hardware feasibility & LP architecture blueprint
-    ├── mps-spec.md             # MPS parser specification & internal model mapping
-    ├── benchmark.md            # CPU & GPU micro-benchmarks, SpMV scaling & bandwidth analysis
-    └── tests.md                # Comprehensive test inventory (69 tests) & numerical verification
+    └── ci.md                   # Continuous integration pipeline details
 ```
 
 ---
@@ -53,22 +61,37 @@ cmake -B build -G Ninja \
 ninja -C build
 ```
 
-### 2. Run the Test Suite
+### 2. Run the Full Test Suite
 ```bash
 ctest --test-dir build --output-on-failure
 ```
 
-### 3. Run Hardware Detection & CUDA Kernel Verification
+### 3. Inspect LP Models (Single-Line Banner or Full Report)
 ```bash
-./build/bin/pipepye_device_probe
+# Print canonical one-line dispatch summary:
+./build/bin/pipepye_inspect tests/data/mps/netlib/beaconfd.mps --one-line
+
+# Full before/after Phase 2 pipeline comparison:
+./build/bin/pipepye_inspect tests/data/mps/netlib/beaconfd.mps --before-after
 ```
 
-### 4. Run CPU vs GPU Micro-Benchmark
+### 4. Run Automated Before/After Presolve & Scaling Benchmark
 ```bash
+./build/bin/pipepye_bench_presolve_scaling
+```
+
+### 5. Run Downstream Numerical Robustness Experiment (PDHG Simulation)
+```bash
+./build/bin/pipepye_bench_numerical_robustness
+```
+
+### 6. Run Hardware Detection & CUDA Micro-Benchmarks
+```bash
+./build/bin/pipepye_device_probe
 ./build/bin/pipepye_microbench_cuda
 ```
 
-### 5. Profile with NVIDIA Nsight Systems
+### 7. Profile with NVIDIA Nsight Systems
 ```bash
 ./scripts/profile.sh
 ```
@@ -77,11 +100,22 @@ ctest --test-dir build --output-on-failure
 
 ## Detailed Documentation
 
-- [Hardware & Software Environment](docs/environment.md)
-- [Build & Configuration Guide](docs/build.md)
-- [Profiling Workflow & Timeline](docs/profiling.md)
-- [CI Pipeline Specification](docs/ci.md)
-- [Algorithm × Hardware Feasibility & LP Architecture](docs/algorithm-hardware-feasibility.md)
-- [MPS Ingestion Specification & Model Mapping](docs/mps-spec.md)
-- [CPU & GPU Performance Benchmarking Report](docs/benchmark.md)
-- [Comprehensive Test Verification Report](docs/tests.md)
+- **Architecture & Summaries**:
+  - [Architecture & Development Roadmap](docs/architecture.md)
+  - [Phase 1 Summary & Findings](docs/phase1summary.md)
+  - [Phase 2 Summary & Preconditioning Findings](docs/phase2summary.md)
+- **Phase 2 Pipeline & Algorithms**:
+  - [Presolve Pipeline Architecture](docs/presolve.md)
+  - [Matrix Scaling & Equilibration](docs/scaling.md)
+  - [Problem Characterization Layer](docs/characterization.md)
+  - [Numerical Robustness Experiment](docs/numerical_robustness.md)
+- **Benchmarks & Numerical Verification**:
+  - [CPU & GPU Performance Benchmarking Report](docs/benchmark.md)
+  - [Comprehensive Test Verification Report (120 Tests)](docs/tests.md)
+  - [Algorithm × Hardware Feasibility & LP Architecture](docs/algorithm-hardware-feasibility.md)
+  - [MPS Ingestion Specification & Model Mapping](docs/mps-spec.md)
+- **Environment & Engineering**:
+  - [Hardware & Software Environment](docs/environment.md)
+  - [Build & Configuration Guide](docs/build.md)
+  - [Profiling Workflow & Timeline](docs/profiling.md)
+  - [CI Pipeline Specification](docs/ci.md)
