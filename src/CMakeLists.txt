@@ -19,6 +19,9 @@ add_library(pipepye_core
     analysis/problem_analyzer.cpp
     analysis/conditioning_proxy.cpp
     pipeline/model_pipeline.cpp
+    solver/solution_verifier.cpp
+    solver/pdhg_solver_cpu.cpp
+    solver/pdhg_solver.cpp
 )
 
 target_include_directories(pipepye_core

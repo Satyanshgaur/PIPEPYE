@@ -80,15 +80,21 @@ struct LinearProgram {
     }
 
     [[nodiscard]] index_t num_cols() const noexcept {
-        return static_cast<index_t>(col_names.size());
+        if (!col_names.empty()) return static_cast<index_t>(col_names.size());
+        if (!c.empty()) return static_cast<index_t>(c.size());
+        return static_cast<index_t>(col_lower.size());
     }
 
     [[nodiscard]] index_t num_rows() const noexcept {
-        return static_cast<index_t>(row_names.size());
+        if (!row_names.empty()) return static_cast<index_t>(row_names.size());
+        if (!row_lower.empty()) return static_cast<index_t>(row_lower.size());
+        if (csr_row_ptr.size() > 1) return static_cast<index_t>(csr_row_ptr.size() - 1);
+        return 0;
     }
 
     [[nodiscard]] size_t num_nonzeros() const noexcept {
-        return csc_values.size();
+        if (!csc_values.empty()) return csc_values.size();
+        return csr_values.size();
     }
 };
 

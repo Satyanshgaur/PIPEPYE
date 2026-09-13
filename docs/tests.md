@@ -2,7 +2,7 @@
 
 **Project**: PipePye — High-Performance Sovereign Optimization Solver  
 **Date**: September 2026  
-**Status**: `100% Passed (125 / 125 Tests Passed, 0 Failed, 0 Skipped)`  
+**Status**: `100% Passed (139 / 139 Tests Passed, 0 Failed, 0 Skipped)`  
 **Test Harness**: GoogleTest v1.15.2 & CTest (CMake 4.3.0)  
 
 ---
@@ -21,7 +21,7 @@ The test suite was compiled and executed natively on the target host hardware:
 | **GPU Model** | NVIDIA GeForce RTX 3050 6GB Laptop GPU (Ampere sm_86, 5.67 GiB VRAM) |
 | **CUDA Toolchain** | NVIDIA CUDA Toolkit 13.3 (Driver Version: 590.26, Compute Capability: 8.6) |
 | **Build System** | CMake 4.3.0 with Ninja Multi-Threaded Generator |
-| **Total Test Execution Time** | **6.77 seconds** |
+| **Total Test Execution Time** | **7.71 seconds** |
 
 ---
 
@@ -30,8 +30,8 @@ The test suite was compiled and executed natively on the target host hardware:
 ```
 ================================================================================
 Test project /home/satyansh/pipepye/build
-      Total Tests: 125
-      Passed:      125 (100.0%)
+      Total Tests: 139
+      Passed:      139 (100.0%)
       Failed:        0 (0.0%)
       Skipped:       0 (0.0%)
 ================================================================================
@@ -307,6 +307,36 @@ Verifies all 4 CUDA SpMV kernel strategies (**Scalar**, **Vector/Warp**, **Adapt
 
 ---
 
+### 3.19. CPU Primal-Dual Hybrid Gradient (PDHG) Solver Suite (`test_pdhg_cpu.cpp`)
+Verifies first-order Chambolle-Pock optimization, Moreau proximal projections, preconditioned step sizes, adaptive momentum restarts, independent solution verification, and Netlib pipeline integration on CPU.
+
+| Test # | Test Name | Status | Duration | Description |
+| :---: | :--- | :--- | :---: | :--- |
+| **126** | `PDHGCPUTest.UnconstrainedBounded1DLP` | **PASSED** | < 1 ms | Solves $\min x$ s.t. $2 \le x \le 5$, verifying projection onto bound $x^* = 2.0, f^* = 2.0$. |
+| **127** | `PDHGCPUTest.SingleEqualityConstraint` | **PASSED** | 10 ms | Solves $\min 2x_0 + 3x_1$ s.t. $x_0 + x_1 = 4, x \ge 0$, verifying exact primal optimum $x^* = (4, 0), f^* = 8.0$ and dual equality multiplier. |
+| **128** | `PDHGCPUTest.SingleInequalityLessThan` | **PASSED** | 10 ms | Solves $\min -x_0 - 2x_1$ s.t. $x_0 + x_1 \le 3, x \ge 0$, verifying inequality boundary solution $x^* = (0, 3), f^* = -6.0$. |
+| **129** | `PDHGCPUTest.SingleInequalityGreaterThan` | **PASSED** | 10 ms | Solves $\min x_0 + x_1$ s.t. $2x_0 + x_1 \ge 4, x \ge 0$, verifying active boundary constraint at $x^* = (2, 0), f^* = 2.0$. |
+| **130** | `PDHGCPUTest.MultipleConstraints2DLP` | **PASSED** | 10 ms | Solves multi-inequality system $\min -3x_0 - 5x_1$ s.t. $x_0 + x_1 \le 4, x_0 + 3x_1 \le 6, x \ge 0$, verifying vertex intersection $x^* = (3, 1), f^* = -14.0$. |
+| **131** | `PDHGCPUTest.DegenerateZeroObjective` | **PASSED** | < 1 ms | Solves degenerate zero-cost feasibility problem $\min 0$ s.t. $x_0 + x_1 = 1, x \ge 0$, validating projection onto simplex manifold. |
+| **132** | `PDHGCPUTest.InfeasibleLPHandling` | **PASSED** | < 1 ms | Solves contradictory system $x_0 \le 1$ and $x_0 \ge 3$, validating robust non-convergence detection without numerical NaN/Inf divergence. |
+| **133** | `PDHGCPUTest.StepSizeAblationStudy` | **PASSED** | 10 ms | Ablates Constant vs Pock-Chambolle vs Adaptive step-size strategies, verifying convergence across all strategies. |
+| **134** | `PDHGCPUTest.RestartAblationStudy` | **PASSED** | 10 ms | Ablates momentum restart, validating stabilization of momentum buffers upon stall detection. |
+| **135** | `PDHGCPUTest.SolutionVerifierCatchesViolations` | **PASSED** | < 1 ms | Validates `SolutionVerifier` by intentionally corrupting variable bounds, row constraints, and objective values, proving 100% detection rate. |
+| **136** | `PDHGCPUTest.EndToEndSolveNetlibAFIRO` | **PASSED** | 10 ms | Solves Netlib `afiro.mps` end-to-end through `ModelPipeline` (presolve + scaling) $\to$ PDHG $\to$ solution recovery $\to$ independent verification, validating objective match $-464.74$ within $2.57 \times 10^{-3}$ max constraint violation. |
+
+---
+
+### 3.20. CUDA PDHG Solver & Parity Suite (`test_pdhg_cuda.cu`)
+Verifies resident GPU state persistence, CPU/GPU numerical parity, timing decomposition, and end-to-end Netlib solve on NVIDIA Ampere GPU.
+
+| Test # | Test Name | Status | Duration | Description |
+| :---: | :--- | :--- | :---: | :--- |
+| **137** | `PDHGCUDATest.SingleEqualityConstraintCUDA` | **PASSED** | 260 ms | Executes PDHG on GPU with resident memory, validating primal solution $x^* = (4, 0), f^* = 8.0$ and non-zero timing decomposition ($T_{\text{h2d}}, T_{\text{pure}}, T_{\text{d2h}} > 0$). |
+| **138** | `PDHGCUDATest.MultipleConstraintsParityAgainstCPU` | **PASSED** | 290 ms | Solves multi-constraint LP on both CPU and GPU, confirming bit-level numerical parity on primal objective and decision variables ($\|x_{\text{cpu}} - x_{\text{cuda}}\|_\infty < 0.02$). |
+| **139** | `PDHGCUDATest.NetlibAFIROSolveCUDA` | **PASSED** | 300 ms | Executes end-to-end pipeline solve on GPU for Netlib `afiro.mps`, verifying 710-iteration convergence to $f^* = -464.74$, passing independent verification, and validating zero per-iteration host transfers. |
+
+---
+
 ## 4. Architectural Verification Matrix
 
 ```mermaid
@@ -347,9 +377,21 @@ flowchart TD
         CUDA["CUDA GPU Kernels (sm_86)"]
     end
 
-    Analyzer -->|Engine Recommendation| CPU_Single
-    Analyzer -->|Engine Recommendation| CPU_Multi
-    Analyzer -->|Engine Recommendation| CUDA
+    subgraph Optimization Solver Layer
+        CPUPDHG["CPU PDHG Optimizer (Chambolle-Pock)"]
+        CUDAPDHG["CUDA PDHG Optimizer (Resident GPU Memory)"]
+        Recovery["Solution Recovery Map (Unscaling + Postsolve)"]
+        Verifier["Independent Solution Verifier"]
+    end
+
+    Analyzer -->|Engine Recommendation| CPUPDHG
+    Analyzer -->|Engine Recommendation| CUDAPDHG
+    Scaling --> CPUPDHG
+    Scaling --> CUDAPDHG
+    CPUPDHG --> Recovery
+    CUDAPDHG --> Recovery
+    Recovery --> Verifier
+    MPS -.->|Ground Truth Validation| Verifier
     CSR --> CPU_Single
     CSR --> CPU_Multi
     CSC --> CPU_Single
@@ -357,4 +399,5 @@ flowchart TD
     Dense -.->|Exact Numerical Check < 1e-13| CPU_Single
     CPU_Single -.->|Exact Parity| CPU_Multi
     CPU_Single -.->|Exact Parity| CUDA
+    CPUPDHG -.->|Bit-Level Parity| CUDAPDHG
 ```

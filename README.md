@@ -24,8 +24,8 @@ pipepye/
 │       └── utils/              # High-resolution CPUTimer, Logger, ScopedNvtxRange markers
 ├── src/                        # Core C++20 library implementations (libpipepye_core.a)
 ├── cuda/                       # CUDA kernels (DAXPY/SAXPY) & hardware probe (pipepye_device_probe)
-├── tests/                      # GoogleTest suite run via CTest (125 unit and integration tests)
-├── benchmarks/                 # CPU sparse, CUDA SpMV, scaling, and 4-way ablation numerical robustness benchmarks
+├── tests/                      # GoogleTest suite run via CTest (139 unit and integration tests)
+├── benchmarks/                 # CPU sparse, CUDA SpMV, scaling, PDHG solver (Exps A-G), and robustness benchmarks
 ├── tools/                      # CLI utilities (pipepye_inspect unified model analyzer with 4-way ablation)
 ├── scripts/
 │   └── profile.sh              # One-command NVIDIA Nsight Systems profiling script
@@ -33,12 +33,14 @@ pipepye/
     ├── architecture.md         # Master optimization solver architecture & development roadmap
     ├── phase1summary.md        # Phase 1 sparse numerical core empirical findings & implications
     ├── phase2summary.md        # Phase 2 presolve, scaling & characterization findings & implications
+    ├── phase3summary.md        # Phase 3 PDHG solver findings, crossover map & implications for Phase 4
+    ├── pdhg.md                 # Primal-Dual Hybrid Gradient solver architecture, GPU residency & verification
     ├── presolve.md             # Modular presolve pipeline, 5 reduction passes & postsolve reconstruction
     ├── scaling.md              # Ruiz equilibration, Pock-Chambolle scaling & unscaling
     ├── characterization.md     # Problem analyzer, topological moments, Gini & conditioning proxies
     ├── numerical_robustness.md # First-order PDHG downstream solver 4-way ablation experiment
     ├── benchmark.md            # CPU/GPU micro-benchmarks, SpMV scaling & bandwidth analysis
-    ├── tests.md                # Comprehensive test inventory (125 tests) & numerical verification
+    ├── tests.md                # Comprehensive test inventory (139 tests) & numerical verification
     ├── algorithm-hardware-feasibility.md # Algorithm × hardware feasibility & LP architecture blueprint
     ├── mps-spec.md             # MPS parser specification & internal model mapping
     ├── environment.md          # Hardware & toolchain specification (RTX 3050, GCC 16, CUDA 13.3)
@@ -66,7 +68,12 @@ ninja -C build
 ctest --test-dir build --output-on-failure
 ```
 
-### 3. Inspect LP Models (Single-Line Banner, 4-Way Ablation or Full Report)
+### 3. Run Phase 3 Comprehensive PDHG Benchmark (Experiments A through G)
+```bash
+./build/bin/pipepye_bench_pdhg
+```
+
+### 4. Inspect LP Models (Single-Line Banner, 4-Way Ablation or Full Report)
 ```bash
 # Print canonical one-line dispatch summary:
 ./build/bin/pipepye_inspect tests/data/mps/netlib/beaconfd.mps --one-line
@@ -81,23 +88,23 @@ ctest --test-dir build --output-on-failure
 ./build/bin/pipepye_inspect tests/data/mps/netlib/beaconfd.mps --before-after
 ```
 
-### 4. Run Automated Before/After Presolve & Scaling Benchmark
+### 5. Run Automated Before/After Presolve & Scaling Benchmark
 ```bash
 ./build/bin/pipepye_bench_presolve_scaling
 ```
 
-### 5. Run Downstream 4-Way Numerical Robustness Experiment (PDHG Simulation)
+### 6. Run Downstream 4-Way Numerical Robustness Experiment (PDHG Simulation)
 ```bash
 ./build/bin/pipepye_bench_numerical_robustness
 ```
 
-### 6. Run Hardware Detection & CUDA Micro-Benchmarks
+### 7. Run Hardware Detection & CUDA Micro-Benchmarks
 ```bash
 ./build/bin/pipepye_device_probe
 ./build/bin/pipepye_microbench_cuda
 ```
 
-### 7. Profile with NVIDIA Nsight Systems
+### 8. Profile with NVIDIA Nsight Systems
 ```bash
 ./scripts/profile.sh
 ```
@@ -110,6 +117,9 @@ ctest --test-dir build --output-on-failure
   - [Architecture & Development Roadmap](docs/architecture.md)
   - [Phase 1 Summary & Findings](docs/phase1summary.md)
   - [Phase 2 Summary & Preconditioning Findings](docs/phase2summary.md)
+  - [Phase 3 Summary & Empirical Crossover Findings](docs/phase3summary.md)
+- **Phase 3 Solver**:
+  - [PDHG LP Solver Architecture & Verification](docs/pdhg.md)
 - **Phase 2 Pipeline & Algorithms**:
   - [Presolve Pipeline Architecture](docs/presolve.md)
   - [Matrix Scaling & Equilibration](docs/scaling.md)
@@ -117,7 +127,7 @@ ctest --test-dir build --output-on-failure
   - [Numerical Robustness Experiment](docs/numerical_robustness.md)
 - **Benchmarks & Numerical Verification**:
   - [CPU & GPU Performance Benchmarking Report](docs/benchmark.md)
-  - [Comprehensive Test Verification Report (125 Tests)](docs/tests.md)
+  - [Comprehensive Test Verification Report (139 Tests)](docs/tests.md)
   - [Algorithm × Hardware Feasibility & LP Architecture](docs/algorithm-hardware-feasibility.md)
   - [MPS Ingestion Specification & Model Mapping](docs/mps-spec.md)
 - **Environment & Engineering**:
@@ -125,3 +135,4 @@ ctest --test-dir build --output-on-failure
   - [Build & Configuration Guide](docs/build.md)
   - [Profiling Workflow & Timeline](docs/profiling.md)
   - [CI Pipeline Specification](docs/ci.md)
+

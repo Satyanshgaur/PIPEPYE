@@ -17,6 +17,8 @@ add_library(pipepye_cuda
     kernels/axpy.cu
     kernels/spmv.cu
     kernels/reductions.cu
+    kernels/pdhg_kernels.cu
+    pdhg_cuda.cu
 )
 
 target_include_directories(pipepye_cuda
