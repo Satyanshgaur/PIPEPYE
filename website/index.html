@@ -26,25 +26,26 @@
        Distributed Top Navigation
        ======================================================================== -->
   <header class="top-nav">
-    <a href="#overview" class="nav-anchor">
-      <span>PIPEPYE</span>
-      <span class="nav-descriptor">RESEARCH REPORT · PHASES 1–5</span>
-    </a>
-    <div class="nav-status">174/174 TESTS PASSED · 100% CONFIRMED</div>
-    <nav>
+    <div class="nav-left">
+      <a href="https://github.com/Satyanshgaur/PIPEPYE" target="_blank" rel="noopener noreferrer" class="nav-anchor" title="View PipePye Repository on GitHub">
+        <span class="nav-brand">PIPEPYE</span>
+        <span class="nav-descriptor">RESEARCH REPORT ↗</span>
+      </a>
+    </div>
+    <nav class="nav-center">
       <ul class="nav-links">
-        <li><a href="#overview">Overview</a></li>
-        <li><a href="#architecture">Architecture</a></li>
-        <li><a href="#phase1">Phase 1: SpMV</a></li>
-        <li><a href="#phase2">Phase 2: Presolve</a></li>
-        <li><a href="#phase3">Phase 3: PDHG</a></li>
-        <li><a href="#phase4">Phase 4: Simplex</a></li>
-        <li><a href="#phase5">Phase 5: Industrial</a></li>
-        <li><a href="#milp">MILP Warm-Start</a></li>
-        <li><a href="#selector">Dispatch</a></li>
-        <li><a href="#verification">Verification</a></li>
+        <li><a href="#phase1" class="nav-item">Phase 1: SpMV</a></li>
+        <li><a href="#phase2" class="nav-item">Phase 2: Presolve</a></li>
+        <li><a href="#phase3" class="nav-item">Phase 3: PDHG</a></li>
+        <li><a href="#phase4" class="nav-item">Phase 4: Simplex</a></li>
+        <li><a href="#phase5" class="nav-item">Phase 5: Industrial</a></li>
+        <li><a href="#milp" class="nav-item">MILP Warm-Start</a></li>
+        <li><a href="#selector" class="nav-item">Dispatch</a></li>
       </ul>
     </nav>
+    <div class="nav-right">
+      <a href="#verification" class="nav-status" title="View Test Verification Matrix">174/174 PASSED</a>
+    </div>
   </header>
 
   <!-- ========================================================================
@@ -1144,24 +1145,16 @@ return Route { Solver::PDHG, Backend::CPU_MultiThreaded };</code></pre>
     <div class="footer-inner">
       <div class="footer-col">
         <span class="footer-title">PipePye Optimization Project</span>
-        <p style="font-size: 13px; color: #888; max-width: 320px;">
+        <p style="font-size: 13px; color: #888; max-width: 380px; margin: 0 auto;">
           Sovereign high-performance mathematical programming solver engineered for complex industrial optimization.
         </p>
       </div>
       <div class="footer-col">
-        <span class="footer-title">Verification & Quality</span>
-        <p style="font-size: 13px; color: #888;">
+        <span class="footer-title">Verification &amp; Quality</span>
+        <p style="font-size: 13px; color: #888; margin: 0 auto;">
           174 Automated Tests Passed (100.0%)<br>
           13 / 13 Pre-Registered Predictions Confirmed<br>
           ISO C++20 · CUDA Toolkit 13.3 (sm_86)
-        </p>
-      </div>
-      <div class="footer-col">
-        <span class="footer-title">Artifact Repositories</span>
-        <p style="font-size: 13px; color: #888;">
-          Reports: <code>reports/industrial_benchmark.csv</code><br>
-          Workloads: <code>workloads/case_{a,b,c,d}/</code><br>
-          Specification: <code>docs/industrial_suite.md</code>
         </p>
       </div>
     </div>

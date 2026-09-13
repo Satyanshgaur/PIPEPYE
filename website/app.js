@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const navLinks = document.querySelectorAll('.nav-links a, .toc-nav a');
 
   const onScroll = () => {
-    const scrollPosition = window.scrollY + 120;
+    const scrollPosition = window.scrollY + 140;
 
     sections.forEach(section => {
       const top = section.offsetTop;
@@ -19,11 +19,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (scrollPosition >= top && scrollPosition < top + height) {
         navLinks.forEach(link => {
           if (link.getAttribute('href') === `#${id}`) {
-            link.style.opacity = '1';
-            link.style.fontWeight = '700';
+            link.classList.add('active');
           } else {
-            link.style.opacity = '0.7';
-            link.style.fontWeight = '400';
+            link.classList.remove('active');
           }
         });
       }
