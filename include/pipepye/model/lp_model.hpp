@@ -6,6 +6,7 @@
 #include <limits>
 #include <cstdint>
 #include <pipepye/core/types.hpp>
+#include <pipepye/sparse/coo_matrix.hpp>
 
 namespace pipepye::model {
 
@@ -56,6 +57,9 @@ struct LinearProgram {
     std::vector<scalar_t> row_lower;
     std::vector<scalar_t> row_upper;
 
+    // Coordinate Sparse representation (natural assembly buffer)
+    pipepye::sparse::COOMatrix A_coo;
+
     // Dual Sparse Representations of Constraint Matrix A
     // 1. Column-Compressed Sparse (CSC) for Simplex, Basis Operations & Column Pricing
     std::vector<index_t> csc_col_ptr; // size: num_cols + 1
@@ -66,6 +70,14 @@ struct LinearProgram {
     std::vector<index_t> csr_row_ptr; // size: num_rows + 1
     std::vector<index_t> csr_col_ind; // size: nnz
     std::vector<scalar_t> csr_values; // size: nnz
+
+    [[nodiscard]] pipepye::sparse::CSRMatrix to_csr() const {
+        return pipepye::sparse::CSRMatrix(num_rows(), num_cols(), csr_row_ptr, csr_col_ind, csr_values);
+    }
+
+    [[nodiscard]] pipepye::sparse::CSCMatrix to_csc() const {
+        return pipepye::sparse::CSCMatrix(num_rows(), num_cols(), csc_col_ptr, csc_row_ind, csc_values);
+    }
 
     [[nodiscard]] index_t num_cols() const noexcept {
         return static_cast<index_t>(col_names.size());

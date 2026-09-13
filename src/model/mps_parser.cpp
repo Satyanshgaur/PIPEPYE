@@ -51,12 +51,6 @@ std::vector<std::string> tokenize_line(const std::string& line) {
     return tokens;
 }
 
-struct Triplet {
-    index_t row;
-    index_t col;
-    scalar_t val;
-};
-
 enum class Section {
     None = 0,
     Name,
@@ -85,7 +79,7 @@ Status MPSParser::parse_stream(std::istream& in, LinearProgram& out_model) {
 
     Section current_section = Section::None;
     std::string line;
-    std::vector<Triplet> triplets;
+    std::vector<pipepye::sparse::TripletF64> triplets;
     bool in_integer_marker = false;
     std::string first_rhs_name;
     std::string first_range_name;
@@ -382,62 +376,24 @@ Status MPSParser::parse_stream(std::istream& in, LinearProgram& out_model) {
         out_model.obj_offset = -out_model.obj_offset;
     }
 
-    // Matrix Construction: Convert triplets to CSC & CSR
+    // Matrix Construction: Convert triplets to COO, CSC & CSR
     index_t num_rows = out_model.num_rows();
     index_t num_cols = out_model.num_cols();
 
-    // 1. Build CSC representation
-    std::sort(triplets.begin(), triplets.end(), [](const Triplet& a, const Triplet& b) {
-        if (a.col != b.col) return a.col < b.col;
-        return a.row < b.row;
-    });
+    out_model.A_coo = pipepye::sparse::COOMatrix(num_rows, num_cols, std::move(triplets));
+    out_model.A_coo.sort(pipepye::sparse::StorageOrder::ColMajor);
+    out_model.A_coo.sum_duplicates();
 
-    // Merge duplicates if any
-    std::vector<Triplet> merged_triplets;
-    merged_triplets.reserve(triplets.size());
-    for (const auto& t : triplets) {
-        if (!merged_triplets.empty() &&
-            merged_triplets.back().row == t.row &&
-            merged_triplets.back().col == t.col) {
-            merged_triplets.back().val += t.val;
-        } else {
-            merged_triplets.push_back(t);
-        }
-    }
+    auto csc = out_model.A_coo.to_csc();
+    auto csr = out_model.A_coo.to_csr();
 
-    out_model.csc_col_ptr.assign(num_cols + 1, 0);
-    out_model.csc_row_ind.resize(merged_triplets.size());
-    out_model.csc_values.resize(merged_triplets.size());
+    out_model.csc_col_ptr = csc.col_ptr_vector();
+    out_model.csc_row_ind = csc.row_ind_vector();
+    out_model.csc_values = csc.values_vector();
 
-    for (const auto& t : merged_triplets) {
-        out_model.csc_col_ptr[t.col + 1]++;
-    }
-    for (index_t j = 0; j < num_cols; ++j) {
-        out_model.csc_col_ptr[j + 1] += out_model.csc_col_ptr[j];
-    }
-    for (size_t k = 0; k < merged_triplets.size(); ++k) {
-        out_model.csc_row_ind[k] = merged_triplets[k].row;
-        out_model.csc_values[k] = merged_triplets[k].val;
-    }
-
-    // 2. Build CSR representation
-    out_model.csr_row_ptr.assign(num_rows + 1, 0);
-    out_model.csr_col_ind.resize(merged_triplets.size());
-    out_model.csr_values.resize(merged_triplets.size());
-
-    for (const auto& t : merged_triplets) {
-        out_model.csr_row_ptr[t.row + 1]++;
-    }
-    for (index_t i = 0; i < num_rows; ++i) {
-        out_model.csr_row_ptr[i + 1] += out_model.csr_row_ptr[i];
-    }
-
-    std::vector<index_t> current_row_pos = out_model.csr_row_ptr;
-    for (const auto& t : merged_triplets) {
-        index_t dest = current_row_pos[t.row]++;
-        out_model.csr_col_ind[dest] = t.col;
-        out_model.csr_values[dest] = t.val;
-    }
+    out_model.csr_row_ptr = csr.row_ptr_vector();
+    out_model.csr_col_ind = csr.col_ind_vector();
+    out_model.csr_values = csr.values_vector();
 
     return Status::OK();
 }

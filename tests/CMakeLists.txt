@@ -15,6 +15,10 @@ add_executable(test_core
     test_core_types.cpp
     test_timer.cpp
     test_mps_parser.cpp
+    test_sparse_vector.cpp
+    test_coo_matrix.cpp
+    test_csr_csc_matrix.cpp
+    test_sparse_representations.cpp
 )
 
 target_link_libraries(test_core

@@ -4,6 +4,9 @@ add_library(pipepye_core
     utils/timer.cpp
     utils/logger.cpp
     model/mps_parser.cpp
+    sparse/coo_matrix.cpp
+    sparse/csr_matrix.cpp
+    sparse/csc_matrix.cpp
 )
 
 target_include_directories(pipepye_core
