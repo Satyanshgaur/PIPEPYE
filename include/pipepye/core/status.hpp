@@ -4,6 +4,8 @@
 #include <string>
 #include <string_view>
 #include <ostream>
+#include <variant>
+#include <stdexcept>
 
 namespace pipepye {
 
@@ -67,4 +69,67 @@ private:
 std::string_view status_code_to_string(StatusCode code);
 std::ostream& operator<<(std::ostream& os, const Status& status);
 
+/// @brief Monadic return type representing either a success value T or an error Status.
+template <typename T>
+class StatusOr {
+public:
+    StatusOr(const Status& status) : data_(status) {}
+    StatusOr(Status&& status) : data_(std::move(status)) {}
+    StatusOr(const T& val) : data_(val) {}
+    StatusOr(T&& val) : data_(std::move(val)) {}
+
+    [[nodiscard]] bool is_ok() const noexcept {
+        return std::holds_alternative<T>(data_);
+    }
+
+    [[nodiscard]] const Status& status() const noexcept {
+        if (is_ok()) {
+            static const Status kOk = Status::OK();
+            return kOk;
+        }
+        return std::get<Status>(data_);
+    }
+
+    [[nodiscard]] const T& value() const & {
+        if (!is_ok()) {
+            throw std::runtime_error("Attempted to access value of failed StatusOr: " + status().to_string());
+        }
+        return std::get<T>(data_);
+    }
+
+    [[nodiscard]] T& value() & {
+        if (!is_ok()) {
+            throw std::runtime_error("Attempted to access value of failed StatusOr: " + status().to_string());
+        }
+        return std::get<T>(data_);
+    }
+
+    [[nodiscard]] T&& value() && {
+        if (!is_ok()) {
+            throw std::runtime_error("Attempted to access value of failed StatusOr: " + status().to_string());
+        }
+        return std::get<T>(std::move(data_));
+    }
+
+    [[nodiscard]] const T* operator->() const {
+        return &value();
+    }
+
+    [[nodiscard]] T* operator->() {
+        return &value();
+    }
+
+    [[nodiscard]] const T& operator*() const & {
+        return value();
+    }
+
+    [[nodiscard]] T& operator*() & {
+        return value();
+    }
+
+private:
+    std::variant<Status, T> data_;
+};
+
 } // namespace pipepye
+

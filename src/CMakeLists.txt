@@ -10,6 +10,10 @@ add_library(pipepye_core
     sparse/dense_matrix.cpp
     sparse/cpu_ops.cpp
     sparse/matrix_generator.cpp
+    presolve/postsolve.cpp
+    presolve/presolve_context.cpp
+    presolve/presolve_pass.cpp
+    presolve/presolve_pass_manager.cpp
 )
 
 target_include_directories(pipepye_core

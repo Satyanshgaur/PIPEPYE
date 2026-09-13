@@ -21,6 +21,7 @@ add_executable(test_core
     test_sparse_representations.cpp
     test_cpu_primitives_and_spmv.cpp
     test_matrix_generators.cpp
+    test_presolve.cpp
 )
 
 target_link_libraries(test_core
