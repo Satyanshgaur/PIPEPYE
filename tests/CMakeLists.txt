@@ -19,6 +19,7 @@ add_executable(test_core
     test_coo_matrix.cpp
     test_csr_csc_matrix.cpp
     test_sparse_representations.cpp
+    test_cpu_primitives_and_spmv.cpp
 )
 
 target_link_libraries(test_core

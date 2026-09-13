@@ -7,6 +7,8 @@ add_library(pipepye_core
     sparse/coo_matrix.cpp
     sparse/csr_matrix.cpp
     sparse/csc_matrix.cpp
+    sparse/dense_matrix.cpp
+    sparse/cpu_ops.cpp
 )
 
 target_include_directories(pipepye_core

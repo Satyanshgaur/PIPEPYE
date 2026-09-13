@@ -115,6 +115,15 @@ public:
         return max_val;
     }
 
+    [[nodiscard]] scalar_t norm_2_sq() const noexcept {
+        scalar_t sum_sq = 0.0;
+        for (index_t i = 0; i < size_; ++i) {
+            scalar_t val = static_cast<scalar_t>(data_[i]);
+            sum_sq += val * val;
+        }
+        return sum_sq;
+    }
+
     [[nodiscard]] scalar_t sum() const noexcept {
         scalar_t s = 0.0;
         for (index_t i = 0; i < size_; ++i) {
@@ -123,9 +132,86 @@ public:
         return s;
     }
 
+    [[nodiscard]] scalar_t mean() const {
+        if (empty()) throw std::runtime_error("VectorView::mean called on empty vector");
+        return sum() / static_cast<scalar_t>(size_);
+    }
+
+    [[nodiscard]] std::remove_const_t<T> min() const {
+        if (empty()) throw std::runtime_error("VectorView::min called on empty vector");
+        std::remove_const_t<T> m = data_[0];
+        for (index_t i = 1; i < size_; ++i) {
+            if (data_[i] < m) m = data_[i];
+        }
+        return m;
+    }
+
+    [[nodiscard]] std::remove_const_t<T> max() const {
+        if (empty()) throw std::runtime_error("VectorView::max called on empty vector");
+        std::remove_const_t<T> m = data_[0];
+        for (index_t i = 1; i < size_; ++i) {
+            if (data_[i] > m) m = data_[i];
+        }
+        return m;
+    }
+
+    [[nodiscard]] index_t argmin() const {
+        if (empty()) throw std::runtime_error("VectorView::argmin called on empty vector");
+        index_t idx = 0;
+        for (index_t i = 1; i < size_; ++i) {
+            if (data_[i] < data_[idx]) idx = i;
+        }
+        return idx;
+    }
+
+    [[nodiscard]] index_t argmax() const {
+        if (empty()) throw std::runtime_error("VectorView::argmax called on empty vector");
+        index_t idx = 0;
+        for (index_t i = 1; i < size_; ++i) {
+            if (data_[i] > data_[idx]) idx = i;
+        }
+        return idx;
+    }
+
+    [[nodiscard]] scalar_t abs_diff_inf(VectorView<const T> other) const {
+        if (size_ != other.size()) {
+            throw std::invalid_argument("VectorView::abs_diff_inf dimension mismatch");
+        }
+        scalar_t max_d = 0.0;
+        for (index_t i = 0; i < size_; ++i) {
+            scalar_t d = std::abs(static_cast<scalar_t>(data_[i]) - static_cast<scalar_t>(other[i]));
+            if (d > max_d) max_d = d;
+        }
+        return max_d;
+    }
+
+    [[nodiscard]] scalar_t abs_diff_2(VectorView<const T> other) const {
+        if (size_ != other.size()) {
+            throw std::invalid_argument("VectorView::abs_diff_2 dimension mismatch");
+        }
+        scalar_t sum_sq = 0.0;
+        for (index_t i = 0; i < size_; ++i) {
+            scalar_t d = static_cast<scalar_t>(data_[i]) - static_cast<scalar_t>(other[i]);
+            sum_sq += d * d;
+        }
+        return std::sqrt(sum_sq);
+    }
+
     // In-place vector modifications (only available for non-const T)
     void fill(T val) requires (!std::is_const_v<T>) {
         std::fill(begin(), end(), val);
+    }
+
+    void set_zero() requires (!std::is_const_v<T>) {
+        fill(static_cast<T>(0));
+    }
+
+    void copy_from(VectorView<const T> src) requires (!std::is_const_v<T>) {
+        if (size_ != src.size()) {
+            throw std::invalid_argument("VectorView::copy_from dimension mismatch: " +
+                                        std::to_string(size_) + " vs " + std::to_string(src.size()));
+        }
+        std::copy(src.begin(), src.end(), begin());
     }
 
     void scale(T alpha) requires (!std::is_const_v<T>) {
@@ -141,6 +227,16 @@ public:
         }
         for (index_t i = 0; i < size_; ++i) {
             data_[i] += alpha * x[i];
+        }
+    }
+
+    /// @brief Computes y = alpha * x + beta * y
+    void axpby(T alpha, VectorView<const T> x, T beta) requires (!std::is_const_v<T>) {
+        if (size_ != x.size()) {
+            throw std::invalid_argument("VectorView::axpby dimension mismatch");
+        }
+        for (index_t i = 0; i < size_; ++i) {
+            data_[i] = alpha * x[i] + beta * data_[i];
         }
     }
 
@@ -246,11 +342,22 @@ public:
     [[nodiscard]] scalar_t dot(VectorView<const T> other) const { return view().dot(other); }
     [[nodiscard]] scalar_t norm_1() const noexcept { return view().norm_1(); }
     [[nodiscard]] scalar_t norm_2() const noexcept { return view().norm_2(); }
+    [[nodiscard]] scalar_t norm_2_sq() const noexcept { return view().norm_2_sq(); }
     [[nodiscard]] scalar_t norm_inf() const noexcept { return view().norm_inf(); }
     [[nodiscard]] scalar_t sum() const noexcept { return view().sum(); }
+    [[nodiscard]] scalar_t mean() const { return view().mean(); }
+    [[nodiscard]] T min() const { return view().min(); }
+    [[nodiscard]] T max() const { return view().max(); }
+    [[nodiscard]] index_t argmin() const { return view().argmin(); }
+    [[nodiscard]] index_t argmax() const { return view().argmax(); }
+    [[nodiscard]] scalar_t abs_diff_inf(VectorView<const T> other) const { return view().abs_diff_inf(other); }
+    [[nodiscard]] scalar_t abs_diff_2(VectorView<const T> other) const { return view().abs_diff_2(other); }
     void fill(T val) { view().fill(val); }
+    void set_zero() { view().set_zero(); }
+    void copy_from(VectorView<const T> src) { view().copy_from(src); }
     void scale(T alpha) { view().scale(alpha); }
     void axpy(T alpha, VectorView<const T> x) { view().axpy(alpha, x); }
+    void axpby(T alpha, VectorView<const T> x, T beta) { view().axpby(alpha, x, beta); }
     void project_bounds(VectorView<const T> lower, VectorView<const T> upper) {
         view().project_bounds(lower, upper);
     }
