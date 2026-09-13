@@ -15,7 +15,7 @@ import subprocess
 import tempfile
 import argparse
 from pathlib import Path
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import urllib.parse
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -216,14 +216,17 @@ class PipePyeRequestHandler(BaseHTTPRequestHandler):
 def main():
     parser = argparse.ArgumentParser(description="PipePye Demonstration Server")
     parser.add_argument("--port", type=int, default=8080, help="Port to listen on (default: 8080)")
-    parser.add_argument("--host", type=str, default="127.0.0.1", help="Host address (default: 127.0.0.1)")
+    parser.add_argument("--host", type=str, default="0.0.0.0", help="Host address (default: 0.0.0.0)")
     args = parser.parse_args()
 
+    ThreadingHTTPServer.allow_reuse_address = True
     server_address = (args.host, args.port)
-    httpd = HTTPServer(server_address, PipePyeRequestHandler)
+    httpd = ThreadingHTTPServer(server_address, PipePyeRequestHandler)
+    httpd.daemon_threads = True
     print("=" * 70)
     print(f"  PipePye Demonstration Web Server Running")
-    print(f"  URL: http://{args.host}:{args.port}")
+    print(f"  Local URL:    http://localhost:{args.port}  or  http://127.0.0.1:{args.port}")
+    print(f"  Network URL:  http://192.168.1.12:{args.port}")
     print(f"  Runner binary: {RUNNER_BIN}")
     print("=" * 70)
 
