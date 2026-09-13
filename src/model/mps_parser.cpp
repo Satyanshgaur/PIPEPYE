@@ -239,16 +239,22 @@ Status MPSParser::parse_stream(std::istream& in, LinearProgram& out_model) {
             }
 
             case Section::Rhs: {
-                if (tokens.size() < 3) continue;
-                std::string rhs_name = tokens[0];
-                if (first_rhs_name.empty()) {
-                    first_rhs_name = rhs_name;
-                } else if (rhs_name != first_rhs_name) {
-                    // Ignore secondary RHS vectors per MPS convention
-                    continue;
+                if (tokens.size() < 2) continue;
+                size_t start_p = 1;
+                if (out_model.row_name_to_idx.count(tokens[0]) > 0 || tokens[0] == out_model.obj_name) {
+                    start_p = 0;
+                } else {
+                    std::string rhs_name = tokens[0];
+                    if (first_rhs_name.empty()) {
+                        first_rhs_name = rhs_name;
+                    } else if (rhs_name != first_rhs_name) {
+                        // Ignore secondary RHS vectors per MPS convention
+                        continue;
+                    }
+                    start_p = 1;
                 }
 
-                for (size_t p = 1; p + 1 < tokens.size(); p += 2) {
+                for (size_t p = start_p; p + 1 < tokens.size(); p += 2) {
                     std::string row_name = tokens[p];
                     scalar_t val = std::stod(tokens[p + 1]);
 
@@ -274,15 +280,21 @@ Status MPSParser::parse_stream(std::istream& in, LinearProgram& out_model) {
             }
 
             case Section::Ranges: {
-                if (tokens.size() < 3) continue;
-                std::string range_name = tokens[0];
-                if (first_range_name.empty()) {
-                    first_range_name = range_name;
-                } else if (range_name != first_range_name) {
-                    continue;
+                if (tokens.size() < 2) continue;
+                size_t start_p = 1;
+                if (out_model.row_name_to_idx.count(tokens[0]) > 0) {
+                    start_p = 0;
+                } else {
+                    std::string range_name = tokens[0];
+                    if (first_range_name.empty()) {
+                        first_range_name = range_name;
+                    } else if (range_name != first_range_name) {
+                        continue;
+                    }
+                    start_p = 1;
                 }
 
-                for (size_t p = 1; p + 1 < tokens.size(); p += 2) {
+                for (size_t p = start_p; p + 1 < tokens.size(); p += 2) {
                     std::string row_name = tokens[p];
                     scalar_t r_val = std::stod(tokens[p + 1]);
 

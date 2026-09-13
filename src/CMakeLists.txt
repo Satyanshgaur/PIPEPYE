@@ -22,6 +22,11 @@ add_library(pipepye_core
     solver/solution_verifier.cpp
     solver/pdhg_solver_cpu.cpp
     solver/pdhg_solver.cpp
+    factorization/dense_lu.cpp
+    factorization/sparse_lu.cpp
+    factorization/basis_factorization.cpp
+    simplex/dual_simplex.cpp
+    crossover/pdhg_crossover.cpp
 )
 
 target_include_directories(pipepye_core

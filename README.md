@@ -21,11 +21,14 @@ pipepye/
 │   └── pipepye/
 │       ├── core/               # Precision definitions (scalar_t, index_t), Status, Version
 │       ├── cuda/               # CUDA_CHECK macros, CudaException, Device querying (RTX 3050)
-│       └── utils/              # High-resolution CPUTimer, Logger, ScopedNvtxRange markers
+│       ├── utils/              # High-resolution CPUTimer, Logger, ScopedNvtxRange markers
+│       ├── simplex/            # Basis state, SimplexConfig, Pricing, Ratio test, DualSimplexSolver
+│       ├── factorization/      # DenseLU oracle, SparseLU (Markowitz), BasisFactorization (PFI eta)
+│       └── crossover/          # Active set detection, basis crash & repair, warm-start cleanup
 ├── src/                        # Core C++20 library implementations (libpipepye_core.a)
 ├── cuda/                       # CUDA kernels (DAXPY/SAXPY) & hardware probe (pipepye_device_probe)
-├── tests/                      # GoogleTest suite run via CTest (139 unit and integration tests)
-├── benchmarks/                 # CPU sparse, CUDA SpMV, scaling, PDHG solver (Exps A-G), and robustness benchmarks
+├── tests/                      # GoogleTest suite run via CTest (160 unit and integration tests)
+├── benchmarks/                 # CPU sparse, CUDA SpMV, scaling, PDHG (Exps A-G), Simplex (Exps A-I)
 ├── tools/                      # CLI utilities (pipepye_inspect unified model analyzer with 4-way ablation)
 ├── scripts/
 │   └── profile.sh              # One-command NVIDIA Nsight Systems profiling script
@@ -33,14 +36,16 @@ pipepye/
     ├── architecture.md         # Master optimization solver architecture & development roadmap
     ├── phase1summary.md        # Phase 1 sparse numerical core empirical findings & implications
     ├── phase2summary.md        # Phase 2 presolve, scaling & characterization findings & implications
-    ├── phase3summary.md        # Phase 3 PDHG solver findings, crossover map & implications for Phase 4
+    ├── phase3summary.md        # Phase 3 PDHG solver findings, crossover map & implications
+    ├── phase4summary.md        # Phase 4 Dual Simplex & Crossover findings & strategic pointers
+    ├── simplex.md              # Sparse Dual Revised Simplex, PFI, Devex, & Crossover architecture
     ├── pdhg.md                 # Primal-Dual Hybrid Gradient solver architecture, GPU residency & verification
     ├── presolve.md             # Modular presolve pipeline, 5 reduction passes & postsolve reconstruction
     ├── scaling.md              # Ruiz equilibration, Pock-Chambolle scaling & unscaling
     ├── characterization.md     # Problem analyzer, topological moments, Gini & conditioning proxies
     ├── numerical_robustness.md # First-order PDHG downstream solver 4-way ablation experiment
     ├── benchmark.md            # CPU/GPU micro-benchmarks, SpMV scaling & bandwidth analysis
-    ├── tests.md                # Comprehensive test inventory (139 tests) & numerical verification
+    ├── tests.md                # Comprehensive test inventory (160 tests) & numerical verification
     ├── algorithm-hardware-feasibility.md # Algorithm × hardware feasibility & LP architecture blueprint
     ├── mps-spec.md             # MPS parser specification & internal model mapping
     ├── environment.md          # Hardware & toolchain specification (RTX 3050, GCC 16, CUDA 13.3)
@@ -68,12 +73,17 @@ ninja -C build
 ctest --test-dir build --output-on-failure
 ```
 
-### 3. Run Phase 3 Comprehensive PDHG Benchmark (Experiments A through G)
+### 3. Run Phase 4 Comprehensive Simplex & Crossover Benchmark (Experiments A through I)
+```bash
+./build/bin/pipepye_bench_simplex
+```
+
+### 4. Run Phase 3 Comprehensive PDHG Benchmark (Experiments A through G)
 ```bash
 ./build/bin/pipepye_bench_pdhg
 ```
 
-### 4. Inspect LP Models (Single-Line Banner, 4-Way Ablation or Full Report)
+### 5. Inspect LP Models (Single-Line Banner, 4-Way Ablation or Full Report)
 ```bash
 # Print canonical one-line dispatch summary:
 ./build/bin/pipepye_inspect tests/data/mps/netlib/beaconfd.mps --one-line
@@ -88,23 +98,23 @@ ctest --test-dir build --output-on-failure
 ./build/bin/pipepye_inspect tests/data/mps/netlib/beaconfd.mps --before-after
 ```
 
-### 5. Run Automated Before/After Presolve & Scaling Benchmark
+### 6. Run Automated Before/After Presolve & Scaling Benchmark
 ```bash
 ./build/bin/pipepye_bench_presolve_scaling
 ```
 
-### 6. Run Downstream 4-Way Numerical Robustness Experiment (PDHG Simulation)
+### 7. Run Downstream 4-Way Numerical Robustness Experiment (PDHG Simulation)
 ```bash
 ./build/bin/pipepye_bench_numerical_robustness
 ```
 
-### 7. Run Hardware Detection & CUDA Micro-Benchmarks
+### 8. Run Hardware Detection & CUDA Micro-Benchmarks
 ```bash
 ./build/bin/pipepye_device_probe
 ./build/bin/pipepye_microbench_cuda
 ```
 
-### 8. Profile with NVIDIA Nsight Systems
+### 9. Profile with NVIDIA Nsight Systems
 ```bash
 ./scripts/profile.sh
 ```
@@ -118,7 +128,10 @@ ctest --test-dir build --output-on-failure
   - [Phase 1 Summary & Findings](docs/phase1summary.md)
   - [Phase 2 Summary & Preconditioning Findings](docs/phase2summary.md)
   - [Phase 3 Summary & Empirical Crossover Findings](docs/phase3summary.md)
-- **Phase 3 Solver**:
+  - [Phase 4 Summary: Dual Simplex & Crossover](docs/phase4summary.md)
+- **Phase 4 Simplex & Crossover**:
+  - [Sparse Dual Revised Simplex & Basis Crossover](docs/simplex.md)
+- **Phase 3 First-Order Solver**:
   - [PDHG LP Solver Architecture & Verification](docs/pdhg.md)
 - **Phase 2 Pipeline & Algorithms**:
   - [Presolve Pipeline Architecture](docs/presolve.md)
@@ -127,7 +140,7 @@ ctest --test-dir build --output-on-failure
   - [Numerical Robustness Experiment](docs/numerical_robustness.md)
 - **Benchmarks & Numerical Verification**:
   - [CPU & GPU Performance Benchmarking Report](docs/benchmark.md)
-  - [Comprehensive Test Verification Report (139 Tests)](docs/tests.md)
+  - [Comprehensive Test Verification Report (160 Tests)](docs/tests.md)
   - [Algorithm × Hardware Feasibility & LP Architecture](docs/algorithm-hardware-feasibility.md)
   - [MPS Ingestion Specification & Model Mapping](docs/mps-spec.md)
 - **Environment & Engineering**:

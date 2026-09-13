@@ -2,7 +2,7 @@
 
 **Project**: PipePye — High-Performance Sovereign Optimization Solver  
 **Date**: September 2026  
-**Status**: `100% Passed (139 / 139 Tests Passed, 0 Failed, 0 Skipped)`  
+**Status**: `100% Passed (160 / 160 Tests Passed, 0 Failed, 0 Skipped)`  
 **Test Harness**: GoogleTest v1.15.2 & CTest (CMake 4.3.0)  
 
 ---
@@ -21,7 +21,7 @@ The test suite was compiled and executed natively on the target host hardware:
 | **GPU Model** | NVIDIA GeForce RTX 3050 6GB Laptop GPU (Ampere sm_86, 5.67 GiB VRAM) |
 | **CUDA Toolchain** | NVIDIA CUDA Toolkit 13.3 (Driver Version: 590.26, Compute Capability: 8.6) |
 | **Build System** | CMake 4.3.0 with Ninja Multi-Threaded Generator |
-| **Total Test Execution Time** | **7.71 seconds** |
+| **Total Test Execution Time** | **5.77 seconds** |
 
 ---
 
@@ -30,8 +30,8 @@ The test suite was compiled and executed natively on the target host hardware:
 ```
 ================================================================================
 Test project /home/satyansh/pipepye/build
-      Total Tests: 139
-      Passed:      139 (100.0%)
+      Total Tests: 160
+      Passed:      160 (100.0%)
       Failed:        0 (0.0%)
       Skipped:       0 (0.0%)
 ================================================================================
@@ -331,9 +331,70 @@ Verifies resident GPU state persistence, CPU/GPU numerical parity, timing decomp
 
 | Test # | Test Name | Status | Duration | Description |
 | :---: | :--- | :--- | :---: | :--- |
-| **137** | `PDHGCUDATest.SingleEqualityConstraintCUDA` | **PASSED** | 260 ms | Executes PDHG on GPU with resident memory, validating primal solution $x^* = (4, 0), f^* = 8.0$ and non-zero timing decomposition ($T_{\text{h2d}}, T_{\text{pure}}, T_{\text{d2h}} > 0$). |
-| **138** | `PDHGCUDATest.MultipleConstraintsParityAgainstCPU` | **PASSED** | 290 ms | Solves multi-constraint LP on both CPU and GPU, confirming bit-level numerical parity on primal objective and decision variables ($\|x_{\text{cpu}} - x_{\text{cuda}}\|_\infty < 0.02$). |
-| **139** | `PDHGCUDATest.NetlibAFIROSolveCUDA` | **PASSED** | 300 ms | Executes end-to-end pipeline solve on GPU for Netlib `afiro.mps`, verifying 710-iteration convergence to $f^* = -464.74$, passing independent verification, and validating zero per-iteration host transfers. |
+| **137** | `PDHGCUDATest.SingleEqualityConstraintCUDA` | **PASSED** | 240 ms | Executes PDHG on GPU with resident memory, validating primal solution $x^* = (4, 0), f^* = 8.0$ and non-zero timing decomposition ($T_{\text{h2d}}, T_{\text{pure}}, T_{\text{d2h}} > 0$). |
+| **138** | `PDHGCUDATest.MultipleConstraintsParityAgainstCPU` | **PASSED** | 310 ms | Solves multi-constraint LP on both CPU and GPU, confirming bit-level numerical parity on primal objective and decision variables ($\|x_{\text{cpu}} - x_{\text{cuda}}\|_\infty < 0.02$). |
+| **139** | `PDHGCUDATest.NetlibAFIROSolveCUDA` | **PASSED** | 260 ms | Executes end-to-end pipeline solve on GPU for Netlib `afiro.mps`, verifying convergence to $f^* = -464.74$, passing independent verification, and validating zero per-iteration host transfers. |
+
+---
+
+### 3.21. Dense LU Factorization Oracle (`test_dense_lu_oracle.cpp`)
+Verifies dense Gaussian elimination with row partial pivoting ($PA = LU$) as a ground-truth reference for small basis linear solves.
+
+| Test # | Test Name | Status | Duration | Description |
+| :---: | :--- | :---: | :---: | :--- |
+| **140** | `DenseLUTest.FactorizeAndSolve2x2` | **PASSED** | < 1 ms | Validates $2 \times 2$ matrix factorization, FTRAN ($LU x = Pb$), and BTRAN ($U^T L^T P x = b$). |
+| **141** | `DenseLUTest.FactorizeAndSolve3x3` | **PASSED** | < 1 ms | Verifies $3 \times 3$ factorization and solve accuracy ($\|Ax - b\|_\infty < 10^{-10}$). |
+| **142** | `DenseLUTest.SingularMatrixDetection` | **PASSED** | < 1 ms | Validates immediate return of `NumericalFailure` status upon zero pivot detection. |
+| **143** | `DenseLUTest.IdentityMatrix` | **PASSED** | < 1 ms | Verifies identity matrix pass-through without unnecessary row permutations. |
+
+---
+
+### 3.22. Sparse LU Factorization with Markowitz Pivoting (`test_sparse_lu.cpp`)
+Verifies sparse LU decomposition with Markowitz threshold partial pivoting ($P B Q = LU$), minimum-degree pivot selection, and dynamic fill-in tracking.
+
+| Test # | Test Name | Status | Duration | Description |
+| :---: | :--- | :---: | :---: | :--- |
+| **144** | `SparseLUTest.DiagonalMatrixFactorizeAndSolve` | **PASSED** | < 1 ms | Factorizes diagonal matrices with $0$ fill-in and verifies forward/backward solve accuracy. |
+| **145** | `SparseLUTest.TridiagonalMatrixFactorizeAndSolve` | **PASSED** | < 1 ms | Verifies Markowitz singleton prioritization and sparse triangular substitution on tridiagonal systems. |
+| **146** | `SparseLUTest.ParityAgainstDenseLUOracle` | **PASSED** | < 1 ms | Verifies exact bit-level agreement between `SparseLU` and `DenseLU` oracle solutions. |
+| **147** | `SparseLUTest.SingularMatrixReturnsFailure` | **PASSED** | < 1 ms | Verifies structural and numerical singularity detection during elimination. |
+
+---
+
+### 3.23. Basis Factorization & PFI Updates (`test_basis_factorization.cpp`)
+Verifies basis matrix construction, elementary Product Form of the Inverse (PFI) eta updates, FTRAN, BTRAN, and refactorization triggering.
+
+| Test # | Test Name | Status | Duration | Description |
+| :---: | :--- | :---: | :---: | :--- |
+| **148** | `BasisFactorizationTest.SlackInitialBasis` | **PASSED** | < 1 ms | Validates initial logical basis factorization ($B = -I$) and $O(1)$ solve complexity. |
+| **149** | `BasisFactorizationTest.PFIUpdateParityAgainstRefactorize` | **PASSED** | < 1 ms | Verifies that PFI eta updates match full basis refactorization to machine precision. |
+| **150** | `BasisFactorizationTest.RefactorizePolicyThreshold` | **PASSED** | < 1 ms | Verifies automated refactorization triggering when eta accumulation exceeds threshold. |
+
+---
+
+### 3.24. Sparse Dual Revised Simplex Solver (`test_dual_simplex.cpp`)
+Verifies the complete dual simplex algorithm with Devex pricing, bound flipping, and full pipeline integration.
+
+| Test # | Test Name | Status | Duration | Description |
+| :---: | :--- | :---: | :---: | :--- |
+| **151** | `DualSimplexTest.UnconstrainedBounded1DLP` | **PASSED** | < 1 ms | Solves 1D bounded problem without constraints, verifying bound placement. |
+| **152** | `DualSimplexTest.SingleEqualityConstraint` | **PASSED** | < 1 ms | Solves single-variable equality constraint to exact vertex optimality. |
+| **153** | `DualSimplexTest.TwoVariableLinearProgramWithVertexOptimum` | **PASSED** | < 1 ms | Solves 2D inequality system, verifying vertex coordinates and audit by `SolutionVerifier`. |
+| **154** | `DualSimplexTest.InfeasibleLPDetected` | **PASSED** | < 1 ms | Verifies detection of contradictory constraints and return of `PRIMAL_INFEASIBLE`. |
+| **155** | `DualSimplexTest.PricingStrategyAblationDantzigVsDevex` | **PASSED** | < 1 ms | Compares Dantzig vs Devex pricing, validating convergence to identical optimal value. |
+| **156** | `DualSimplexTest.NetlibAFIRODirectSolveAndVerification` | **PASSED** | 10 ms | Direct cold-start solve of Netlib `afiro.mps`, matching exact optimal objective $-464.753143$. |
+| **157** | `DualSimplexTest.NetlibBLENDDirectSolveAndVerification` | **PASSED** | 30 ms | Cold-start solve of Netlib `blend.mps`, reaching exact optimal objective $-30.812150$. |
+| **158** | `DualSimplexTest.EndToEndSolvePipelineIntegrationAFIRO` | **PASSED** | 10 ms | Validates `DualSimplexSolver::solve_end_to_end` with full presolve, scaling, simplex solve, postsolve recovery, and independent verification. |
+
+---
+
+### 3.25. PDHG to Simplex Basis Crossover (`test_crossover.cpp`)
+Verifies the hybrid first-order to active-set crossover pipeline.
+
+| Test # | Test Name | Status | Duration | Description |
+| :---: | :--- | :---: | :---: | :--- |
+| **159** | `CrossoverTest.TwoVariableLPCrossoverFromApproximatePoint` | **PASSED** | < 1 ms | Ingests perturbed approximate solution, detects active bounds, crashes basis, and snaps to exact vertex. |
+| **160** | `CrossoverTest.NetlibAFIROPDHGToSimplexCrossover` | **PASSED** | 10 ms | Warm-starts from moderate-precision PDHG solution ($10^{-4}$), executes basis crash and clean-up pivots, reaching exact objective $-464.753143$ audited by `SolutionVerifier`. |
 
 ---
 

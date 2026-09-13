@@ -39,6 +39,19 @@ set_target_properties(pipepye_bench_numerical_robustness PROPERTIES
     CXX_STANDARD_REQUIRED ON
 )
 
+# Phase 4 Dual Simplex & Basis Crossover Benchmark Suite
+add_executable(pipepye_bench_simplex
+    bench_simplex.cpp
+)
+target_link_libraries(pipepye_bench_simplex
+    PRIVATE
+        pipepye_core
+)
+set_target_properties(pipepye_bench_simplex PROPERTIES
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+
 if(PIPEPYE_ENABLE_CUDA)
     add_executable(pipepye_microbench_cuda
         microbench_cuda.cu

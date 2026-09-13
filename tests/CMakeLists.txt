@@ -27,6 +27,11 @@ add_executable(test_core
     test_problem_analyzer.cpp
     test_pipeline.cpp
     test_pdhg_cpu.cpp
+    test_dense_lu_oracle.cpp
+    test_sparse_lu.cpp
+    test_basis_factorization.cpp
+    test_dual_simplex.cpp
+    test_crossover.cpp
 )
 
 target_link_libraries(test_core
