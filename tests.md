@@ -30,8 +30,8 @@ The test suite was compiled and executed natively on the target host hardware:
 ```
 ================================================================================
 Test project /home/satyansh/pipepye/build
-      Total Tests: 69
-      Passed:      69 (100.0%)
+      Total Tests: 79
+      Passed:      79 (100.0%)
       Failed:       0 (0.0%)
       Skipped:      0 (0.0%)
 ================================================================================

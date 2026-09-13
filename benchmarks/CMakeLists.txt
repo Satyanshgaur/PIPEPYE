@@ -53,4 +53,19 @@ if(PIPEPYE_ENABLE_CUDA)
         CUDA_STANDARD 20
         CUDA_STANDARD_REQUIRED ON
     )
+
+    add_executable(pipepye_run_all_benchmarks
+        run_all_benchmarks.cu
+    )
+
+    target_link_libraries(pipepye_run_all_benchmarks
+        PRIVATE
+            ${BENCH_DEPS}
+    )
+
+    set_target_properties(pipepye_run_all_benchmarks PROPERTIES
+        CUDA_STANDARD 20
+        CUDA_STANDARD_REQUIRED ON
+    )
 endif()
+
