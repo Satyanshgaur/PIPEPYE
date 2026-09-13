@@ -11,3 +11,35 @@ set_target_properties(pipepye_inspect PROPERTIES
     CXX_STANDARD 20
     CXX_STANDARD_REQUIRED ON
 )
+
+add_executable(pipepye_dashboard_runner
+    pipepye_dashboard_runner.cpp
+)
+
+if(PIPEPYE_ENABLE_CUDA)
+    set(RUNNER_DEPS
+        pipepye_cuda
+        pipepye_core
+        ${CMAKE_DL_LIBS}
+    )
+    if(TARGET CUDA::nvtx3)
+        list(APPEND RUNNER_DEPS CUDA::nvtx3)
+    endif()
+    if(TARGET CUDA::nvToolsExt)
+        list(APPEND RUNNER_DEPS CUDA::nvToolsExt)
+    endif()
+    target_link_libraries(pipepye_dashboard_runner
+        PRIVATE
+            ${RUNNER_DEPS}
+    )
+else()
+    target_link_libraries(pipepye_dashboard_runner
+        PRIVATE
+            pipepye_core
+    )
+endif()
+
+set_target_properties(pipepye_dashboard_runner PROPERTIES
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)

@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PipePye Optimization Engine — Technical Demonstration Dashboard</title>
+    <link rel="stylesheet" href="/dashboard.css">
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-container">
+            <div class="brand">
+                <span class="brand-logo">π</span>
+                <div>
+                    <h1 class="brand-title">PipePye Optimization Engine</h1>
+                    <p class="brand-subtitle">Structure-Aware Linear & Mixed-Integer Solver Pipeline</p>
+                </div>
+            </div>
+            <div class="header-controls">
+                <div class="status-indicator">
+                    <span class="status-dot ready" id="system-status-dot"></span>
+                    <span id="system-status-text">Engine Ready (C++20/CUDA)</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <!-- Input & Control Section -->
+        <section class="card control-card">
+            <div class="card-header">
+                <h2>Model Ingestion & Solver Configuration</h2>
+                <span class="badge">Native Linux Filesystem Input</span>
+            </div>
+            <div class="card-body">
+                <div class="control-grid">
+                    <!-- File Selection Area -->
+                    <div class="file-drop-zone" id="drop-zone">
+                        <input type="file" id="mps-file-input" accept=".mps" style="display: none;">
+                        <div class="drop-zone-content" id="drop-zone-prompt">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                            </svg>
+                            <p class="primary-text">Select an <strong>.mps</strong> file from your Linux filesystem</p>
+                            <p class="secondary-text">Click to browse or drag & drop</p>
+                        </div>
+                        <div class="selected-file-info" id="selected-file-info" style="display: none;">
+                            <span class="file-icon">📄</span>
+                            <span class="file-name" id="selected-file-name">None</span>
+                            <span class="file-size" id="selected-file-size">0 KB</span>
+                            <button class="btn-text" id="btn-clear-file">Change</button>
+                        </div>
+                    </div>
+
+                    <!-- Preset Samples & Solver Controls -->
+                    <div class="controls-side">
+                        <div class="form-group">
+                            <label for="sample-select">Or Select a Built-in Test Model:</label>
+                            <select id="sample-select">
+                                <option value="">-- Choose from Netlib or Industrial Suite --</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group row-group">
+                            <div>
+                                <label for="max-iters">Max PDHG Iterations:</label>
+                                <input type="number" id="max-iters" value="3000" min="100" max="20000" step="100">
+                            </div>
+                            <div class="action-wrap">
+                                <button id="btn-solve" class="btn btn-primary" disabled>
+                                    <span class="btn-spinner" id="btn-spinner" style="display: none;"></span>
+                                    Run PipePye Pipeline
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Execution Progress Log Bar -->
+                <div class="execution-progress" id="execution-progress" style="display: none;">
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" id="progress-bar-fill"></div>
+                    </div>
+                    <div class="progress-steps" id="progress-steps">
+                        <span class="step-label active" id="step-ingest">Ingestion</span>
+                        <span class="step-label" id="step-prep">Presolve & Scaling</span>
+                        <span class="step-label" id="step-struct">Structural Prediction</span>
+                        <span class="step-label" id="step-solve">Core Solvers</span>
+                        <span class="step-label" id="step-verify">Solution Verification</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Error Container -->
+        <div id="error-container" class="alert alert-error" style="display: none;"></div>
+
+        <!-- Results View (Hidden until execution completes) -->
+        <div id="results-view" style="display: none;">
+
+            <!-- Executive Summary Banner -->
+            <section class="card summary-banner">
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <span class="summary-label">Model Name</span>
+                        <span class="summary-value" id="res-model-name">-</span>
+                        <span class="summary-sub" id="res-parse-time">Parse: 0.0 ms</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Pre-Registered Prediction</span>
+                        <span class="summary-value" id="res-predicted-engine">-</span>
+                        <span class="summary-sub" id="res-prediction-rationale">-</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Empirical Winner</span>
+                        <span class="summary-value highlight" id="res-winner-engine">-</span>
+                        <span class="summary-sub" id="res-winner-time">Time: - ms</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Structural Hypothesis</span>
+                        <span class="badge badge-outcome" id="res-prediction-badge">-</span>
+                        <span class="summary-sub" id="res-verif-badge">Verification: -</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Optimal Objective</span>
+                        <span class="summary-value mono" id="res-best-obj">-</span>
+                        <span class="summary-sub" id="res-obj-status">Consistent</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Grid Layout for Solver Phases -->
+            <div class="two-column-grid">
+
+                <!-- Phase 1: Sparse Representation & Core Memory -->
+                <section class="card">
+                    <div class="card-header">
+                        <h3>Phase 1: Sparse Representation & Storage</h3>
+                        <span class="tag">Raw Matrix Topology</span>
+                    </div>
+                    <div class="card-body">
+                        <table class="data-table">
+                            <tbody>
+                                <tr><td>Dimensions $(m \times n)$</td><td class="mono font-bold" id="p1-dims">-</td></tr>
+                                <tr><td>Nonzeros (NNZ)</td><td class="mono" id="p1-nnz">-</td></tr>
+                                <tr><td>Matrix Density $(\rho)$</td><td class="mono" id="p1-density">-</td></tr>
+                                <tr><td>Variables Breakdown</td><td id="p1-vars">-</td></tr>
+                                <tr><td>Constraint Senses</td><td id="p1-senses">-</td></tr>
+                                <tr><td>COO Buffer Footprint</td><td class="mono" id="p1-coo-mem">-</td></tr>
+                                <tr><td>CSR Matrix Footprint</td><td class="mono" id="p1-csr-mem">-</td></tr>
+                                <tr><td>CSC Matrix Footprint</td><td class="mono" id="p1-csc-mem">-</td></tr>
+                                <tr><td>SpMV Kernel Selection</td><td class="highlight-text" id="p1-spmv-suit">-</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Phase 2: Presolve & Scaling -->
+                <section class="card">
+                    <div class="card-header">
+                        <h3>Phase 2: Presolve & Ruiz Scaling</h3>
+                        <span class="tag">Preconditioning Pipeline</span>
+                    </div>
+                    <div class="card-body">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Metric</th>
+                                    <th>Raw Model</th>
+                                    <th>Prepared</th>
+                                    <th>Reduction</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Rows $(m)$</td>
+                                    <td class="mono" id="p2-raw-rows">-</td>
+                                    <td class="mono" id="p2-prep-rows">-</td>
+                                    <td class="mono text-green" id="p2-rows-red">-</td>
+                                </tr>
+                                <tr>
+                                    <td>Columns $(n)$</td>
+                                    <td class="mono" id="p2-raw-cols">-</td>
+                                    <td class="mono" id="p2-prep-cols">-</td>
+                                    <td class="mono text-green" id="p2-cols-red">-</td>
+                                </tr>
+                                <tr>
+                                    <td>Nonzeros (NNZ)</td>
+                                    <td class="mono" id="p2-raw-nnz">-</td>
+                                    <td class="mono" id="p2-prep-nnz">-</td>
+                                    <td class="mono text-green" id="p2-nnz-red">-</td>
+                                </tr>
+                                <tr>
+                                    <td>Density $(\rho)$</td>
+                                    <td class="mono" id="p2-raw-density">-</td>
+                                    <td class="mono" id="p2-prep-density">-</td>
+                                    <td class="mono" id="p2-density-change">-</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="callout mt-3">
+                            <div class="callout-row">
+                                <span class="label">Dynamic Range Compression:</span>
+                                <span class="mono" id="p2-dynamic-range">-</span>
+                            </div>
+                            <div class="callout-row">
+                                <span class="label">Equilibration Method:</span>
+                                <span id="p2-scaling-method">Ruiz Equilibration (L-inf)</span>
+                            </div>
+                            <div class="callout-row">
+                                <span class="label">Preparation Latency:</span>
+                                <span class="mono" id="p2-prep-time">- ms</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+
+            <!-- Phase 5: Structure & Pre-Registered Recommendation -->
+            <section class="card">
+                <div class="card-header">
+                    <h3>Phase 5: Structural Moments & Algorithmic Selection</h3>
+                    <span class="tag">Graph & Matrix Invariants</span>
+                </div>
+                <div class="card-body">
+                    <div class="metrics-row">
+                        <div class="metric-card">
+                            <span class="metric-title">Staircase Score</span>
+                            <span class="metric-val" id="p5-staircase">-</span>
+                            <span class="metric-desc">Multi-period time coupling</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-title">Row Gini Index</span>
+                            <span class="metric-val" id="p5-row-gini">-</span>
+                            <span class="metric-desc">Degree imbalance / Hub rows</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-title">Row Degree (Max / Avg)</span>
+                            <span class="metric-val" id="p5-row-degree">-</span>
+                            <span class="metric-desc">Nonzeros per row constraint</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-title">Half-Bandwidth</span>
+                            <span class="metric-val" id="p5-bandwidth">-</span>
+                            <span class="metric-desc">Diagonal profile envelope</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-title">Integrality Ratio</span>
+                            <span class="metric-val" id="p5-integrality">-</span>
+                            <span class="metric-desc">Discrete variables ratio</span>
+                        </div>
+                    </div>
+                    <div class="prediction-box mt-3">
+                        <div class="prediction-header">
+                            <strong>Pre-Registered Solver Recommendation:</strong>
+                            <span class="badge badge-info" id="p5-rec-badge">-</span>
+                        </div>
+                        <p class="prediction-rationale-text" id="p5-rec-rationale">-</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Phase 3: First-Order PDHG Convergence & Execution -->
+            <section class="card">
+                <div class="card-header">
+                    <h3>Phase 3: First-Order PDHG Solvers (CPU & GPU)</h3>
+                    <span class="tag">Iteration Convergence</span>
+                </div>
+                <div class="card-body">
+                    <div class="pdhg-layout">
+                        <!-- Table comparison -->
+                        <div class="pdhg-table-wrap">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Backend</th>
+                                        <th>Status</th>
+                                        <th>Objective</th>
+                                        <th>Iters</th>
+                                        <th>Primal Res</th>
+                                        <th>Dual Res</th>
+                                        <th>Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>CPU (Baseline)</strong></td>
+                                        <td><span class="badge" id="pdhg-cpu-status">-</span></td>
+                                        <td class="mono" id="pdhg-cpu-obj">-</td>
+                                        <td class="mono" id="pdhg-cpu-iters">-</td>
+                                        <td class="mono" id="pdhg-cpu-pres">-</td>
+                                        <td class="mono" id="pdhg-cpu-dres">-</td>
+                                        <td class="mono" id="pdhg-cpu-time">- ms</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>CUDA (GPU VRAM)</strong></td>
+                                        <td><span class="badge" id="pdhg-gpu-status">-</span></td>
+                                        <td class="mono" id="pdhg-gpu-obj">-</td>
+                                        <td class="mono" id="pdhg-gpu-iters">-</td>
+                                        <td class="mono" id="pdhg-gpu-pres">-</td>
+                                        <td class="mono" id="pdhg-gpu-dres">-</td>
+                                        <td class="mono" id="pdhg-gpu-time">- ms</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div class="gpu-timing-breakdown mt-2" id="gpu-timing-box" style="display: none;">
+                                <span class="timing-chip" id="chip-h2d">H2D: 0.0 ms</span>
+                                <span class="timing-chip" id="chip-pure">Kernel: 0.0 ms</span>
+                                <span class="timing-chip" id="chip-d2h">D2H: 0.0 ms</span>
+                            </div>
+                        </div>
+
+                        <!-- Real Convergence Chart Container (SVG) -->
+                        <div class="chart-container">
+                            <div class="chart-header">
+                                <span class="chart-title">Residual Convergence History ($\log_{10}$ Norm)</span>
+                                <div class="chart-legend">
+                                    <span class="legend-item"><span class="legend-dot color-primal"></span> Primal Residual</span>
+                                    <span class="legend-item"><span class="legend-dot color-dual"></span> Dual Residual</span>
+                                </div>
+                            </div>
+                            <div class="svg-chart-wrapper" id="svg-chart-wrapper">
+                                <svg id="convergence-svg" width="100%" height="220" viewBox="0 0 500 220" preserveAspectRatio="none">
+                                    <!-- Axes and dynamic polylines rendered via dashboard.js -->
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Phase 4 & Phase 5: Simplex, Crossover, & MILP Warm-Start -->
+            <div class="two-column-grid">
+
+                <!-- Phase 4: Dual Revised Simplex & Crossover -->
+                <section class="card">
+                    <div class="card-header">
+                        <h3>Phase 4: Dual Revised Simplex & Crossover</h3>
+                        <span class="tag">High-Accuracy Simplex</span>
+                    </div>
+                    <div class="card-body">
+                        <h4>Dual Revised Simplex Engine</h4>
+                        <table class="data-table">
+                            <tbody>
+                                <tr><td>Status</td><td><span class="badge" id="ds-status">-</span></td></tr>
+                                <tr><td>Objective Value</td><td class="mono font-bold" id="ds-obj">-</td></tr>
+                                <tr><td>Simplex Iterations (Pivots)</td><td class="mono" id="ds-pivots">-</td></tr>
+                                <tr><td>Bound Flips (Harris Ratio)</td><td class="mono" id="ds-bound-flips">-</td></tr>
+                                <tr><td>LU Factorizations</td><td class="mono" id="ds-factorizations">-</td></tr>
+                                <tr><td>Product Form (PFI) Eta Updates</td><td class="mono" id="ds-eta-updates">-</td></tr>
+                                <tr><td>FTRAN / BTRAN Solves</td><td class="mono" id="ds-tran-counts">-</td></tr>
+                                <tr><td>Total Solve Time</td><td class="mono" id="ds-time">- ms</td></tr>
+                            </tbody>
+                        </table>
+
+                        <h4 class="mt-3">PDHG → Simplex Basis Crossover</h4>
+                        <table class="data-table">
+                            <tbody>
+                                <tr><td>Crossover Succeeded</td><td><span class="badge" id="co-status">-</span></td></tr>
+                                <tr><td>Active Bounds Detected</td><td class="mono" id="co-bounds">-</td></tr>
+                                <tr><td>Crashed Basis Partition</td><td class="mono" id="co-partition">-</td></tr>
+                                <tr><td>Simplex Clean-up Pivots</td><td class="mono" id="co-pivots">-</td></tr>
+                                <tr><td>Total Crossover Latency</td><td class="mono" id="co-time">- ms</td></tr>
+                                <tr><td>Final Vertex Objective</td><td class="mono font-bold" id="co-obj">-</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Phase 5: MILP Branch-and-Bound (Warm vs Cold Start) -->
+                <section class="card" id="card-milp">
+                    <div class="card-header">
+                        <h3>Phase 5: MILP Branch-and-Bound Ablation</h3>
+                        <span class="tag" id="milp-tag">Combinatorial Search</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="milp-not-applicable" class="milp-placeholder" style="display: none;">
+                            <p>This model is a pure Continuous Linear Program (0 discrete/binary variables).</p>
+                            <p class="secondary-text">Select an industrial MILP (e.g. Case C Refinery Scheduling or Case D Unit Commitment) to evaluate the warm-start pivot reduction ablation.</p>
+                        </div>
+
+                        <div id="milp-applicable">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Search Strategy</th>
+                                        <th>Simplex Pivots</th>
+                                        <th>Nodes Explored</th>
+                                        <th>Total Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="highlight-row">
+                                        <td><strong>Dual Warm-Start (PipePye)</strong></td>
+                                        <td class="mono font-bold text-green" id="milp-warm-pivots">-</td>
+                                        <td class="mono" id="milp-warm-nodes">-</td>
+                                        <td class="mono" id="milp-warm-time">- ms</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Cold-Start Baseline</strong></td>
+                                        <td class="mono" id="milp-cold-pivots">-</td>
+                                        <td class="mono" id="milp-cold-nodes">-</td>
+                                        <td class="mono" id="milp-cold-time">- ms</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <div class="pivot-reduction-badge mt-3">
+                                <span class="badge-label">Empirical Pivot Reduction:</span>
+                                <span class="badge-value text-green font-bold" id="milp-reduction-pct">- %</span>
+                            </div>
+
+                            <div class="callout mt-2">
+                                <div class="callout-row">
+                                    <span class="label">Best Integer Incumbent Objective:</span>
+                                    <span class="mono font-bold" id="milp-best-obj">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+
+            <!-- Independent Solution Verification Audit -->
+            <section class="card">
+                <div class="card-header">
+                    <h3>Independent Solution Verification</h3>
+                    <span class="tag">Audited Against Original Model</span>
+                </div>
+                <div class="card-body">
+                    <div class="verification-grid">
+                        <div class="verif-card">
+                            <span class="verif-title">Audited Engine</span>
+                            <span class="verif-val mono font-bold" id="verif-engine">-</span>
+                        </div>
+                        <div class="verif-card">
+                            <span class="verif-title">Feasibility Audit</span>
+                            <span class="verif-val badge" id="verif-feas-badge">-</span>
+                        </div>
+                        <div class="verif-card">
+                            <span class="verif-title">Max Variable Bound Violation</span>
+                            <span class="verif-val mono" id="verif-bound-viol">-</span>
+                        </div>
+                        <div class="verif-card">
+                            <span class="verif-title">Max Constraint Violation</span>
+                            <span class="verif-val mono" id="verif-row-viol">-</span>
+                        </div>
+                        <div class="verif-card">
+                            <span class="verif-title">Objective Mismatch</span>
+                            <span class="verif-val mono" id="verif-obj-mismatch">-</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <footer class="app-footer">
+        <p>PipePye Optimization Engine &middot; Real-time demonstration frontend on Linux &middot; Native C++20/CUDA execution</p>
+    </footer>
+
+    <script src="/dashboard.js"></script>
+</body>
+</html>
