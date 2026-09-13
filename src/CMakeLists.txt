@@ -17,6 +17,8 @@ add_library(pipepye_core
     presolve/presolve_oracle.cpp
     scaling/equilibrator.cpp
     analysis/problem_analyzer.cpp
+    analysis/conditioning_proxy.cpp
+    pipeline/model_pipeline.cpp
 )
 
 target_include_directories(pipepye_core

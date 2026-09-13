@@ -61,6 +61,20 @@ PresolveContext::PresolveContext(const model::LinearProgram& lp, PresolveOptions
             col_degrees_[j] = static_cast<index_t>(col_adj_[j].size());
         }
     }
+
+    // Validate bounds: detect immediate infeasibility
+    for (index_t j = 0; j < num_cols_; ++j) {
+        if (col_lb_[j] > col_ub_[j] + options_.tolerance) {
+            status_ = PresolveStatus::Infeasible;
+            return;
+        }
+    }
+    for (index_t i = 0; i < num_rows_; ++i) {
+        if (row_lb_[i] > row_ub_[i] + options_.tolerance) {
+            status_ = PresolveStatus::Infeasible;
+            return;
+        }
+    }
 }
 
 void PresolveContext::remove_row(index_t i) {

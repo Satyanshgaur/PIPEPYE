@@ -43,6 +43,11 @@ StatusOr<PassStats> EmptyRowColPass::run(PresolveContext& ctx) {
         scalar_t lb = ctx.col_lower(j);
         scalar_t ub = ctx.col_upper(j);
 
+        if (lb > ub + eps) {
+            ctx.set_status(PresolveStatus::Infeasible);
+            return stats;
+        }
+
         if (c > eps) {
             // Minimizing positive cost c * x -> set x to smallest possible value
             if (lb > -inf) {

@@ -25,6 +25,7 @@ add_executable(test_core
     test_presolve_edge_cases.cpp
     test_scaling.cpp
     test_problem_analyzer.cpp
+    test_pipeline.cpp
 )
 
 target_link_libraries(test_core

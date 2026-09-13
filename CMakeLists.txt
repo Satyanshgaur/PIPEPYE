@@ -62,6 +62,7 @@ endif()
 # Subdirectories
 add_subdirectory(src)
 add_subdirectory(cuda)
+add_subdirectory(tools)
 
 if(PIPEPYE_BUILD_TESTS)
     enable_testing()

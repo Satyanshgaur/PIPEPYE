@@ -13,6 +13,32 @@ set_target_properties(pipepye_bench_sparse_cpu PROPERTIES
     CXX_STANDARD_REQUIRED ON
 )
 
+# Automated Before/After Presolve & Scaling Benchmark
+add_executable(pipepye_bench_presolve_scaling
+    bench_presolve_scaling.cpp
+)
+target_link_libraries(pipepye_bench_presolve_scaling
+    PRIVATE
+        pipepye_core
+)
+set_target_properties(pipepye_bench_presolve_scaling PROPERTIES
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+
+# Numerical Robustness Benchmark (PDHG First-Order Simulation)
+add_executable(pipepye_bench_numerical_robustness
+    bench_numerical_robustness.cpp
+)
+target_link_libraries(pipepye_bench_numerical_robustness
+    PRIVATE
+        pipepye_core
+)
+set_target_properties(pipepye_bench_numerical_robustness PROPERTIES
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+
 if(PIPEPYE_ENABLE_CUDA)
     add_executable(pipepye_microbench_cuda
         microbench_cuda.cu

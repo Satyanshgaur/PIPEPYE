@@ -2,7 +2,7 @@
 
 **Project**: PipePye — High-Performance Sovereign Optimization Solver  
 **Date**: September 2026  
-**Status**: `100% Passed (116 / 116 Tests Passed, 0 Failed, 0 Skipped)`  
+**Status**: `100% Passed (120 / 120 Tests Passed, 0 Failed, 0 Skipped)`  
 **Test Harness**: GoogleTest v1.15.2 & CTest (CMake 4.3.0)  
 
 ---
@@ -21,7 +21,7 @@ The test suite was compiled and executed natively on the target host hardware:
 | **GPU Model** | NVIDIA GeForce RTX 3050 6GB Laptop GPU (Ampere sm_86, 5.67 GiB VRAM) |
 | **CUDA Toolchain** | NVIDIA CUDA Toolkit 13.3 (Driver Version: 590.26, Compute Capability: 8.6) |
 | **Build System** | CMake 4.3.0 with Ninja Multi-Threaded Generator |
-| **Total Test Execution Time** | **4.22 seconds** |
+| **Total Test Execution Time** | **5.92 seconds** |
 
 ---
 
@@ -30,8 +30,8 @@ The test suite was compiled and executed natively on the target host hardware:
 ```
 ================================================================================
 Test project /home/satyansh/pipepye/build
-      Total Tests: 116
-      Passed:      116 (100.0%)
+      Total Tests: 120
+      Passed:      120 (100.0%)
       Failed:        0 (0.0%)
       Skipped:       0 (0.0%)
 ================================================================================
@@ -250,43 +250,55 @@ Validates problem geometry extraction, higher-order degree moments, Gini coeffic
 
 ---
 
-### 3.15. CUDA Device & Kernel Verification (`test_cuda_ops.cu`)
+### 3.15. Model Preparation Pipeline & Conditioning Proxies (`test_pipeline.cpp`)
+Validates end-to-end model preparation orchestrating presolve reductions, Ruiz equilibration, conditioning proxies, and 1-step solution recovery.
+
+| Test # | Test Name | Status | Duration | Description |
+| :---: | :--- | :---: | :---: | :--- |
+| **101** | `ConditioningProxyTest.MagnitudeAndSpectralProxies` | **PASSED** | 10 ms | Validates practical conditioning estimators (dynamic range proxy, norm ratios, power iteration spectral norm estimate) and canonical one-line summary formatting. |
+| **102** | `ModelPipelineTest.FullPreparationAndSolutionRecovery` | **PASSED** | 10 ms | **1-Step Solution Recovery**: Simulates downstream solver output on transformed space; verifies single-call recovery restores fixed variables and exact original objective. |
+| **103** | `ModelPipelineTest.NetlibAfiroPipeline` | **PASSED** | < 1 ms | Validates complete pipeline on real Netlib `AFIRO` MPS model with bounded scaling and structural profiling. |
+| **104** | `ModelPipelineTest.InfeasibleModelDetection` | **PASSED** | < 1 ms | Validates pipeline handling of contradictory primal bounds ($l_j > u_j$) with immediate infeasibility detection. |
+
+---
+
+### 3.16. CUDA Device & Kernel Verification (`test_cuda_ops.cu`)
 Validates GPU hardware detection, runtime error intercepts, and CUDA kernel numerical accuracy.
 
 | Test # | Test Name | Status | Duration | Description |
 | :---: | :--- | :---: | :---: | :--- |
-| **101** | `CudaErrorHandlingTest.ExplicitErrorHandlingThrowsCudaException` | **PASSED** | 50 ms | Verifies that CUDA runtime failures throw typed `CudaException` with file and line metadata. |
-| **102** | `CudaErrorHandlingTest.SuccessDoesNotThrow` | **PASSED** | < 1 ms | Validates zero overhead when CUDA operations succeed. |
-| **103** | `CudaErrorHandlingTest.CatchesRuntimeCallFailure` | **PASSED** | 30 ms | Verifies error trapping on invalid device pointers. |
-| **104** | `CudaDeviceTest.QueryDeviceCapabilities` | **PASSED** | 230 ms | Discovers NVIDIA RTX 3050 Laptop GPU (5.67 GiB VRAM, 20 SMs, Warp Size 32, Max Threads/Block 1024). |
-| **105** | `CudaKernelTest.DoublePrecisionAxpyNumericalVerification` | **PASSED** | 230 ms | **GPU Numerical Parity**: Verifies CUDA DAXPY ($N=100,000$) matches CPU reference to machine precision ($< 10^{-14}$). |
-| **106** | `CudaKernelTest.SinglePrecisionAxpyNumericalVerification` | **PASSED** | 200 ms | **GPU Numerical Parity**: Verifies CUDA SAXPY ($N=100,000$) matches single-precision CPU reference. |
+| **105** | `CudaErrorHandlingTest.ExplicitErrorHandlingThrowsCudaException` | **PASSED** | 50 ms | Verifies that CUDA runtime failures throw typed `CudaException` with file and line metadata. |
+| **106** | `CudaErrorHandlingTest.SuccessDoesNotThrow` | **PASSED** | < 1 ms | Validates zero overhead when CUDA operations succeed. |
+| **107** | `CudaErrorHandlingTest.CatchesRuntimeCallFailure` | **PASSED** | 30 ms | Verifies error trapping on invalid device pointers. |
+| **108** | `CudaDeviceTest.QueryDeviceCapabilities` | **PASSED** | 230 ms | Discovers NVIDIA RTX 3050 Laptop GPU (5.67 GiB VRAM, 20 SMs, Warp Size 32, Max Threads/Block 1024). |
+| **109** | `CudaKernelTest.DoublePrecisionAxpyNumericalVerification` | **PASSED** | 230 ms | **GPU Numerical Parity**: Verifies CUDA DAXPY ($N=100,000$) matches CPU reference to machine precision ($< 10^{-14}$). |
+| **110** | `CudaKernelTest.SinglePrecisionAxpyNumericalVerification` | **PASSED** | 200 ms | **GPU Numerical Parity**: Verifies CUDA SAXPY ($N=100,000$) matches single-precision CPU reference. |
 
 ---
 
-### 3.16. CUDA Warp/Block-Level Reductions (`test_cuda_spmv_and_reductions.cu`)
+### 3.17. CUDA Warp/Block-Level Reductions (`test_cuda_spmv_and_reductions.cu`)
 Validates fast on-device reduction kernels utilized for solver convergence criteria, objective evaluations, and KKT residual norms.
 
 | Test # | Test Name | Status | Duration | Description |
 | :---: | :--- | :---: | :---: | :--- |
-| **107** | `CudaReductionsTest.DotProductParityAgainstCPU` | **PASSED** | 200 ms | **Numerical Parity**: Validates GPU dot product against CPU reference on vectors $N = 10^2$ to $2 \times 10^5$ (relative error $< 10^{-12}$). |
-| **108** | `CudaReductionsTest.NormsAndSumParityAgainstCPU` | **PASSED** | 230 ms | **Mathematical Parity**: Validates GPU $L_1$ norm, $L_2$ Euclidean norm, $L_\infty$ max norm, and element summation against CPU to machine precision. |
-| **109** | `CudaReductionsTest.BoundaryDimensions` | **PASSED** | 220 ms | **Boundary Testing**: Validates reductions on small/sub-warp boundary vector sizes ($N = 1, 31, 32, 33, 255, 256, 257$). |
+| **111** | `CudaReductionsTest.DotProductParityAgainstCPU` | **PASSED** | 200 ms | **Numerical Parity**: Validates GPU dot product against CPU reference on vectors $N = 10^2$ to $2 \times 10^5$ (relative error $< 10^{-12}$). |
+| **112** | `CudaReductionsTest.NormsAndSumParityAgainstCPU` | **PASSED** | 230 ms | **Mathematical Parity**: Validates GPU $L_1$ norm, $L_2$ Euclidean norm, $L_\infty$ max norm, and element summation against CPU to machine precision. |
+| **113** | `CudaReductionsTest.BoundaryDimensions` | **PASSED** | 220 ms | **Boundary Testing**: Validates reductions on small/sub-warp boundary vector sizes ($N = 1, 31, 32, 33, 255, 256, 257$). |
 
 ---
 
-### 3.17. CUDA SpMV Execution Variants & CPU Numerical Parity (`test_cuda_spmv_and_reductions.cu`)
+### 3.18. CUDA SpMV Execution Variants & CPU Numerical Parity (`test_cuda_spmv_and_reductions.cu`)
 Verifies all 4 CUDA SpMV kernel strategies (**Scalar**, **Vector/Warp**, **Adaptive Sub-warp 8**, and **Balanced Work-partitioned**) against the CPU CSR reference across all sparse matrix topologies.
 
 | Test # | Test Name | Status | Duration | Description |
 | :---: | :--- | :---: | :---: | :--- |
-| **110** | `CudaSpMVVerificationTest.RandomSparseMatrixParityAllVariants` | **PASSED** | 250 ms | Verifies all 4 GPU SpMV kernels on uniform random matrices with both standard ($1.0 \cdot Ax$) and generalized ($2.5 \cdot Ax - 1.5 \cdot y$) scaling ($\|y_{\text{gpu}} - y_{\text{cpu}}\|_\infty < 10^{-12}$). |
-| **111** | `CudaSpMVVerificationTest.BandedMatrixParityAllVariants` | **PASSED** | 220 ms | Verifies all 4 GPU SpMV kernels on banded diagonally-dominant matrices ($\|y_{\text{gpu}} - y_{\text{cpu}}\|_\infty < 10^{-12}$). |
-| **112** | `CudaSpMVVerificationTest.BlockDiagonalMatrixParityAllVariants` | **PASSED** | 320 ms | Verifies all 4 GPU SpMV kernels on block-diagonal structures with off-diagonal coupling ($\|y_{\text{gpu}} - y_{\text{cpu}}\|_\infty < 10^{-12}$). |
-| **113** | `CudaSpMVVerificationTest.StaircaseMatrixParityAllVariants` | **PASSED** | 310 ms | Verifies all 4 GPU SpMV kernels on multi-stage inter-temporal staircase LP matrices ($\|y_{\text{gpu}} - y_{\text{cpu}}\|_\infty < 10^{-12}$). |
-| **114** | `CudaSpMVVerificationTest.IrregularHubMatrixParityAllVariants` | **PASSED** | 230 ms | Verifies all 4 GPU SpMV kernels on extreme power-law / hub distributions (5% hub rows holding 50% of nonzeros) with zero numerical degradation. |
-| **115** | `CudaSpMVVerificationTest.NetlibLPModelsParityAllVariants` | **PASSED** | 200 ms | Verifies all 4 GPU SpMV kernels on parsed real-world Netlib LP problems (`BEACONFD`, `BANDM`, `AFIRO`). |
-| **116** | `CudaSpMVVerificationTest.EmptyMatrixAndEmptyRowsEdgeCases` | **PASSED** | 240 ms | Verifies all 4 GPU SpMV kernels handle matrices with alternating empty rows without out-of-bounds memory accesses. |
+| **114** | `CudaSpMVVerificationTest.RandomSparseMatrixParityAllVariants` | **PASSED** | 250 ms | Verifies all 4 GPU SpMV kernels on uniform random matrices with both standard ($1.0 \cdot Ax$) and generalized ($2.5 \cdot Ax - 1.5 \cdot y$) scaling ($\|y_{\text{gpu}} - y_{\text{cpu}}\|_\infty < 10^{-12}$). |
+| **115** | `CudaSpMVVerificationTest.BandedMatrixParityAllVariants` | **PASSED** | 220 ms | Verifies all 4 GPU SpMV kernels on banded diagonally-dominant matrices ($\|y_{\text{gpu}} - y_{\text{cpu}}\|_\infty < 10^{-12}$). |
+| **116** | `CudaSpMVVerificationTest.BlockDiagonalMatrixParityAllVariants` | **PASSED** | 320 ms | Verifies all 4 GPU SpMV kernels on block-diagonal structures with off-diagonal coupling ($\|y_{\text{gpu}} - y_{\text{cpu}}\|_\infty < 10^{-12}$). |
+| **117** | `CudaSpMVVerificationTest.StaircaseMatrixParityAllVariants` | **PASSED** | 310 ms | Verifies all 4 GPU SpMV kernels on multi-stage inter-temporal staircase LP matrices ($\|y_{\text{gpu}} - y_{\text{cpu}}\|_\infty < 10^{-12}$). |
+| **118** | `CudaSpMVVerificationTest.IrregularHubMatrixParityAllVariants` | **PASSED** | 230 ms | Verifies all 4 GPU SpMV kernels on extreme power-law / hub distributions (5% hub rows holding 50% of nonzeros) with zero numerical degradation. |
+| **119** | `CudaSpMVVerificationTest.NetlibLPModelsParityAllVariants` | **PASSED** | 200 ms | Verifies all 4 GPU SpMV kernels on parsed real-world Netlib LP problems (`BEACONFD`, `BANDM`, `AFIRO`). |
+| **120** | `CudaSpMVVerificationTest.EmptyMatrixAndEmptyRowsEdgeCases` | **PASSED** | 240 ms | Verifies all 4 GPU SpMV kernels handle matrices with alternating empty rows without out-of-bounds memory accesses. |
 
 ---
 

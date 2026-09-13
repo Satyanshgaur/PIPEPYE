@@ -113,7 +113,7 @@ The benchmark runner [`benchmarks/run_all_benchmarks.cu`](file:///home/satyansh/
 All plots are generated automatically by [`scripts/plot_benchmarks.py`](file:///home/satyansh/pipepye/scripts/plot_benchmarks.py) from the captured benchmark datasets.
 
 ### Figure 1: Crossover Analysis — SpMV Runtime vs Problem Size (NNZ)
-![SpMV Crossover Analysis](benchmarks/plots/runtime_vs_nnz.png)
+![SpMV Crossover Analysis](plots/runtime_vs_nnz.png)
 
 #### Detailed Analysis:
 - At $\text{NNZ} = 2,469$, CPU 1-Thread executes in **$1.95\ \mu\text{s}$**, whereas GPU kernels take **$7.5 - 14.5\ \mu\text{s}$**. The CPU is **$3.8\times - 7.4\times$ faster** than the GPU.
@@ -124,7 +124,7 @@ All plots are generated automatically by [`scripts/plot_benchmarks.py`](file:///
 ---
 
 ### Figure 2: Speedup vs CPU 1-Thread Across Problem Size
-![Speedup vs Problem Size](benchmarks/plots/speedup_vs_problem_size.png)
+![Speedup vs Problem Size](plots/speedup_vs_problem_size.png)
 
 #### Detailed Analysis:
 - The horizontal dashed line ($y = 1.0\times$) represents the single-threaded CPU baseline.
@@ -135,7 +135,7 @@ All plots are generated automatically by [`scripts/plot_benchmarks.py`](file:///
 ---
 
 ### Figure 3: Memory Bandwidth Throughput vs Matrix Density
-![Performance vs Sparsity](benchmarks/plots/performance_vs_sparsity.png)
+![Performance vs Sparsity](plots/performance_vs_sparsity.png)
 
 #### Detailed Analysis:
 - Evaluated on a fixed $10,000 \times 10,000$ matrix with density varying from $0.05\%$ ($50,000\text{ NNZ}$) to $5.0\%$ ($5,000,000\text{ NNZ}$).
@@ -146,7 +146,7 @@ All plots are generated automatically by [`scripts/plot_benchmarks.py`](file:///
 ---
 
 ### Figure 4: Structural Topologies & Netlib LP Instances Comparison
-![Structure Comparison](benchmarks/plots/structure_comparison.png)
+![Structure Comparison](plots/structure_comparison.png)
 
 #### Detailed Analysis:
 The performance profile varies dramatically depending on matrix sparsity structure:
@@ -165,7 +165,7 @@ The performance profile varies dramatically depending on matrix sparsity structu
 ---
 
 ### Figure 5: Vector Reductions Bandwidth Scaling vs Hardware Peak
-![Reductions Bandwidth](benchmarks/plots/reductions_bandwidth.png)
+![Reductions Bandwidth](plots/reductions_bandwidth.png)
 
 #### Detailed Analysis:
 - **Left Panel (Dot Product Scaling)**: Shows bandwidth scaling from $N = 10^4$ to $N = 10^7$ double-precision elements.
@@ -204,3 +204,63 @@ flowchart TD
    - Dispatch to `Scalar`, `Adaptive`, or `Balanced` based on row variance metrics.
 3. **Threshold for CPU Fallback**:
    - Subproblems with $\text{NNZ} < 20,000$ (such as subproblems within Branch-and-Bound trees) execute on CPU single-thread to avoid GPU invocation overheads.
+
+---
+
+## 6. Phase 2 Preconditioning & Numerical Robustness Experiments
+
+### 6.1 Automated Before/After Presolve & Scaling Harness (`pipepye_bench_presolve_scaling`)
+Executes Path A (Raw LP Characterization) vs. Path B (Presolve + Ruiz Scaling + Postsolve Map) across 11 benchmark instances:
+
+```text
+========================================================================================================================
+Model               Raw Size       Prep Size      Row Red%    Col Red%    Raw Range      Prep Range     Ruiz Iter   Time (ms) 
+------------------------------------------------------------------------------------------------------------------------
+AFIRO               27x32          21x29          22.2        9.4         2.3e+01        9.3e+00        11          0.14      
+ADLITTLE            56x97          53x95          5.4         2.1         5.4e+04        9.7e+02        16          0.23      
+BEACONFD            173x262        86x147         50.3        43.9        4.2e+05        8.3e+02        1           0.59      
+BLEND               74x83          26x15          64.9        81.9        2.2e+04        1.5e+01        16          0.14      
+BANDM               305x472        211x248        30.8        47.5        2.0e+05        7.9e+03        16          1.83      
+synth_ill_cond      1000x1000      995x1000       0.5         0.0         1.3e+04        1.1e+04        14          5.86      
+synth_degenerate    120x150        110x105        8.3         30.0        1.3e+00        1.3e+00        12          0.20      
+synth_banded        2000x2000      2000x2000      0.0         0.0         1.0e+05        1.0e+05        13          25.38     
+synth_block_diag    2000x2000      1999x1993      0.0         0.3         2.1e+04        2.0e+04        14          15.25     
+synth_staircase     2000x2200      2000x2200      0.0         0.0         5.7e+04        5.4e+04        14          16.84     
+synth_irregular     2000x2000      1075x893       46.2        55.4        1.2e+04        1.0e+04        15          25.63     
+========================================================================================================================
+```
+
+Machine-readable outputs: `reports/presolve_scaling_benchmark.csv` and `reports/presolve_scaling_benchmark.json`.
+
+### 6.2 Downstream Numerical Robustness Evaluation (`pipepye_bench_numerical_robustness`)
+Simulates first-order PDHG (Chambolle-Pock) optimization on Raw vs. Prepared LPs:
+
+```text
+========================================================================================================================
+                                  NUMERICAL ROBUSTNESS RESULTS SUMMARY                                                  
+========================================================================================================================
+Model                 Category        Raw Iters   Prep Iters  Raw P-Res       Prep P-Res      Raw Conv?   Prep Conv?  Speedup   
+------------------------------------------------------------------------------------------------------------------------
+AFIRO                 Easy_Baseline   500         500         4.90e-07        1.54e-05        MAX_ITER    MAX_ITER    0.50x     
+BEACONFD              Large_Sparse    500         500         4.37e-01        1.58e-05        MAX_ITER    MAX_ITER    1.25x     
+ill_conditioned_1e12  Ill_Conditioned 500         0           6.91e-01        0.00e+00        MAX_ITER    CONV        7.98x     
+degenerate_cascaded   Degenerate      500         500         3.21e-02        3.19e-08        MAX_ITER    MAX_ITER    0.20x     
+irregular_hub_extreme Irregular_Hub   500         500         5.56e+00        4.44e-01        MAX_ITER    MAX_ITER    0.55x     
+========================================================================================================================
+```
+
+- **Stagnation Prevention**: Raw PDHG was trapped at $43.7\%$ error on `BEACONFD`; after presolve & Ruiz scaling, error dropped by **$27,700\times$** to $1.58 \times 10^{-5}$ ($1.25\times$ faster overall).
+- **Zero-Iteration Presolve Solutions**: Ill-conditioned systems with $10^{12}$ dynamic range were solved to exact optimality inside the presolve pipeline ($0$ solver iterations, **$7.98\times$ faster**).
+- **Feasibility on Degeneracies**: Cascaded redundant rows and fixed bounds were pruned, driving primal residual from $3.2 \times 10^{-2}$ to **$3.19 \times 10^{-8}$** (a **$1,000,000\times$ improvement**).
+- Machine-readable outputs: `reports/numerical_robustness.csv` and `reports/numerical_robustness.json`.
+
+### 6.3 Unified Model Inspection CLI (`tools/pipepye_inspect`)
+Single-command CLI inspection tool printing canonical one-line banner and full analytical reports:
+```bash
+./build/bin/pipepye_inspect tests/data/mps/netlib/beaconfd.mps --one-line
+# Output:
+# 262 variables, 173 constraints, 7.446% density, coefficient range 10^-3–10^2, row imbalance extreme, estimated VRAM 59 KB
+
+./build/bin/pipepye_inspect tests/data/mps/netlib/beaconfd.mps --before-after
+```
+

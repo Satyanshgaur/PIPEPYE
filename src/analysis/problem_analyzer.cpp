@@ -288,7 +288,20 @@ ProblemStats ProblemAnalyzer::analyze(const model::LinearProgram& lp) {
     }
     stats.num_connected_components = components;
 
-    // 9. Kernel Engine Recommendation (derived from Phase 1 empirical findings)
+    // 9. Numerical Conditioning Proxies
+    stats.conditioning_proxy = ConditioningEstimator::estimate(lp);
+
+    // 10. Estimated Memory Footprint
+    size_t host_bytes = (sizeof(index_t) * (m + 1) + sizeof(index_t) * nnz + sizeof(scalar_t) * nnz) +
+                        (sizeof(index_t) * (n + 1) + sizeof(index_t) * nnz + sizeof(scalar_t) * nnz) +
+                        (sizeof(scalar_t) * (3 * n + 2 * m));
+    stats.estimated_host_ram_mb = static_cast<double>(host_bytes) / (1024.0 * 1024.0);
+
+    size_t gpu_bytes = (sizeof(index_t) * (m + 1) + sizeof(index_t) * nnz + sizeof(scalar_t) * nnz) +
+                       (sizeof(scalar_t) * (6 * n + 5 * m));
+    stats.estimated_gpu_vram_mb = static_cast<double>(gpu_bytes) / (1024.0 * 1024.0);
+
+    // 11. Kernel Engine Recommendation (derived from Phase 1 empirical findings)
     if (stats.num_nonzeros < 15000) {
         stats.recommended_engine = RecommendedEngine::CPU_SingleThread;
         stats.recommendation_reason =

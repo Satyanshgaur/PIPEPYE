@@ -1,0 +1,37 @@
+[
+  {
+    "model_name": "AFIRO",
+    "category": "Easy_Baseline",
+    "dimensions": {"rows": 27, "cols": 32, "nnz": 83},
+    "raw": {"iterations": 500, "converged": false, "diverged": false, "primal_res": 4.90328e-07, "dual_res": 0.898238, "obj": -72.3463, "time_ms": 0.302184},
+    "prepared": {"iterations": 500, "converged": false, "diverged": false, "primal_res": 1.53644e-05, "dual_res": 0.0322299, "obj": -249.473, "solver_ms": 0.255628, "prep_ms": 0.348157, "total_ms": 0.603785}
+  },
+  {
+    "model_name": "BEACONFD",
+    "category": "Large_Sparse",
+    "dimensions": {"rows": 173, "cols": 262, "nnz": 3375},
+    "raw": {"iterations": 500, "converged": false, "diverged": false, "primal_res": 0.436888, "dual_res": 133.507, "obj": 38705.2, "time_ms": 6.03647},
+    "prepared": {"iterations": 500, "converged": false, "diverged": false, "primal_res": 1.57777e-05, "dual_res": 0.82678, "obj": 33903.3, "solver_ms": 2.95321, "prep_ms": 1.88783, "total_ms": 4.84104}
+  },
+  {
+    "model_name": "ill_conditioned_1e12",
+    "category": "Ill_Conditioned",
+    "dimensions": {"rows": 150, "cols": 150, "nnz": 299},
+    "raw": {"iterations": 500, "converged": false, "diverged": false, "primal_res": 0.691404, "dual_res": 188931, "obj": 5371.23, "time_ms": 0.670059},
+    "prepared": {"iterations": 0, "converged": true, "diverged": false, "primal_res": 0, "dual_res": 0, "obj": 0, "solver_ms": 0, "prep_ms": 0.083944, "total_ms": 0.083944}
+  },
+  {
+    "model_name": "degenerate_cascaded",
+    "category": "Degenerate",
+    "dimensions": {"rows": 150, "cols": 150, "nnz": 280},
+    "raw": {"iterations": 500, "converged": false, "diverged": false, "primal_res": 0.0321351, "dual_res": 0.860675, "obj": 40, "time_ms": 0.551722},
+    "prepared": {"iterations": 500, "converged": false, "diverged": false, "primal_res": 3.19171e-08, "dual_res": 0.890645, "obj": 42, "solver_ms": 0.499264, "prep_ms": 2.22449, "total_ms": 2.72375}
+  },
+  {
+    "model_name": "irregular_hub_extreme",
+    "category": "Irregular_Hub",
+    "dimensions": {"rows": 250, "cols": 250, "nnz": 2500},
+    "raw": {"iterations": 500, "converged": false, "diverged": false, "primal_res": 5.55808, "dual_res": 0.942958, "obj": 903.184, "time_ms": 2.57279},
+    "prepared": {"iterations": 500, "converged": false, "diverged": false, "primal_res": 0.44412, "dual_res": 0.824016, "obj": 28.774, "solver_ms": 0.989329, "prep_ms": 3.65808, "total_ms": 4.64741}
+  }
+]

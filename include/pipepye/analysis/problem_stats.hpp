@@ -4,7 +4,9 @@
 #include <vector>
 #include <sstream>
 #include <iomanip>
+#include <cmath>
 #include <pipepye/core/types.hpp>
+#include <pipepye/analysis/conditioning_proxy.hpp>
 
 namespace pipepye::analysis {
 
@@ -90,27 +92,94 @@ struct ProblemStats {
     double staircase_score{0.0};          ///< Correlation between row index and column median
     int num_connected_components{0};      ///< Connected components in bipartite graph
 
-    // 7. Empirical Hardware Engine Recommendation
+    // 7. Numerical Conditioning Proxies
+    ConditioningProxy conditioning_proxy;
+
+    // 8. Memory Footprint Estimates
+    double estimated_host_ram_mb{0.0};
+    double estimated_gpu_vram_mb{0.0};
+
+    // 9. Empirical Hardware Engine Recommendation
     RecommendedEngine recommended_engine{RecommendedEngine::CPU_SingleThread};
     std::string recommendation_reason;
+
+    [[nodiscard]] std::string row_imbalance_rating() const {
+        if (row_length_gini >= 0.50 || row_length_imbalance >= 8.0) return "extreme";
+        if (row_length_gini >= 0.35 || row_length_imbalance >= 4.0) return "high";
+        if (row_length_gini >= 0.20 || row_length_imbalance >= 2.0) return "moderate";
+        return "low";
+    }
+
+    [[nodiscard]] std::string format_count(size_t val) const {
+        std::ostringstream ss;
+        if (val >= 1000000) {
+            ss << std::fixed << std::setprecision(1) << (static_cast<double>(val) / 1e6) << "M";
+        } else if (val >= 1000) {
+            ss << std::fixed << std::setprecision(1) << (static_cast<double>(val) / 1e3) << "K";
+        } else {
+            ss << val;
+        }
+        return ss.str();
+    }
+
+    [[nodiscard]] std::string format_memory(double mb) const {
+        std::ostringstream ss;
+        if (mb >= 1024.0) {
+            ss << std::fixed << std::setprecision(1) << (mb / 1024.0) << " GB";
+        } else if (mb >= 1.0) {
+            ss << std::fixed << std::setprecision(1) << mb << " MB";
+        } else {
+            ss << std::fixed << std::setprecision(0) << (mb * 1024.0) << " KB";
+        }
+        return ss.str();
+    }
+
+    [[nodiscard]] std::string format_coeff_range() const {
+        if (min_abs_coeff <= 0.0 && max_abs_coeff <= 0.0) return "0";
+        auto to_exp = [](scalar_t val) -> std::string {
+            int exp = static_cast<int>(std::floor(std::log10(val > 0.0 ? val : 1.0)));
+            return "10^" + std::to_string(exp);
+        };
+        return to_exp(min_abs_coeff) + "–" + to_exp(max_abs_coeff);
+    }
+
+    /// @brief Generates canonical single-line unified report banner for fast CLI inspection and dispatch.
+    /// Example: "12.4M variables, 8.1M constraints, 0.003% density, coefficient range 10^-7–10^6, row imbalance high, estimated VRAM 3.2 GB"
+    [[nodiscard]] std::string format_one_line_summary() const {
+        std::ostringstream ss;
+        ss << format_count(num_cols) << " variables, "
+           << format_count(num_rows) << " constraints, "
+           << std::fixed << std::setprecision(3) << (density * 100.0) << "% density, "
+           << "coefficient range " << format_coeff_range() << ", "
+           << "row imbalance " << row_imbalance_rating() << ", "
+           << "estimated VRAM " << format_memory(estimated_gpu_vram_mb);
+        return ss.str();
+    }
 
     [[nodiscard]] std::string format_report() const {
         std::ostringstream ss;
         ss << "================================================================================\n";
         ss << "                    PIPEPYE PROBLEM CHARACTERIZATION REPORT                     \n";
         ss << "================================================================================\n";
+        ss << "SUMMARY BANNER:\n";
+        ss << "  " << format_one_line_summary() << "\n";
+        ss << "--------------------------------------------------------------------------------\n";
         ss << "DIMENSIONS & SPARSITY:\n";
         ss << "  Rows: " << num_rows << ", Columns: " << num_cols << ", Nonzeros (NNZ): " << num_nonzeros << "\n";
         ss << "  Density: " << std::fixed << std::setprecision(5) << (density * 100.0) << "%\n";
         ss << "  Empty Rows: " << num_empty_rows << ", Empty Columns: " << num_empty_cols << "\n";
         ss << "--------------------------------------------------------------------------------\n";
-        ss << "COEFFICIENT DYNAMICS:\n";
+        ss << "COEFFICIENT DYNAMICS & CONDITIONING PROXIES:\n";
         ss << std::scientific << std::setprecision(3);
-        ss << "  Magnitude Min / Max:  " << min_abs_coeff << " / " << max_abs_coeff << "\n";
-        ss << "  Dynamic Range:        " << dynamic_range << " (" << std::fixed << std::setprecision(1)
+        ss << "  Magnitude Min / Max:        " << min_abs_coeff << " / " << max_abs_coeff << "\n";
+        ss << "  Dynamic Range (Proxy):      " << dynamic_range << " (" << std::fixed << std::setprecision(1)
            << dynamic_range_orders << " orders of magnitude)\n";
         ss << std::scientific << std::setprecision(3);
-        ss << "  Mean / StdDev Coeff:  " << mean_abs_coeff << " / " << stddev_abs_coeff << "\n";
+        ss << "  Mean / StdDev Coeff:        " << mean_abs_coeff << " / " << stddev_abs_coeff << "\n";
+        ss << "  Row/Col Norm Ratio Proxies: Row=" << conditioning_proxy.row_norm_ratio_proxy
+           << ", Col=" << conditioning_proxy.col_norm_ratio_proxy << "\n";
+        ss << "  Spectral Cond Proxy:        " << conditioning_proxy.spectral_conditioning_proxy
+           << " (spectral norm est: " << conditioning_proxy.spectral_norm_estimate << ")\n";
         ss << "--------------------------------------------------------------------------------\n";
         ss << "BOUNDS & VARIABLES:\n";
         ss << "  Variables:   " << num_boxed_vars << " Boxed, " << num_bounded_below_vars << " Bounded Below, "
@@ -125,12 +194,17 @@ struct ProblemStats {
            << ", StdDev=" << row_nnz_stddev << ", Skew=" << row_nnz_skewness << "\n";
         ss << "  Col NNZ:  Min=" << col_nnz_min << ", Max=" << col_nnz_max << ", Avg=" << col_nnz_avg
            << ", StdDev=" << col_nnz_stddev << ", Skew=" << col_nnz_skewness << "\n";
-        ss << "  Half-Bandwidth:       " << half_bandwidth << " (Normalized: " << std::setprecision(4)
+        ss << "  Half-Bandwidth:             " << half_bandwidth << " (Normalized: " << std::setprecision(4)
            << normalized_bandwidth << ")\n";
-        ss << "  Row Imbalance Ratio:  " << std::setprecision(2) << row_length_imbalance << "x\n";
-        ss << "  Row Gini Coefficient: " << std::setprecision(4) << row_length_gini << " (0=Uniform, 1=Heavy Hubs)\n";
-        ss << "  Staircase Score:      " << std::setprecision(3) << staircase_score << "\n";
-        ss << "  Connected Components: " << num_connected_components << "\n";
+        ss << "  Row Imbalance Ratio:        " << std::setprecision(2) << row_length_imbalance << "x ("
+           << row_imbalance_rating() << ")\n";
+        ss << "  Row Gini Coefficient:       " << std::setprecision(4) << row_length_gini << " (0=Uniform, 1=Heavy Hubs)\n";
+        ss << "  Staircase Score:            " << std::setprecision(3) << staircase_score << "\n";
+        ss << "  Connected Components:       " << num_connected_components << "\n";
+        ss << "--------------------------------------------------------------------------------\n";
+        ss << "ESTIMATED MEMORY CONSUMPTION:\n";
+        ss << "  Estimated Host RAM:         " << format_memory(estimated_host_ram_mb) << "\n";
+        ss << "  Estimated GPU VRAM:         " << format_memory(estimated_gpu_vram_mb) << "\n";
         ss << "--------------------------------------------------------------------------------\n";
         ss << "RECOMMENDED COMPUTATIONAL ENGINE:\n";
         ss << "  Selection: " << to_string(recommended_engine) << "\n";

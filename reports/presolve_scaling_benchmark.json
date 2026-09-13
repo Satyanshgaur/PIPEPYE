@@ -1,0 +1,101 @@
+[
+  {
+    "model_name": "AFIRO",
+    "category": "Netlib_Easy",
+    "raw": {"rows": 27, "cols": 32, "nnz": 83, "dynamic_range": 22.7009, "row_norm_ratio": 6.62995, "col_norm_ratio": 2.62679, "spectral_norm": 6.70703},
+    "prepared": {"rows": 21, "cols": 29, "nnz": 72, "dynamic_range": 9.34579, "row_norm_ratio": 2.88315, "col_norm_ratio": 1.74243, "spectral_norm": 2.9628},
+    "presolve": {"eliminated_rows": 6, "eliminated_cols": 3, "eliminated_nnz": 11, "fixed_vars": 0, "bounds_tightened": 42, "redundant_rows": 6, "passes": 4, "time_ms": 0.053872},
+    "scaling": {"iterations": 11, "time_ms": 0.017304},
+    "total_pipeline_ms": 0.144158
+  },
+  {
+    "model_name": "ADLITTLE",
+    "category": "Netlib_Standard",
+    "raw": {"rows": 56, "cols": 97, "nnz": 383, "dynamic_range": 53583.3, "row_norm_ratio": 106.4, "col_norm_ratio": 64.3078, "spectral_norm": 103.284},
+    "prepared": {"rows": 53, "cols": 95, "nnz": 373, "dynamic_range": 970.562, "row_norm_ratio": 2.96259, "col_norm_ratio": 1.93699, "spectral_norm": 4.42896},
+    "presolve": {"eliminated_rows": 3, "eliminated_cols": 2, "eliminated_nnz": 10, "fixed_vars": 1, "bounds_tightened": 122, "redundant_rows": 3, "passes": 3, "time_ms": 0.073526},
+    "scaling": {"iterations": 16, "time_ms": 0.048888},
+    "total_pipeline_ms": 0.226921
+  },
+  {
+    "model_name": "BEACONFD",
+    "category": "Netlib_LargeSparse",
+    "raw": {"rows": 173, "cols": 262, "nnz": 3375, "dynamic_range": 416667, "row_norm_ratio": 8510.14, "col_norm_ratio": 11511.5, "spectral_norm": 726.115},
+    "prepared": {"rows": 86, "cols": 147, "nnz": 1364, "dynamic_range": 833.333, "row_norm_ratio": 2.61974, "col_norm_ratio": 1.17603, "spectral_norm": 3.52971},
+    "presolve": {"eliminated_rows": 87, "eliminated_cols": 115, "eliminated_nnz": 2011, "fixed_vars": 77, "bounds_tightened": 167, "redundant_rows": 63, "passes": 4, "time_ms": 0.244358},
+    "scaling": {"iterations": 1, "time_ms": 0.082489},
+    "total_pipeline_ms": 0.591662
+  },
+  {
+    "model_name": "BLEND",
+    "category": "Netlib_Standard",
+    "raw": {"rows": 74, "cols": 83, "nnz": 491, "dynamic_range": 22000, "row_norm_ratio": 85.3623, "col_norm_ratio": 95.5184, "spectral_norm": 74.1702},
+    "prepared": {"rows": 26, "cols": 15, "nnz": 67, "dynamic_range": 14.5843, "row_norm_ratio": 1.92561, "col_norm_ratio": 2.55128, "spectral_norm": 2.70292},
+    "presolve": {"eliminated_rows": 48, "eliminated_cols": 68, "eliminated_nnz": 424, "fixed_vars": 62, "bounds_tightened": 19, "redundant_rows": 24, "passes": 4, "time_ms": 0.061995},
+    "scaling": {"iterations": 16, "time_ms": 0.014192},
+    "total_pipeline_ms": 0.143465
+  },
+  {
+    "model_name": "BANDM",
+    "category": "Netlib_Banded",
+    "raw": {"rows": 305, "cols": 472, "nnz": 2494, "dynamic_range": 200000, "row_norm_ratio": 751.166, "col_norm_ratio": 3035.38, "spectral_norm": 415.4},
+    "prepared": {"rows": 211, "cols": 248, "nnz": 1572, "dynamic_range": 7856.74, "row_norm_ratio": 3.89042, "col_norm_ratio": 2.72401, "spectral_norm": 4.08836},
+    "presolve": {"eliminated_rows": 94, "eliminated_cols": 224, "eliminated_nnz": 922, "fixed_vars": 63, "bounds_tightened": 1386, "redundant_rows": 87, "passes": 20, "time_ms": 1.19221},
+    "scaling": {"iterations": 16, "time_ms": 0.208797},
+    "total_pipeline_ms": 1.82571
+  },
+  {
+    "model_name": "synth_ill_cond",
+    "category": "Synthetic_IllConditioned",
+    "raw": {"rows": 1000, "cols": 1000, "nnz": 9955, "dynamic_range": 13488.5, "row_norm_ratio": 23.3255, "col_norm_ratio": 6.7094, "spectral_norm": 5.70885e+06},
+    "prepared": {"rows": 995, "cols": 1000, "nnz": 9942, "dynamic_range": 11333.9, "row_norm_ratio": 2.9703, "col_norm_ratio": 3.15069, "spectral_norm": 6.35983},
+    "presolve": {"eliminated_rows": 5, "eliminated_cols": 0, "eliminated_nnz": 13, "fixed_vars": 0, "bounds_tightened": 2837, "redundant_rows": 5, "passes": 3, "time_ms": 1.43564},
+    "scaling": {"iterations": 14, "time_ms": 1.61803},
+    "total_pipeline_ms": 5.85711
+  },
+  {
+    "model_name": "synth_degenerate",
+    "category": "Synthetic_Degenerate",
+    "raw": {"rows": 120, "cols": 150, "nnz": 220, "dynamic_range": 1.33333, "row_norm_ratio": 1, "col_norm_ratio": 4.42217, "spectral_norm": 8.38446},
+    "prepared": {"rows": 110, "cols": 105, "nnz": 220, "dynamic_range": 1.33333, "row_norm_ratio": 1.13133, "col_norm_ratio": 3.31686, "spectral_norm": 4.19223},
+    "presolve": {"eliminated_rows": 10, "eliminated_cols": 45, "eliminated_nnz": 0, "fixed_vars": 45, "bounds_tightened": 0, "redundant_rows": 10, "passes": 2, "time_ms": 0.033256},
+    "scaling": {"iterations": 12, "time_ms": 0.042109},
+    "total_pipeline_ms": 0.202488
+  },
+  {
+    "model_name": "synth_banded",
+    "category": "Synthetic_Banded",
+    "raw": {"rows": 2000, "cols": 2000, "nnz": 61760, "dynamic_range": 102828, "row_norm_ratio": 2.17365, "col_norm_ratio": 2.9198, "spectral_norm": 29.8104},
+    "prepared": {"rows": 2000, "cols": 2000, "nnz": 61760, "dynamic_range": 101838, "row_norm_ratio": 1.94944, "col_norm_ratio": 2.05788, "spectral_norm": 6.20113},
+    "presolve": {"eliminated_rows": 0, "eliminated_cols": 0, "eliminated_nnz": 0, "fixed_vars": 0, "bounds_tightened": 0, "redundant_rows": 0, "passes": 1, "time_ms": 1.48372},
+    "scaling": {"iterations": 13, "time_ms": 10.9513},
+    "total_pipeline_ms": 25.378
+  },
+  {
+    "model_name": "synth_block_diag",
+    "category": "Synthetic_BlockDiagonal",
+    "raw": {"rows": 2000, "cols": 2000, "nnz": 26917, "dynamic_range": 21265.2, "row_norm_ratio": 5.56714, "col_norm_ratio": 6.11812, "spectral_norm": 21.1931},
+    "prepared": {"rows": 1999, "cols": 1993, "nnz": 26816, "dynamic_range": 19599.7, "row_norm_ratio": 3.64212, "col_norm_ratio": 2.78666, "spectral_norm": 4.51221},
+    "presolve": {"eliminated_rows": 1, "eliminated_cols": 7, "eliminated_nnz": 101, "fixed_vars": 7, "bounds_tightened": 393, "redundant_rows": 0, "passes": 4, "time_ms": 3.20865},
+    "scaling": {"iterations": 14, "time_ms": 4.76938},
+    "total_pipeline_ms": 15.2482
+  },
+  {
+    "model_name": "synth_staircase",
+    "category": "Synthetic_Staircase",
+    "raw": {"rows": 2000, "cols": 2200, "nnz": 32216, "dynamic_range": 56814, "row_norm_ratio": 4.52238, "col_norm_ratio": 10.4332, "spectral_norm": 22.5522},
+    "prepared": {"rows": 2000, "cols": 2200, "nnz": 32216, "dynamic_range": 53541.8, "row_norm_ratio": 3.28853, "col_norm_ratio": 3.78836, "spectral_norm": 4.81493},
+    "presolve": {"eliminated_rows": 0, "eliminated_cols": 0, "eliminated_nnz": 0, "fixed_vars": 0, "bounds_tightened": 175, "redundant_rows": 0, "passes": 4, "time_ms": 3.33439},
+    "scaling": {"iterations": 14, "time_ms": 5.7991},
+    "total_pipeline_ms": 16.8374
+  },
+  {
+    "model_name": "synth_irregular",
+    "category": "Synthetic_IrregularHub",
+    "raw": {"rows": 2000, "cols": 2000, "nnz": 20000, "dynamic_range": 11807.4, "row_norm_ratio": 292.391, "col_norm_ratio": 15.6528, "spectral_norm": 34.0701},
+    "prepared": {"rows": 1075, "cols": 893, "nnz": 7730, "dynamic_range": 10411.3, "row_norm_ratio": 5.22804, "col_norm_ratio": 3.13622, "spectral_norm": 5.52801},
+    "presolve": {"eliminated_rows": 925, "eliminated_cols": 1107, "eliminated_nnz": 12270, "fixed_vars": 1107, "bounds_tightened": 15109, "redundant_rows": 636, "passes": 20, "time_ms": 21.2557},
+    "scaling": {"iterations": 15, "time_ms": 1.2098},
+    "total_pipeline_ms": 25.6336
+  }
+]
