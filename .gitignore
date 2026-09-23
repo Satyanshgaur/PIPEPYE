@@ -45,3 +45,8 @@ Testing/
 
 # GoogleTest download cache
 _deps/
+
+# Python bytecode
+__pycache__/
+*.pyc
+

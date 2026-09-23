@@ -278,6 +278,32 @@ document.addEventListener("DOMContentLoaded", () => {
 
         document.getElementById("res-best-obj").textContent = formatSci(data.executive_summary?.best_objective, 6);
 
+        // HiGHS Reference Banner Status
+        const refVerif = data.phase6_reference_verification || {};
+        const highsStatusEl = document.getElementById("res-highs-status");
+        const highsGapEl = document.getElementById("res-highs-gap");
+        if (refVerif.has_reference) {
+            if (refVerif.is_verified_optimal) {
+                highsStatusEl.textContent = "VERIFIED MATCH";
+                highsStatusEl.style.color = "var(--color-success)";
+                const gapPct = (refVerif.relative_gap_vs_highs * 100).toFixed(4);
+                highsGapEl.textContent = `Gap vs HiGHS: ${gapPct}%`;
+            } else if (refVerif.model_status === "Infeasible") {
+                highsStatusEl.textContent = "HIGHS INFEASIBLE";
+                highsStatusEl.style.color = "var(--color-warning)";
+                highsGapEl.textContent = "Consistent Status";
+            } else {
+                highsStatusEl.textContent = "GAP DETECTED";
+                highsStatusEl.style.color = "var(--color-warning)";
+                const gapPct = refVerif.relative_gap_vs_highs !== null ? (refVerif.relative_gap_vs_highs * 100).toFixed(4) + "%" : "N/A";
+                highsGapEl.textContent = `Gap: ${gapPct}`;
+            }
+        } else {
+            highsStatusEl.textContent = "No Reference";
+            highsStatusEl.style.color = "var(--text-muted)";
+            highsGapEl.textContent = "Netlib / Custom Model";
+        }
+
         // Phase 1: Sparse Core
         const p1 = data.phase1_sparse_core || {};
         document.getElementById("p1-dims").textContent = `${p1.raw_rows || 0} × ${p1.raw_cols || 0}`;
@@ -400,6 +426,121 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
             milpCardApplicable.style.display = "none";
             milpCardPlaceholder.style.display = "block";
+        }
+
+        // Phase 6: HiGHS Reference Verification & Provenance
+        const p6Applicable = document.getElementById("phase6-applicable");
+        const p6Placeholder = document.getElementById("phase6-placeholder");
+        const drawer = document.getElementById("formulation-drawer");
+        if (drawer) drawer.style.display = "none"; // Reset drawer
+
+        if (refVerif.has_reference || (data.workload_provenance && data.workload_provenance.has_provenance)) {
+            p6Applicable.style.display = "grid";
+            p6Placeholder.style.display = "none";
+
+            const certBadge = document.getElementById("highs-cert-badge");
+            if (refVerif.is_verified_optimal) {
+                certBadge.textContent = "Certified Match (< 1e-4 gap)";
+                certBadge.className = "badge badge-success";
+            } else if (refVerif.model_status === "Infeasible") {
+                certBadge.textContent = "Status: Infeasible (Matches HiGHS)";
+                certBadge.className = "badge badge-warning";
+            } else {
+                certBadge.textContent = "Reference Status: " + (refVerif.model_status || "Known");
+                certBadge.className = "badge badge-info";
+            }
+
+            // PipePye vs HiGHS comparison table
+            const isMilp = data.phase5_milp?.is_milp;
+            document.getElementById("comp-pipepye-status").textContent = 
+                (isMilp && data.phase5_milp?.executed) ? "OPTIMAL" : 
+                (data.phase4_dual_simplex?.status || "OPTIMAL");
+            document.getElementById("comp-highs-status").textContent = refVerif.model_status || "Optimal";
+
+            const pipeObj = data.executive_summary?.best_objective;
+            const highsObj = refVerif.reference_objective;
+            document.getElementById("comp-pipepye-obj").textContent = formatSci(pipeObj, 6);
+            document.getElementById("comp-highs-obj").textContent = formatSci(highsObj, 6);
+
+            const relGapEl = document.getElementById("comp-rel-gap");
+            if (refVerif.relative_gap_vs_highs !== null && refVerif.relative_gap_vs_highs !== undefined) {
+                const gapPct = (refVerif.relative_gap_vs_highs * 100).toFixed(4);
+                relGapEl.textContent = `${gapPct}% relative gap (Verified ${refVerif.is_verified_optimal ? "OPTIMAL" : "CLOSE"})`;
+                relGapEl.className = refVerif.is_verified_optimal ? "mono text-green font-bold" : "mono text-pink font-bold";
+            } else {
+                relGapEl.textContent = "N/A (Infeasible or unbounded)";
+                relGapEl.className = "mono text-muted";
+            }
+
+            // Pivots / Iterations
+            const pipePivots = isMilp ? (data.phase5_milp?.warm_pivots || 0) : (data.phase4_dual_simplex?.pivots || 0);
+            document.getElementById("comp-pipepye-pivots").textContent = pipePivots.toLocaleString();
+            document.getElementById("comp-highs-iters").textContent = (refVerif.highs_simplex_iterations || 0).toLocaleString();
+
+            // Nodes
+            const pipeNodes = isMilp ? (data.phase5_milp?.warm_nodes_explored || 0) : 0;
+            const highsNodes = refVerif.highs_mip_nodes >= 0 ? refVerif.highs_mip_nodes : 0;
+            document.getElementById("comp-pipepye-nodes").textContent = isMilp ? pipeNodes.toLocaleString() : "N/A (Continuous LP)";
+            document.getElementById("comp-highs-nodes").textContent = isMilp ? highsNodes.toLocaleString() : "N/A (Continuous LP)";
+
+            // Runtime
+            const pipeTimeMs = data.executive_summary?.best_runtime_ms || 0;
+            const highsTimeMs = (refVerif.highs_wallclock_sec || 0) * 1000;
+            document.getElementById("comp-pipepye-time").textContent = `${pipeTimeMs.toFixed(2)} ms`;
+            document.getElementById("comp-highs-time").textContent = `${highsTimeMs.toFixed(2)} ms`;
+
+            // Industrial Provenance
+            const prov = data.workload_provenance || {};
+            document.getElementById("prov-form-class").textContent = prov.formulation_class || (isMilp ? "MILP" : "LP");
+            document.getElementById("prov-category").textContent = prov.category || "Industrial Energy & Refining";
+            document.getElementById("prov-benchmark").textContent = prov.provenance_benchmark || "Academic Literature Reference";
+            document.getElementById("prov-structure").textContent = prov.mathematical_structure || "Sparse Structured Industrial System";
+
+            const rng = prov.ranges || {};
+            if (rng.min_abs_coeff !== undefined) {
+                document.getElementById("prov-ranges").textContent = 
+                    `|A| ∈ [${rng.min_abs_coeff}, ${rng.max_abs_coeff}], RHS ∈ [${rng.min_rhs}, ${rng.max_rhs}], Dynamic Range: ${prov.structural_metrics?.dynamic_range || "-"}`;
+            } else {
+                document.getElementById("prov-ranges").textContent = `Dynamic Range: ${(p2.dynamic_range_before || 0).toFixed(1)}`;
+            }
+
+            // Setup Formulation Toggle Button
+            const btnForm = document.getElementById("btn-toggle-formulation");
+            if (btnForm) {
+                btnForm.onclick = () => {
+                    if (drawer.style.display === "block") {
+                        drawer.style.display = "none";
+                        return;
+                    }
+                    const caseId = prov.case_id || refVerif.case_id;
+                    if (!caseId) return;
+
+                    fetch(`/api/formulation?case=${encodeURIComponent(caseId)}`)
+                        .then(r => r.json())
+                        .then(fData => {
+                            if (fData.markdown) {
+                                document.getElementById("formulation-markdown-content").innerHTML = renderSimpleMarkdown(fData.markdown);
+                                document.getElementById("formulation-doc-title").textContent = `Mathematical Formulation: ${prov.name || caseId}`;
+                                drawer.style.display = "block";
+                                drawer.scrollIntoView({ behavior: "smooth" });
+                            }
+                        })
+                        .catch(err => {
+                            console.error("Failed to load formulation:", err);
+                        });
+                };
+            }
+
+            const btnCloseForm = document.getElementById("btn-close-formulation");
+            if (btnCloseForm) {
+                btnCloseForm.onclick = () => {
+                    drawer.style.display = "none";
+                };
+            }
+
+        } else {
+            p6Applicable.style.display = "none";
+            p6Placeholder.style.display = "block";
         }
 
         // Verification Audit
@@ -559,5 +700,112 @@ document.addEventListener("DOMContentLoaded", () => {
         polyPrimal.setAttribute("stroke-width", "1.8");
         polyPrimal.setAttribute("stroke-linecap", "round");
         svg.appendChild(polyPrimal);
+    }
+
+    // =========================================================================
+    // LIGHTWEIGHT MARKDOWN TO HTML RENDERER (FOR FORMULATION VIEWER)
+    // =========================================================================
+    function renderSimpleMarkdown(md) {
+        if (!md) return "";
+        let lines = md.split("\n");
+        let html = [];
+        let inCode = false;
+        let inTable = false;
+        let tableRows = [];
+
+        for (let i = 0; i < lines.length; ++i) {
+            let line = lines[i];
+
+            if (line.trim().startsWith("```")) {
+                if (inCode) {
+                    html.push("</code></pre>");
+                    inCode = false;
+                } else {
+                    html.push("<pre><code>");
+                    inCode = true;
+                }
+                continue;
+            }
+
+            if (inCode) {
+                html.push(escapeHtml(line) + "\n");
+                continue;
+            }
+
+            // Table parsing
+            if (line.trim().startsWith("|") && line.trim().endsWith("|")) {
+                if (!inTable) {
+                    inTable = true;
+                    tableRows = [];
+                }
+                if (!/^\|[\s\-:]+(\|[\s\-:]+)+\|$/.test(line.trim())) {
+                    tableRows.push(line.trim());
+                }
+                continue;
+            } else if (inTable) {
+                inTable = false;
+                html.push(renderTable(tableRows));
+                tableRows = [];
+            }
+
+            // Headings
+            if (line.startsWith("### ")) {
+                html.push(`<h3>${formatInline(line.slice(4))}</h3>`);
+            } else if (line.startsWith("## ")) {
+                html.push(`<h2>${formatInline(line.slice(3))}</h2>`);
+            } else if (line.startsWith("# ")) {
+                html.push(`<h1>${formatInline(line.slice(2))}</h1>`);
+            } else if (line.trim().startsWith("- ")) {
+                html.push(`<ul><li>${formatInline(line.trim().slice(2))}</li></ul>`);
+            } else if (/^\d+\.\s/.test(line.trim())) {
+                let text = line.trim().replace(/^\d+\.\s/, "");
+                html.push(`<ol><li>${formatInline(text)}</li></ol>`);
+            } else if (line.trim().startsWith("$$") && line.trim().endsWith("$$") && line.trim().length > 4) {
+                html.push(`<pre class="math"><code>${escapeHtml(line.trim().slice(2, -2).trim())}</code></pre>`);
+            } else if (line.trim() === "") {
+                html.push("");
+            } else {
+                html.push(`<p>${formatInline(line)}</p>`);
+            }
+        }
+
+        if (inTable) {
+            html.push(renderTable(tableRows));
+        }
+
+        return html.join("\n")
+            .replace(/<\/ul>\s*<ul>/g, "")
+            .replace(/<\/ol>\s*<ol>/g, "");
+    }
+
+    function escapeHtml(text) {
+        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    function formatInline(text) {
+        let s = escapeHtml(text);
+        s = s.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        s = s.replace(/\*(.*?)\*/g, '<em>$1</em>');
+        s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+        s = s.replace(/\$\$([\s\S]*?)\$\$/g, '<code>$1</code>');
+        s = s.replace(/\$([^\$]+)\$/g, '<code>$1</code>');
+        return s;
+    }
+
+    function renderTable(rows) {
+        if (!rows || rows.length === 0) return "";
+        let out = ["<table class=\"data-table\">"];
+        for (let r = 0; r < rows.length; ++r) {
+            let cells = rows[r].split("|").slice(1, -1);
+            let tag = (r === 0) ? "th" : "td";
+            let rowHtml = "<tr>" + cells.map(c => `<${tag}>${formatInline(c.trim())}</${tag}>`).join("") + "</tr>";
+            if (r === 0) {
+                out.push(`<thead>${rowHtml}</thead><tbody>`);
+            } else {
+                out.push(rowHtml);
+            }
+        }
+        out.push("</tbody></table>");
+        return out.join("");
     }
 });

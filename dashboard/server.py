@@ -23,6 +23,60 @@ DASHBOARD_DIR = REPO_ROOT / "dashboard"
 BUILD_DIR = REPO_ROOT / "build"
 RUNNER_BIN = BUILD_DIR / "bin" / "pipepye_dashboard_runner"
 
+def load_reference_solutions():
+    ref_file = REPO_ROOT / "reports" / "reference_solutions.json"
+    if ref_file.exists():
+        try:
+            with open(ref_file, "r") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {}
+
+def load_all_metadata():
+    workloads_dir = REPO_ROOT / "workloads"
+    meta_dict = {}
+    if workloads_dir.exists():
+        for case_dir in workloads_dir.glob("case_*"):
+            if not case_dir.is_dir():
+                continue
+            meta_file = case_dir / "metadata.json"
+            if meta_file.exists():
+                try:
+                    with open(meta_file, "r") as f:
+                        meta_dict[case_dir.name] = json.load(f)
+                except Exception:
+                    pass
+    return meta_dict
+
+def match_workload(mps_path, model_name):
+    path_str = str(mps_path).replace("\\", "/")
+    # Match by directory name
+    for cid in ["case_a_crude_blending", "case_b_multi_period_planning", "case_c_refinery_scheduling", "case_d_unit_commitment"]:
+        if cid in path_str:
+            stem = Path(path_str).stem
+            if stem == "model":
+                stem = "T10" if "case_b" in cid else "Small"
+            return cid, stem
+
+    # Match by model name
+    m = (model_name or "").upper()
+    if "BLENDING" in m or "CRUDE" in m:
+        scale = "Small" if "SMALL" in m else ("Medium" if "MED" in m else ("Large" if "LARGE" in m else "Small"))
+        return "case_a_crude_blending", scale
+    if "PLANNING" in m or "MULTI_PERIOD" in m:
+        for t in ["T100", "T50", "T25", "T10"]:
+            if t in m:
+                return "case_b_multi_period_planning", t
+        return "case_b_multi_period_planning", "T10"
+    if "REFINERY" in m or "SCHED" in m:
+        scale = "Small" if "SMALL" in m else ("Medium" if "MED" in m else ("Large" if "LARGE" in m else "Small"))
+        return "case_c_refinery_scheduling", scale
+    if "UNIT_COMMIT" in m or "COMMIT" in m:
+        scale = "Small" if "SMALL" in m else ("Medium" if "MED" in m else ("Large" if "LARGE" in m else "Small"))
+        return "case_d_unit_commitment", scale
+    return None, None
+
 class PipePyeRequestHandler(BaseHTTPRequestHandler):
     def _set_headers(self, status=200, content_type="application/json"):
         self.send_response(status)
@@ -52,6 +106,8 @@ class PipePyeRequestHandler(BaseHTTPRequestHandler):
             self._handle_samples()
         elif path == "/api/status":
             self._handle_status()
+        elif path == "/api/formulation":
+            self._handle_formulation(parsed.query)
         else:
             self._set_headers(404, "text/plain")
             self.wfile.write(b"Not Found")
@@ -83,26 +139,100 @@ class PipePyeRequestHandler(BaseHTTPRequestHandler):
             "repo_root": str(REPO_ROOT),
         }).encode())
 
-    def _handle_samples(self):
-        """Discovers existing MPS files in the repository for quick testing."""
-        samples = []
-        search_dirs = [
-            ("Workloads (Phase 5 Industrial)", REPO_ROOT / "workloads"),
-            ("Netlib Test Suite", REPO_ROOT / "tests" / "data" / "mps" / "netlib"),
-            ("General MPS Tests", REPO_ROOT / "tests" / "data" / "mps")
-        ]
+    def _handle_formulation(self, query_string):
+        params = urllib.parse.parse_qs(query_string)
+        case_id = params.get("case", [""])[0]
+        if not case_id:
+            self._set_headers(400, "application/json")
+            self.wfile.write(json.dumps({"error": "Missing 'case' parameter"}).encode())
+            return
 
-        for category, sdir in search_dirs:
-            if not sdir.exists():
-                continue
-            for p in sorted(sdir.glob("**/*.mps")):
+        allowed_cases = ["case_a_crude_blending", "case_b_multi_period_planning", "case_c_refinery_scheduling", "case_d_unit_commitment"]
+        if case_id not in allowed_cases:
+            self._set_headers(404, "application/json")
+            self.wfile.write(json.dumps({"error": "Unknown case ID"}).encode())
+            return
+
+        readme_path = REPO_ROOT / "workloads" / case_id / "README.md"
+        if not readme_path.exists():
+            self._set_headers(404, "application/json")
+            self.wfile.write(json.dumps({"error": f"Formulation README not found for {case_id}"}).encode())
+            return
+
+        with open(readme_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        self._set_headers(200, "application/json")
+        self.wfile.write(json.dumps({"case_id": case_id, "markdown": content}).encode())
+
+    def _handle_samples(self):
+        """Discovers existing MPS files in the repository with rich metadata."""
+        samples = []
+        cases_meta = load_all_metadata()
+        ref_solutions = load_reference_solutions()
+
+        # 1. Phase 5 & 6 Industrial Workload Suite
+        workloads_dir = REPO_ROOT / "workloads"
+        if workloads_dir.exists():
+            for case_dir in sorted(workloads_dir.glob("case_*")):
+                if not case_dir.is_dir():
+                    continue
+                cid = case_dir.name
+                meta = cases_meta.get(cid, {})
+                case_name = meta.get("name", cid.replace("_", " ").title())
+                form_class = meta.get("formulation_class", "LP")
+                group_label = f"Industrial Suite: {case_name} [{form_class}]"
+
+                for p in sorted(case_dir.glob("*.mps")):
+                    rel = p.relative_to(REPO_ROOT)
+                    scale = p.stem
+                    if scale == "model":
+                        continue  # Keep list clean of alias files
+
+                    ref_info = ref_solutions.get(cid, {}).get(scale, {})
+                    ref_obj = ref_info.get("objective")
+
+                    samples.append({
+                        "name": f"{case_name} — {scale} ({form_class})",
+                        "instance": scale,
+                        "case_id": cid,
+                        "rel_path": str(rel),
+                        "abs_path": str(p),
+                        "size_bytes": p.stat().st_size,
+                        "category": group_label,
+                        "formulation_class": form_class,
+                        "highs_ref_objective": ref_obj,
+                        "provenance_benchmark": meta.get("provenance", {}).get("benchmark", "")
+                    })
+
+        # 2. Netlib Benchmark Suite
+        netlib_dir = REPO_ROOT / "tests" / "data" / "mps" / "netlib"
+        if netlib_dir.exists():
+            for p in sorted(netlib_dir.glob("*.mps")):
                 rel = p.relative_to(REPO_ROOT)
                 samples.append({
-                    "name": p.stem,
+                    "name": f"{p.stem} (Netlib LP)",
+                    "instance": p.stem,
                     "rel_path": str(rel),
                     "abs_path": str(p),
                     "size_bytes": p.stat().st_size,
-                    "category": category
+                    "category": "Netlib Benchmark Suite (Standard LPs)"
+                })
+
+        # 3. General MPS Tests
+        general_dir = REPO_ROOT / "tests" / "data" / "mps"
+        if general_dir.exists():
+            for p in sorted(general_dir.glob("*.mps")):
+                if "netlib" in str(p):
+                    continue
+                rel = p.relative_to(REPO_ROOT)
+                samples.append({
+                    "name": f"{p.stem} (Test Model)",
+                    "instance": p.stem,
+                    "rel_path": str(rel),
+                    "abs_path": str(p),
+                    "size_bytes": p.stat().st_size,
+                    "category": "General MPS Unit Tests"
                 })
 
         self._set_headers(200, "application/json")
@@ -196,9 +326,87 @@ class PipePyeRequestHandler(BaseHTTPRequestHandler):
                 }).encode())
                 return
 
-            # Output is pure JSON
-            self._set_headers(200, "application/json")
-            self.wfile.write(proc.stdout.encode("utf-8"))
+            # Enrich output JSON with Phase 6 HiGHS reference solutions & provenance
+            try:
+                output_json = json.loads(proc.stdout)
+                case_id, instance_key = match_workload(mps_filepath, output_json.get("model", {}).get("name"))
+
+                if case_id and instance_key:
+                    ref_data = load_reference_solutions()
+                    cases_meta = load_all_metadata()
+
+                    case_ref = ref_data.get(case_id, {}).get(instance_key)
+                    case_meta = cases_meta.get(case_id, {})
+
+                    if case_ref:
+                        ref_obj = case_ref.get("objective")
+                        pipe_obj = output_json.get("executive_summary", {}).get("best_objective")
+
+                        rel_gap = None
+                        is_verified = False
+                        if pipe_obj is not None and ref_obj is not None and not (isinstance(ref_obj, str) and ref_obj == "Infinity"):
+                            try:
+                                p_val = float(pipe_obj)
+                                r_val = float(ref_obj)
+                                rel_gap = abs(p_val - r_val) / max(1.0, abs(r_val))
+                                is_verified = (rel_gap < 1e-4)
+                            except (ValueError, TypeError):
+                                pass
+
+                        output_json["phase6_reference_verification"] = {
+                            "has_reference": True,
+                            "case_id": case_id,
+                            "instance_key": instance_key,
+                            "solver": case_ref.get("solver", "HiGHS-1.8.1"),
+                            "model_status": case_ref.get("model_status", "Optimal"),
+                            "reference_objective": ref_obj,
+                            "recomputed_objective": case_ref.get("recomputed_objective"),
+                            "objective_discrepancy": case_ref.get("objective_discrepancy"),
+                            "highs_simplex_iterations": case_ref.get("performance", {}).get("simplex_iterations", 0),
+                            "highs_mip_nodes": case_ref.get("performance", {}).get("mip_nodes", 0),
+                            "highs_wallclock_sec": case_ref.get("performance", {}).get("wallclock_time_sec", 0.0),
+                            "highs_run_time_sec": case_ref.get("performance", {}).get("highs_run_time_sec", 0.0),
+                            "relative_gap_vs_highs": rel_gap,
+                            "is_verified_optimal": is_verified,
+                            "independent_verification": case_ref.get("independent_verification", {})
+                        }
+                    else:
+                        output_json["phase6_reference_verification"] = {"has_reference": False}
+
+                    if case_meta:
+                        matched_inst_meta = {}
+                        for inst in case_meta.get("instances", []):
+                            if inst.get("scale") == instance_key or inst.get("file_name") == f"{instance_key}.mps":
+                                matched_inst_meta = inst
+                                break
+
+                        output_json["workload_provenance"] = {
+                            "has_provenance": True,
+                            "case_id": case_id,
+                            "name": case_meta.get("name"),
+                            "category": case_meta.get("category"),
+                            "formulation_class": case_meta.get("formulation_class"),
+                            "mathematical_structure": case_meta.get("mathematical_structure"),
+                            "provenance_benchmark": case_meta.get("provenance", {}).get("benchmark"),
+                            "references": case_meta.get("provenance", {}).get("references", []),
+                            "pre_registered_strategy": case_meta.get("pre_registered_strategy", {}),
+                            "instance_scale": instance_key,
+                            "ranges": matched_inst_meta.get("ranges", {}),
+                            "structural_metrics": matched_inst_meta.get("structural_metrics", {})
+                        }
+                    else:
+                        output_json["workload_provenance"] = {"has_provenance": False}
+                else:
+                    output_json["phase6_reference_verification"] = {"has_reference": False}
+                    output_json["workload_provenance"] = {"has_provenance": False}
+
+                resp_bytes = json.dumps(output_json).encode("utf-8")
+                self._set_headers(200, "application/json")
+                self.wfile.write(resp_bytes)
+                return
+            except json.JSONDecodeError:
+                self._set_headers(200, "application/json")
+                self.wfile.write(proc.stdout.encode("utf-8"))
 
         except subprocess.TimeoutExpired:
             self._set_headers(504, "application/json")

@@ -420,12 +420,18 @@ select:focus, input[type="number"]:focus {
 
 .summary-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     gap: 1rem;
     padding: 1.25rem;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
+    .summary-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
     .summary-grid {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -728,4 +734,184 @@ select:focus, input[type="number"]:focus {
     font-size: 0.75rem;
     color: var(--text-muted);
     margin-top: 2rem;
+}
+
+/* Phase 6: HiGHS Reference & Formulation Drawer Styles */
+.card-sub-column {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.sub-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sub-header-row h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.provenance-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    background: rgba(15, 23, 42, 0.4);
+    padding: 1rem;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+}
+
+.prov-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.prov-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.prov-value {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.prov-value.font-bold {
+    color: var(--color-primary);
+}
+
+.font-italic {
+    font-style: italic;
+}
+
+.btn-secondary {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.5rem 0.85rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.btn-secondary:hover {
+    background: var(--bg-primary);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.btn-sm {
+    padding: 0.35rem 0.65rem;
+    font-size: 0.75rem;
+}
+
+/* Formulation Drawer */
+.formulation-drawer {
+    background: #090d16;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1.25rem;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.formulation-drawer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.formulation-drawer-header h4 {
+    color: var(--color-primary);
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+/* Markdown typography inside drawer */
+.markdown-body {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    line-height: 1.6;
+}
+
+.markdown-body h1, .markdown-body h2, .markdown-body h3 {
+    color: var(--text-primary);
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.markdown-body h1 { font-size: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.3rem; }
+.markdown-body h2 { font-size: 1.05rem; }
+.markdown-body h3 { font-size: 0.95rem; }
+
+.markdown-body p {
+    margin-bottom: 0.75rem;
+}
+
+.markdown-body code {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 0.15rem 0.35rem;
+    font-family: var(--font-mono);
+    color: var(--color-primary);
+    font-size: 0.8rem;
+}
+
+.markdown-body pre {
+    background: #050811;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.75rem;
+    overflow-x: auto;
+    margin-bottom: 0.75rem;
+}
+
+.markdown-body pre code {
+    background: transparent;
+    border: none;
+    padding: 0;
+    color: #e2e8f0;
+}
+
+.markdown-body ul, .markdown-body ol {
+    margin-left: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.markdown-body li {
+    margin-bottom: 0.25rem;
+}
+
+.markdown-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+    font-size: 0.8rem;
+}
+
+.markdown-body th, .markdown-body td {
+    border: 1px solid var(--border-color);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+}
+
+.markdown-body th {
+    background: rgba(15, 23, 42, 0.6);
+    color: var(--text-primary);
 }

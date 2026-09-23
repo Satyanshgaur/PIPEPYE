@@ -126,6 +126,11 @@
                         <span class="summary-value mono" id="res-best-obj">-</span>
                         <span class="summary-sub" id="res-obj-status">Consistent</span>
                     </div>
+                    <div class="summary-item">
+                        <span class="summary-label">HiGHS-1.8.1 Reference</span>
+                        <span class="summary-value" id="res-highs-status">-</span>
+                        <span class="summary-sub" id="res-highs-gap">Discrepancy: -</span>
+                    </div>
                 </div>
             </section>
 
@@ -422,6 +427,114 @@
                 </section>
 
             </div>
+
+            <!-- Phase 6: HiGHS-1.8.1 Benchmark Verification & Formulation Provenance -->
+            <section class="card" id="card-phase6">
+                <div class="card-header">
+                    <h3>Phase 6: HiGHS-1.8.1 Independent Reference Verification & Literature Provenance</h3>
+                    <span class="tag" id="phase6-tag">Certified Reference Benchmark</span>
+                </div>
+                <div class="card-body">
+                    <!-- If reference available -->
+                    <div id="phase6-applicable" class="two-column-grid">
+                        <!-- HiGHS Comparison Table -->
+                        <div class="card-sub-column">
+                            <div class="sub-header-row mb-2">
+                                <h4>HiGHS-1.8.1 Reference vs. PipePye Solver</h4>
+                                <span class="badge" id="highs-cert-badge">Certified Match</span>
+                            </div>
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Metric</th>
+                                        <th>PipePye Engine</th>
+                                        <th>HiGHS-1.8.1 Reference</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Model Status</td>
+                                        <td class="mono font-bold" id="comp-pipepye-status">-</td>
+                                        <td class="mono font-bold" id="comp-highs-status">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Objective Value</td>
+                                        <td class="mono font-bold" id="comp-pipepye-obj">-</td>
+                                        <td class="mono font-bold" id="comp-highs-obj">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Relative Discrepancy</td>
+                                        <td colspan="2" class="mono text-green font-bold" id="comp-rel-gap">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Simplex Pivots / Iterations</td>
+                                        <td class="mono" id="comp-pipepye-pivots">-</td>
+                                        <td class="mono" id="comp-highs-iters">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Branch & Bound Nodes</td>
+                                        <td class="mono" id="comp-pipepye-nodes">-</td>
+                                        <td class="mono" id="comp-highs-nodes">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Solve Runtime</td>
+                                        <td class="mono" id="comp-pipepye-time">-</td>
+                                        <td class="mono" id="comp-highs-time">-</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Industrial Provenance & Formulation Specs -->
+                        <div class="card-sub-column">
+                            <div class="sub-header-row mb-2">
+                                <h4>Industrial Formulation & Academic Provenance</h4>
+                                <span class="badge badge-info" id="prov-form-class">Formulation</span>
+                            </div>
+                            <div class="provenance-details">
+                                <div class="prov-item mb-2">
+                                    <span class="prov-label">Industrial Domain:</span>
+                                    <span class="prov-value font-bold" id="prov-category">-</span>
+                                </div>
+                                <div class="prov-item mb-2">
+                                    <span class="prov-label">Literature Provenance:</span>
+                                    <span class="prov-value font-italic" id="prov-benchmark">-</span>
+                                </div>
+                                <div class="prov-item mb-2">
+                                    <span class="prov-label">Mathematical Structure:</span>
+                                    <span class="prov-value" id="prov-structure">-</span>
+                                </div>
+                                <div class="prov-item mb-2">
+                                    <span class="prov-label">Matrix Coefficient Ranges:</span>
+                                    <span class="prov-value mono" id="prov-ranges">-</span>
+                                </div>
+                                <div class="prov-actions mt-3">
+                                    <button class="btn btn-secondary btn-sm" id="btn-toggle-formulation">
+                                        📄 View Complete Mathematical Formulation (LaTeX / Markdown)
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- If no reference available (e.g. Netlib / general test) -->
+                    <div id="phase6-placeholder" class="milp-placeholder" style="display: none;">
+                        <p>Standard Test Model (Netlib / Unit Test Suite).</p>
+                        <p class="secondary-text">Independent solution verification is verified below against original constraints. Select any Phase 6 Industrial Workload (Case A Crude Blending, Case B Multi-Period Planning, Case C Refinery Scheduling, or Case D Unit Commitment) to evaluate certified HiGHS-1.8.1 comparison metrics.</p>
+                    </div>
+
+                    <!-- Expandable Formulation Drawer -->
+                    <div id="formulation-drawer" class="formulation-drawer mt-3" style="display: none;">
+                        <div class="formulation-drawer-header">
+                            <h4 id="formulation-doc-title">Mathematical Formulation Specification</h4>
+                            <button class="btn-text" id="btn-close-formulation">Close</button>
+                        </div>
+                        <div class="formulation-drawer-content markdown-body" id="formulation-markdown-content">
+                            <!-- Populated dynamically via fetch('/api/formulation?case=...') -->
+                        </div>
+                    </div>
+                </div>
+            </section>
 
             <!-- Independent Solution Verification Audit -->
             <section class="card">
