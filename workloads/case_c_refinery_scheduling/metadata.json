@@ -1,48 +1,167 @@
 {
-  "problem_name": "Refinery_Scheduling",
-  "instance_id": "REFINERY_SCHED_Small",
-  "generator_version": "1.0.0",
-  "random_seed": 42,
-  "scale": "Small",
-  "dimensions": {
-    "rows": 108,
-    "cols": 90,
-    "nnz": 262,
-    "density": 2.695473e-02
+  "workload_case": "case_c_refinery_scheduling",
+  "name": "Refinery Unit Scheduling",
+  "category": "Petrochemical Unit Operations & Tank Logistics",
+  "formulation_class": "MILP",
+  "mathematical_structure": "Mixed-Integer Linear Program with disjunctive semicontinuous mode constraints and inventory tank mass balances",
+  "provenance": {
+    "benchmark": "Pinto, Joly & Moro (2000) Refinery Planning & Floudas-Lin (2004) Scheduling Models",
+    "references": [
+      "Pinto, J. M., Joly, M., & Moro, L. F. (2000). Planning and Scheduling Models for Refinery Operations. Computers & Chem. Eng., 24(9-10), 2259-2276.",
+      "Moro, L. F. L., & Pinto, J. M. (1998). Mixed-Integer Optimization for the Scheduling of Pipeline Transfers. Computers & Chem. Eng., 22, S725-S728.",
+      "Floudas, C. A., & Lin, X. (2004). Continuous-time versus discrete-time approaches for scheduling. Computers & Chem. Eng., 28(11), 2109-2129."
+    ]
   },
-  "variable_types": {
-    "continuous": 54,
-    "integer": 0,
-    "binary": 36
+  "pre_registered_strategy": {
+    "hardware": "CPU",
+    "hardware_rationale": "Branch-and-bound tree search requires irregular tree traversal, dynamic priority queue management, and sequential node selection, which cannot be effectively mapped to massively parallel SIMT GPUs.",
+    "algorithm": "BranchAndBound with Warm-Started Dual Simplex",
+    "algorithm_rationale": "40%-43% binary variables necessitate discrete tree search; variable bound tightenings at child nodes preserve dual feasibility, allowing warm-started Dual Simplex to resolve child LPs in < 5 pivots."
   },
-  "ranges": {
-    "min_abs_coeff": 9.000000e-01,
-    "max_abs_coeff": 3.150000e+02,
-    "min_rhs": 0.0000,
-    "max_rhs": 500.0000,
-    "min_bound": 0.0000,
-    "max_bound": 500.0000
-  },
-  "structural_statistics": {
-    "row_nnz_avg": 2.43,
-    "row_nnz_stddev": 1.21,
-    "col_nnz_avg": 2.91,
-    "col_nnz_stddev": 1.03,
-    "half_bandwidth": 33,
-    "normalized_bandwidth": 0.3056,
-    "staircase_score": 0.9971,
-    "row_length_gini": 0.1568,
-    "num_connected_components": 1,
-    "coupling_density": 2.6955e-02
-  },
-  "pre_registered_prediction": {
-    "expected_solver": "BranchAndBound",
-    "expected_backend": "CPU",
-    "rationale": "Discrete unit commitment and operating modes impose combinatorial search; warm-started Dual Simplex provides crucial pivot efficiency during branch-and-bound exploration."
-  },
-  "reference_solution": {
-    "has_reference": false,
-    "objective": 0.0000e+00,
-    "source": ""
-  }
+  "instances": [
+    {
+      "instance_name": "Refinery Unit Scheduling (Large)",
+      "file_name": "Large.mps",
+      "scale": "Large",
+      "dimensions": {
+        "rows": 1536,
+        "columns": 1344,
+        "nonzeros": 4289,
+        "density": 0.0020776173425099205,
+        "density_pct": "0.21%"
+      },
+      "variable_types": {
+        "continuous": 768,
+        "integer": 0,
+        "binary": 576,
+        "integrality_ratio": 0.42857142857142855
+      },
+      "structural_metrics": {
+        "staircase_score": 1.0,
+        "row_gini_index": 0.24029478875223442,
+        "row_nnz_mean": 2.7923177083333335,
+        "row_nnz_stddev": 1.843970563953796,
+        "col_nnz_mean": 3.191220238095238,
+        "col_nnz_stddev": 0.799858803950476,
+        "dynamic_range": 387.77777777777777
+      },
+      "ranges": {
+        "min_abs_coeff": 0.9,
+        "max_abs_coeff": 349.0,
+        "min_rhs": 0.0,
+        "max_rhs": 192.0,
+        "min_bound": 0.0,
+        "max_bound": 500.0
+      },
+      "pre_registered_prediction": {
+        "predicted_solver": "BranchAndBound",
+        "predicted_backend": "CPU"
+      },
+      "reference_solution": {
+        "solver": "HiGHS-1.8.1",
+        "status": "Infeasible",
+        "objective": Infinity,
+        "independent_verification_passed": false,
+        "simplex_iterations": 750,
+        "mip_nodes": 1,
+        "wallclock_sec": 0.04911035700024513
+      }
+    },
+    {
+      "instance_name": "Refinery Unit Scheduling (Medium)",
+      "file_name": "Medium.mps",
+      "scale": "Medium",
+      "dimensions": {
+        "rows": 480,
+        "columns": 420,
+        "nonzeros": 1316,
+        "density": 0.006527777777777778,
+        "density_pct": "0.65%"
+      },
+      "variable_types": {
+        "continuous": 240,
+        "integer": 0,
+        "binary": 180,
+        "integrality_ratio": 0.42857142857142855
+      },
+      "structural_metrics": {
+        "staircase_score": 1.0,
+        "row_gini_index": 0.23006585612968578,
+        "row_nnz_mean": 2.7416666666666667,
+        "row_nnz_stddev": 1.7630269109939556,
+        "col_nnz_mean": 3.1333333333333333,
+        "col_nnz_stddev": 0.8515159218002708,
+        "dynamic_range": 372.22222222222223
+      },
+      "ranges": {
+        "min_abs_coeff": 0.9,
+        "max_abs_coeff": 335.0,
+        "min_rhs": 0.0,
+        "max_rhs": 199.0,
+        "min_bound": 0.0,
+        "max_bound": 500.0
+      },
+      "pre_registered_prediction": {
+        "predicted_solver": "BranchAndBound",
+        "predicted_backend": "CPU"
+      },
+      "reference_solution": {
+        "solver": "HiGHS-1.8.1",
+        "status": "Optimal",
+        "objective": 84193.61483282885,
+        "independent_verification_passed": true,
+        "simplex_iterations": 22821,
+        "mip_nodes": 45,
+        "wallclock_sec": 4.643054015999951
+      }
+    },
+    {
+      "instance_name": "Refinery Unit Scheduling (Small)",
+      "file_name": "Small.mps",
+      "scale": "Small",
+      "dimensions": {
+        "rows": 108,
+        "columns": 90,
+        "nonzeros": 262,
+        "density": 0.026954732510288067,
+        "density_pct": "2.70%"
+      },
+      "variable_types": {
+        "continuous": 54,
+        "integer": 0,
+        "binary": 36,
+        "integrality_ratio": 0.4
+      },
+      "structural_metrics": {
+        "staircase_score": 1.0,
+        "row_gini_index": 0.1567712750918857,
+        "row_nnz_mean": 2.425925925925926,
+        "row_nnz_stddev": 1.2110884582772188,
+        "col_nnz_mean": 2.911111111111111,
+        "col_nnz_stddev": 1.02896328024802,
+        "dynamic_range": 350.0
+      },
+      "ranges": {
+        "min_abs_coeff": 0.9,
+        "max_abs_coeff": 315.0,
+        "min_rhs": 0.0,
+        "max_rhs": 170.0,
+        "min_bound": 0.0,
+        "max_bound": 500.0
+      },
+      "pre_registered_prediction": {
+        "predicted_solver": "BranchAndBound",
+        "predicted_backend": "CPU"
+      },
+      "reference_solution": {
+        "solver": "HiGHS-1.8.1",
+        "status": "Optimal",
+        "objective": -6645.985999999998,
+        "independent_verification_passed": true,
+        "simplex_iterations": 42,
+        "mip_nodes": 1,
+        "wallclock_sec": 0.009711957000035909
+      }
+    }
+  ]
 }

@@ -1,5 +1,90 @@
 {
-  "objective": 2.684400e+05,
-  "solver": "DualSimplex",
-  "status": "OPTIMAL"
+  "T10": {
+    "mps_file": "T10.mps",
+    "solver": "HiGHS-1.8.1",
+    "model_status": "Optimal",
+    "objective": 268440.0,
+    "recomputed_objective": 268440.0,
+    "objective_discrepancy": 0.0,
+    "independent_verification": {
+      "passed": true,
+      "max_variable_bound_violation": 0.0,
+      "max_row_bound_violation": 0.0,
+      "max_integrality_violation": 0.0,
+      "num_integer_variables": 0
+    },
+    "performance": {
+      "simplex_iterations": 112,
+      "ipm_iterations": 0,
+      "mip_nodes": -1,
+      "wallclock_time_sec": 0.0021178349998081103,
+      "highs_run_time_sec": 0.0020606517791748047
+    }
+  },
+  "T100": {
+    "mps_file": "T100.mps",
+    "solver": "HiGHS-1.8.1",
+    "model_status": "Optimal",
+    "objective": 6746601.599999999,
+    "recomputed_objective": 6746601.6,
+    "objective_discrepancy": 9.313225746154785e-10,
+    "independent_verification": {
+      "passed": true,
+      "max_variable_bound_violation": 0.0,
+      "max_row_bound_violation": 0.0,
+      "max_integrality_violation": 0.0,
+      "num_integer_variables": 0
+    },
+    "performance": {
+      "simplex_iterations": 3308,
+      "ipm_iterations": 0,
+      "mip_nodes": -1,
+      "wallclock_time_sec": 0.06984871399981785,
+      "highs_run_time_sec": 0.06961393356323242
+    }
+  },
+  "T25": {
+    "mps_file": "T25.mps",
+    "solver": "HiGHS-1.8.1",
+    "model_status": "Optimal",
+    "objective": 661056.3999999999,
+    "recomputed_objective": 661056.4,
+    "objective_discrepancy": 1.1641532182693481e-10,
+    "independent_verification": {
+      "passed": true,
+      "max_variable_bound_violation": 0.0,
+      "max_row_bound_violation": 0.0,
+      "max_integrality_violation": 0.0,
+      "num_integer_variables": 0
+    },
+    "performance": {
+      "simplex_iterations": 314,
+      "ipm_iterations": 0,
+      "mip_nodes": -1,
+      "wallclock_time_sec": 0.004129007000301499,
+      "highs_run_time_sec": 0.004021167755126953
+    }
+  },
+  "T50": {
+    "mps_file": "T50.mps",
+    "solver": "HiGHS-1.8.1",
+    "model_status": "Optimal",
+    "objective": 3434088.1999999993,
+    "recomputed_objective": 3434088.2,
+    "objective_discrepancy": 9.313225746154785e-10,
+    "independent_verification": {
+      "passed": true,
+      "max_variable_bound_violation": 0.0,
+      "max_row_bound_violation": 0.0,
+      "max_integrality_violation": 0.0,
+      "num_integer_variables": 0
+    },
+    "performance": {
+      "simplex_iterations": 1616,
+      "ipm_iterations": 0,
+      "mip_nodes": -1,
+      "wallclock_time_sec": 0.03724000599959254,
+      "highs_run_time_sec": 0.03707313537597656
+    }
+  }
 }

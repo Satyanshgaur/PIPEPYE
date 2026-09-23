@@ -1,48 +1,215 @@
 {
-  "problem_name": "Multi_Period_Planning",
-  "instance_id": "PLANNING_T10_Small",
-  "generator_version": "1.0.0",
-  "random_seed": 42,
-  "scale": "Small",
-  "dimensions": {
-    "rows": 160,
-    "cols": 200,
-    "nnz": 890,
-    "density": 2.781250e-02
+  "workload_case": "case_b_multi_period_planning",
+  "name": "Multi-Period Production & Inventory Planning",
+  "category": "Supply Chain & Continuous Manufacturing",
+  "formulation_class": "LP",
+  "mathematical_structure": "Block-angular / staircase sparse linear program with dynamic inventory propagation",
+  "provenance": {
+    "benchmark": "Manne (1958) Multi-Sector Production Planning & Netlib Staircase Class (SC205, SCTAP1)",
+    "references": [
+      "Manne, A. S. (1958). Programming of Economic Lot Sizes. Management Science, 4(2), 115-135.",
+      "Fourer, R. (1982). Solving Staircase Linear Programs by the Simplex Method, 1: Inversion. Math. Prog., 23(1), 274-313.",
+      "Fourer, R. (1983). Solving Staircase Linear Programs by the Simplex Method, 2: Pricing. Math. Prog., 25(3), 251-292."
+    ]
   },
-  "variable_types": {
-    "continuous": 200,
-    "integer": 0,
-    "binary": 0
+  "pre_registered_strategy": {
+    "hardware": "Adaptive: CPU for T <= 50 (NNZ < 20k); GPU (CUDA) for T >= 100 (NNZ >= 30k)",
+    "hardware_rationale": "Large horizons create extensive block-banded sparse matrices where repeated SpMV operations in PDHG achieve high memory bandwidth utilization and parallel thread occupancy across independent time stages.",
+    "algorithm": "DualSimplex for small horizons; PDHG First-Order for large horizons (T >= 100)",
+    "algorithm_rationale": "Simplex pivot counts scale superlinearly with horizon length as basis path traverses temporal stages; first-order PDHG provides linear per-iteration complexity scaling with NNZ."
   },
-  "ranges": {
-    "min_abs_coeff": 6.000000e-01,
-    "max_abs_coeff": 3.000000e+00,
-    "min_rhs": 0.0000,
-    "max_rhs": 5000.0000,
-    "min_bound": 0.0000,
-    "max_bound": inf
-  },
-  "structural_statistics": {
-    "row_nnz_avg": 5.56,
-    "row_nnz_stddev": 3.45,
-    "col_nnz_avg": 4.45,
-    "col_nnz_stddev": 1.56,
-    "half_bandwidth": 46,
-    "normalized_bandwidth": 0.2300,
-    "staircase_score": 0.9966,
-    "row_length_gini": 0.3055,
-    "num_connected_components": 1,
-    "coupling_density": 2.7813e-02
-  },
-  "pre_registered_prediction": {
-    "expected_solver": "DualSimplex",
-    "expected_backend": "CPU",
-    "rationale": "Small to moderate period models stay within CPU cache boundaries where low-overhead Simplex pivots outperform iterative first-order GPU solvers."
-  },
-  "reference_solution": {
-    "has_reference": false,
-    "objective": 0.0000e+00,
-    "source": ""
-  }
+  "instances": [
+    {
+      "instance_name": "Multi-Period Production & Inventory Planning (T10)",
+      "file_name": "T10.mps",
+      "scale": "T10",
+      "dimensions": {
+        "rows": 160,
+        "columns": 200,
+        "nonzeros": 890,
+        "density": 0.0278125,
+        "density_pct": "2.78%"
+      },
+      "variable_types": {
+        "continuous": 200,
+        "integer": 0,
+        "binary": 0,
+        "integrality_ratio": 0.0
+      },
+      "structural_metrics": {
+        "staircase_score": 1.0,
+        "row_gini_index": 0.3054775280898876,
+        "row_nnz_mean": 5.5625,
+        "row_nnz_stddev": 3.44544536308443,
+        "col_nnz_mean": 4.45,
+        "col_nnz_stddev": 1.5644487847162014,
+        "dynamic_range": 5.0
+      },
+      "ranges": {
+        "min_abs_coeff": 0.6,
+        "max_abs_coeff": 3.0,
+        "min_rhs": 54.0,
+        "max_rhs": 14958.0,
+        "min_bound": 0.0,
+        "max_bound": 0.0
+      },
+      "pre_registered_prediction": {
+        "predicted_solver": "DualSimplex",
+        "predicted_backend": "CPU"
+      },
+      "reference_solution": {
+        "solver": "HiGHS-1.8.1",
+        "status": "Optimal",
+        "objective": 268440.0,
+        "independent_verification_passed": true,
+        "simplex_iterations": 112,
+        "mip_nodes": -1,
+        "wallclock_sec": 0.0021178349998081103
+      }
+    },
+    {
+      "instance_name": "Multi-Period Production & Inventory Planning (T100)",
+      "file_name": "T100.mps",
+      "scale": "T100",
+      "dimensions": {
+        "rows": 3800,
+        "columns": 5000,
+        "nonzeros": 39975,
+        "density": 0.0021039473684210525,
+        "density_pct": "0.21%"
+      },
+      "variable_types": {
+        "continuous": 5000,
+        "integer": 0,
+        "binary": 0,
+        "integrality_ratio": 0.0
+      },
+      "structural_metrics": {
+        "staircase_score": 1.0,
+        "row_gini_index": 0.4713101938711697,
+        "row_nnz_mean": 10.519736842105264,
+        "row_nnz_stddev": 10.44217813204095,
+        "col_nnz_mean": 7.995,
+        "col_nnz_stddev": 5.00549448106778,
+        "dynamic_range": 6.0
+      },
+      "ranges": {
+        "min_abs_coeff": 0.5,
+        "max_abs_coeff": 3.0,
+        "min_rhs": 50.0,
+        "max_rhs": 37478.0,
+        "min_bound": 0.0,
+        "max_bound": 0.0
+      },
+      "pre_registered_prediction": {
+        "predicted_solver": "PDHG_GPU",
+        "predicted_backend": "GPU"
+      },
+      "reference_solution": {
+        "solver": "HiGHS-1.8.1",
+        "status": "Optimal",
+        "objective": 6746601.599999999,
+        "independent_verification_passed": true,
+        "simplex_iterations": 3308,
+        "mip_nodes": -1,
+        "wallclock_sec": 0.06984871399981785
+      }
+    },
+    {
+      "instance_name": "Multi-Period Production & Inventory Planning (T25)",
+      "file_name": "T25.mps",
+      "scale": "T25",
+      "dimensions": {
+        "rows": 400,
+        "columns": 500,
+        "nonzeros": 2240,
+        "density": 0.0112,
+        "density_pct": "1.12%"
+      },
+      "variable_types": {
+        "continuous": 500,
+        "integer": 0,
+        "binary": 0,
+        "integrality_ratio": 0.0
+      },
+      "structural_metrics": {
+        "staircase_score": 1.0,
+        "row_gini_index": 0.2973214285714285,
+        "row_nnz_mean": 5.6,
+        "row_nnz_stddev": 3.411744421846396,
+        "col_nnz_mean": 4.48,
+        "col_nnz_stddev": 1.5263027222671128,
+        "dynamic_range": 5.0
+      },
+      "ranges": {
+        "min_abs_coeff": 0.6,
+        "max_abs_coeff": 3.0,
+        "min_rhs": 50.0,
+        "max_rhs": 14864.0,
+        "min_bound": 0.0,
+        "max_bound": 0.0
+      },
+      "pre_registered_prediction": {
+        "predicted_solver": "DualSimplex",
+        "predicted_backend": "CPU"
+      },
+      "reference_solution": {
+        "solver": "HiGHS-1.8.1",
+        "status": "Optimal",
+        "objective": 661056.3999999999,
+        "independent_verification_passed": true,
+        "simplex_iterations": 314,
+        "mip_nodes": -1,
+        "wallclock_sec": 0.004129007000301499
+      }
+    },
+    {
+      "instance_name": "Multi-Period Production & Inventory Planning (T50)",
+      "file_name": "T50.mps",
+      "scale": "T50",
+      "dimensions": {
+        "rows": 1900,
+        "columns": 2500,
+        "nonzeros": 19975,
+        "density": 0.004205263157894737,
+        "density_pct": "0.42%"
+      },
+      "variable_types": {
+        "continuous": 2500,
+        "integer": 0,
+        "binary": 0,
+        "integrality_ratio": 0.0
+      },
+      "structural_metrics": {
+        "staircase_score": 1.0,
+        "row_gini_index": 0.47221856267703055,
+        "row_nnz_mean": 10.513157894736842,
+        "row_nnz_stddev": 10.447227561028399,
+        "col_nnz_mean": 7.99,
+        "col_nnz_stddev": 5.010977948464751,
+        "dynamic_range": 6.0
+      },
+      "ranges": {
+        "min_abs_coeff": 0.5,
+        "max_abs_coeff": 3.0,
+        "min_rhs": 50.0,
+        "max_rhs": 37485.0,
+        "min_bound": 0.0,
+        "max_bound": 0.0
+      },
+      "pre_registered_prediction": {
+        "predicted_solver": "DualSimplex",
+        "predicted_backend": "CPU"
+      },
+      "reference_solution": {
+        "solver": "HiGHS-1.8.1",
+        "status": "Optimal",
+        "objective": 3434088.1999999993,
+        "independent_verification_passed": true,
+        "simplex_iterations": 1616,
+        "mip_nodes": -1,
+        "wallclock_sec": 0.03724000599959254
+      }
+    }
+  ]
 }

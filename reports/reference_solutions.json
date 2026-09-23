@@ -1,0 +1,296 @@
+{
+  "case_a_crude_blending": {
+    "Large": {
+      "mps_file": "Large.mps",
+      "solver": "HiGHS-1.8.1",
+      "model_status": "Optimal",
+      "objective": -5548348.006458127,
+      "recomputed_objective": -5548348.006458126,
+      "objective_discrepancy": 9.313225746154785e-10,
+      "independent_verification": {
+        "passed": true,
+        "max_variable_bound_violation": 0.0,
+        "max_row_bound_violation": 0.0,
+        "max_integrality_violation": 0.0,
+        "num_integer_variables": 0
+      },
+      "performance": {
+        "simplex_iterations": 96,
+        "ipm_iterations": 0,
+        "mip_nodes": -1,
+        "wallclock_time_sec": 0.004586684000059904,
+        "highs_run_time_sec": 0.003889799118041992
+      }
+    },
+    "Medium": {
+      "mps_file": "Medium.mps",
+      "solver": "HiGHS-1.8.1",
+      "model_status": "Optimal",
+      "objective": -2858452.9000000004,
+      "recomputed_objective": -2858452.8999999994,
+      "objective_discrepancy": 9.313225746154785e-10,
+      "independent_verification": {
+        "passed": true,
+        "max_variable_bound_violation": 0.0,
+        "max_row_bound_violation": 0.0,
+        "max_integrality_violation": 0.0,
+        "num_integer_variables": 0
+      },
+      "performance": {
+        "simplex_iterations": 36,
+        "ipm_iterations": 0,
+        "mip_nodes": -1,
+        "wallclock_time_sec": 0.001182035000056203,
+        "highs_run_time_sec": 0.0010981559753417969
+      }
+    },
+    "Small": {
+      "mps_file": "Small.mps",
+      "solver": "HiGHS-1.8.1",
+      "model_status": "Optimal",
+      "objective": -1710944.499999999,
+      "recomputed_objective": -1710944.499999999,
+      "objective_discrepancy": 0.0,
+      "independent_verification": {
+        "passed": true,
+        "max_variable_bound_violation": 0.0,
+        "max_row_bound_violation": 0.0,
+        "max_integrality_violation": 0.0,
+        "num_integer_variables": 0
+      },
+      "performance": {
+        "simplex_iterations": 15,
+        "ipm_iterations": 0,
+        "mip_nodes": -1,
+        "wallclock_time_sec": 0.0003708519998326665,
+        "highs_run_time_sec": 0.0003364086151123047
+      }
+    }
+  },
+  "case_b_multi_period_planning": {
+    "T10": {
+      "mps_file": "T10.mps",
+      "solver": "HiGHS-1.8.1",
+      "model_status": "Optimal",
+      "objective": 268440.0,
+      "recomputed_objective": 268440.0,
+      "objective_discrepancy": 0.0,
+      "independent_verification": {
+        "passed": true,
+        "max_variable_bound_violation": 0.0,
+        "max_row_bound_violation": 0.0,
+        "max_integrality_violation": 0.0,
+        "num_integer_variables": 0
+      },
+      "performance": {
+        "simplex_iterations": 112,
+        "ipm_iterations": 0,
+        "mip_nodes": -1,
+        "wallclock_time_sec": 0.0021178349998081103,
+        "highs_run_time_sec": 0.0020606517791748047
+      }
+    },
+    "T100": {
+      "mps_file": "T100.mps",
+      "solver": "HiGHS-1.8.1",
+      "model_status": "Optimal",
+      "objective": 6746601.599999999,
+      "recomputed_objective": 6746601.6,
+      "objective_discrepancy": 9.313225746154785e-10,
+      "independent_verification": {
+        "passed": true,
+        "max_variable_bound_violation": 0.0,
+        "max_row_bound_violation": 0.0,
+        "max_integrality_violation": 0.0,
+        "num_integer_variables": 0
+      },
+      "performance": {
+        "simplex_iterations": 3308,
+        "ipm_iterations": 0,
+        "mip_nodes": -1,
+        "wallclock_time_sec": 0.06984871399981785,
+        "highs_run_time_sec": 0.06961393356323242
+      }
+    },
+    "T25": {
+      "mps_file": "T25.mps",
+      "solver": "HiGHS-1.8.1",
+      "model_status": "Optimal",
+      "objective": 661056.3999999999,
+      "recomputed_objective": 661056.4,
+      "objective_discrepancy": 1.1641532182693481e-10,
+      "independent_verification": {
+        "passed": true,
+        "max_variable_bound_violation": 0.0,
+        "max_row_bound_violation": 0.0,
+        "max_integrality_violation": 0.0,
+        "num_integer_variables": 0
+      },
+      "performance": {
+        "simplex_iterations": 314,
+        "ipm_iterations": 0,
+        "mip_nodes": -1,
+        "wallclock_time_sec": 0.004129007000301499,
+        "highs_run_time_sec": 0.004021167755126953
+      }
+    },
+    "T50": {
+      "mps_file": "T50.mps",
+      "solver": "HiGHS-1.8.1",
+      "model_status": "Optimal",
+      "objective": 3434088.1999999993,
+      "recomputed_objective": 3434088.2,
+      "objective_discrepancy": 9.313225746154785e-10,
+      "independent_verification": {
+        "passed": true,
+        "max_variable_bound_violation": 0.0,
+        "max_row_bound_violation": 0.0,
+        "max_integrality_violation": 0.0,
+        "num_integer_variables": 0
+      },
+      "performance": {
+        "simplex_iterations": 1616,
+        "ipm_iterations": 0,
+        "mip_nodes": -1,
+        "wallclock_time_sec": 0.03724000599959254,
+        "highs_run_time_sec": 0.03707313537597656
+      }
+    }
+  },
+  "case_c_refinery_scheduling": {
+    "Large": {
+      "mps_file": "Large.mps",
+      "solver": "HiGHS-1.8.1",
+      "model_status": "Infeasible",
+      "objective": Infinity,
+      "recomputed_objective": 0.0,
+      "objective_discrepancy": Infinity,
+      "independent_verification": {
+        "passed": false,
+        "max_variable_bound_violation": 0.0,
+        "max_row_bound_violation": 192.0,
+        "max_integrality_violation": 0.0,
+        "num_integer_variables": 576
+      },
+      "performance": {
+        "simplex_iterations": 750,
+        "ipm_iterations": -1,
+        "mip_nodes": 1,
+        "wallclock_time_sec": 0.04911035700024513,
+        "highs_run_time_sec": 0.04902386665344238
+      }
+    },
+    "Medium": {
+      "mps_file": "Medium.mps",
+      "solver": "HiGHS-1.8.1",
+      "model_status": "Optimal",
+      "objective": 84193.61483282885,
+      "recomputed_objective": 84193.61483282887,
+      "objective_discrepancy": 1.4551915228366852e-11,
+      "independent_verification": {
+        "passed": true,
+        "max_variable_bound_violation": 4.064304448547773e-12,
+        "max_row_bound_violation": 2.2851054382044822e-11,
+        "max_integrality_violation": 1.247890679678676e-13,
+        "num_integer_variables": 180
+      },
+      "performance": {
+        "simplex_iterations": 22821,
+        "ipm_iterations": -1,
+        "mip_nodes": 45,
+        "wallclock_time_sec": 4.643054015999951,
+        "highs_run_time_sec": 4.643004417419434
+      }
+    },
+    "Small": {
+      "mps_file": "Small.mps",
+      "solver": "HiGHS-1.8.1",
+      "model_status": "Optimal",
+      "objective": -6645.985999999998,
+      "recomputed_objective": -6645.985999999999,
+      "objective_discrepancy": 9.094947017729282e-13,
+      "independent_verification": {
+        "passed": true,
+        "max_variable_bound_violation": 2.280754460464519e-14,
+        "max_row_bound_violation": 2.280754460464519e-14,
+        "max_integrality_violation": 0.0,
+        "num_integer_variables": 36
+      },
+      "performance": {
+        "simplex_iterations": 42,
+        "ipm_iterations": -1,
+        "mip_nodes": 1,
+        "wallclock_time_sec": 0.009711957000035909,
+        "highs_run_time_sec": 0.009637594223022461
+      }
+    }
+  },
+  "case_d_unit_commitment": {
+    "Large": {
+      "mps_file": "Large.mps",
+      "solver": "HiGHS-1.8.1",
+      "model_status": "Optimal",
+      "objective": 2566229.5,
+      "recomputed_objective": 2566229.5,
+      "objective_discrepancy": 0.0,
+      "independent_verification": {
+        "passed": true,
+        "max_variable_bound_violation": 7.560174708487466e-12,
+        "max_row_bound_violation": 4.1532237966228935e-12,
+        "max_integrality_violation": 3.530509218307998e-14,
+        "num_integer_variables": 960
+      },
+      "performance": {
+        "simplex_iterations": 4009,
+        "ipm_iterations": -1,
+        "mip_nodes": 1,
+        "wallclock_time_sec": 1.5045404069996948,
+        "highs_run_time_sec": 1.504418134689331
+      }
+    },
+    "Medium": {
+      "mps_file": "Medium.mps",
+      "solver": "HiGHS-1.8.1",
+      "model_status": "Optimal",
+      "objective": 671250.7999999999,
+      "recomputed_objective": 671250.7999999999,
+      "objective_discrepancy": 0.0,
+      "independent_verification": {
+        "passed": true,
+        "max_variable_bound_violation": 0.0,
+        "max_row_bound_violation": 0.0,
+        "max_integrality_violation": 0.0,
+        "num_integer_variables": 240
+      },
+      "performance": {
+        "simplex_iterations": 2044,
+        "ipm_iterations": -1,
+        "mip_nodes": 1,
+        "wallclock_time_sec": 0.3728621739992377,
+        "highs_run_time_sec": 0.3728010654449463
+      }
+    },
+    "Small": {
+      "mps_file": "Small.mps",
+      "solver": "HiGHS-1.8.1",
+      "model_status": "Optimal",
+      "objective": 204174.4,
+      "recomputed_objective": 204174.40000000002,
+      "objective_discrepancy": 2.9103830456733704e-11,
+      "independent_verification": {
+        "passed": true,
+        "max_variable_bound_violation": 0.0,
+        "max_row_bound_violation": 0.0,
+        "max_integrality_violation": 0.0,
+        "num_integer_variables": 60
+      },
+      "performance": {
+        "simplex_iterations": 57,
+        "ipm_iterations": -1,
+        "mip_nodes": 1,
+        "wallclock_time_sec": 0.014192266999998537,
+        "highs_run_time_sec": 0.014143943786621094
+      }
+    }
+  }
+}

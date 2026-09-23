@@ -1,0 +1,12 @@
+Case,Instance,Rows,Cols,NNZ,Binaries,Solver,Status,PivotsIters,Nodes,ParseMs,PrepMs,SolveMs,TotalMs,PipePyeObj,HiGHSObj,RelativeGapPct,Verified,MaxBoundViol,MaxRowViol
+case_a_crude_blending,Crude_Blending_Small,26,18,141,0,DualSimplex,OPTIMAL,22,0,0.789633,2.68276,7.60691,11.0793,-1.71094e+06,-1.71094e+06,6.68052e-06,YES,0,4.19095e-09
+case_a_crude_blending,Crude_Blending_Medium,66,78,774,0,DualSimplex,OPTIMAL,71,0,13.457,12.487,18.4663,44.4103,-2.85845e+06,-2.85845e+06,1.0999e-05,YES,0,4.65661e-10
+case_a_crude_blending,Crude_Blending_Large,155,260,3630,0,DualSimplex,OPTIMAL,152,0,24.3959,10.2486,77.3836,112.028,-5.54835e+06,-5.54835e+06,7.54311e-10,YES,0,9.31323e-10
+case_b_multi_period_planning,Multi_Period_T10,160,200,890,0,DualSimplex,OPTIMAL,121,0,3.80778,3.66954,17.1306,24.6079,268440,268440,0,YES,0,5.68434e-14
+case_b_multi_period_planning,Multi_Period_T25,400,500,2240,0,DualSimplex,OPTIMAL,326,0,20.196,9.78759,127.352,157.336,661056,661056,1.76105e-14,YES,0,1.13687e-13
+case_b_multi_period_planning,Multi_Period_T50,1900,2500,19975,0,DualSimplex,OPTIMAL,1655,0,84.4552,62.1197,6577.75,6724.33,3.43409e+06,3.43409e+06,5.82396e-06,YES,1.42109e-14,2.27374e-13
+case_b_multi_period_planning,Multi_Period_T100,3800,5000,39975,0,DualSimplex,OPTIMAL,3404,0,159.837,119.392,37606.9,37886.1,6.7466e+06,6.7466e+06,5.92891e-06,YES,0,2.27374e-13
+case_c_refinery_scheduling,Refinery_Sched_Small,108,90,262,36,BranchAndBound_DualSimplex,OPTIMAL,98,31,1.75338,0.215017,62.1885,64.1569,-6645.99,-6645.99,6.84244e-14,YES,0,0
+case_c_refinery_scheduling,Refinery_Sched_Medium,480,420,1316,180,BranchAndBound_DualSimplex,NODE_LIMIT,1493,500,10.3363,0.878552,8367.72,8378.93,inf,84193.6,inf,NO,0,0
+case_d_unit_commitment,Unit_Commit_Small,254,120,580,60,BranchAndBound_DualSimplex,OPTIMAL,320,49,3.13993,0.354378,168.826,172.32,204174,204174,1.42544e-14,YES,0,0
+case_d_unit_commitment,Unit_Commit_Medium,988,480,2360,240,BranchAndBound_DualSimplex,NODE_LIMIT,4209,500,12.8236,1.49773,12225.3,12239.6,inf,671251,inf,NO,0,0

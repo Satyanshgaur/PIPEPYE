@@ -1,48 +1,167 @@
 {
-  "problem_name": "Crude_Blending",
-  "instance_id": "BLENDING_Small",
-  "generator_version": "1.0.0",
-  "random_seed": 42,
-  "scale": "Small",
-  "dimensions": {
-    "rows": 26,
-    "cols": 18,
-    "nnz": 141,
-    "density": 3.012821e-01
+  "workload_case": "case_a_crude_blending",
+  "name": "Crude Oil Blending",
+  "category": "Petroleum Refining & Downstream Logistics",
+  "formulation_class": "LP",
+  "mathematical_structure": "Densely coupled, compact linear program with dense quality rows",
+  "provenance": {
+    "benchmark": "Haverly (1978) Pooling Benchmark & Baker-Lasdon (1985) Refinery Blending LP",
+    "references": [
+      "Haverly, C. A. (1978). Studies of Compromise Solutions for the Pooling Problem. ACM SIGMAP Bulletin, 25, 19-28.",
+      "Williams, H. P. (2013). Model Building in Mathematical Programming (5th ed., Ch. 12). Wiley.",
+      "Gary, J. H., Handwerk, G. E., & Kaiser, M. J. (2007). Petroleum Refining: Technology and Economics (5th ed.). CRC Press."
+    ]
   },
-  "variable_types": {
-    "continuous": 18,
-    "integer": 0,
-    "binary": 0
+  "pre_registered_strategy": {
+    "hardware": "CPU",
+    "hardware_rationale": "Small matrix dimensions (m <= 155, n <= 260) fit fully within CPU L1/L2 cache; PCI-e transfer and CUDA kernel launch latency would heavily dominate total runtime.",
+    "algorithm": "DualSimplex",
+    "algorithm_rationale": "High nonzero density (9%-30%) and dense quality rows lead to ill-conditioned gradient operators for first-order PDHG solvers; exact vertex pivoting with LU basis updates resolves active quality limits in < 100 pivots."
   },
-  "ranges": {
-    "min_abs_coeff": 1.000000e+00,
-    "max_abs_coeff": 1.200000e+02,
-    "min_rhs": 0.0000,
-    "max_rhs": 25000.0000,
-    "min_bound": 0.0000,
-    "max_bound": 30000.0000
-  },
-  "structural_statistics": {
-    "row_nnz_avg": 5.42,
-    "row_nnz_stddev": 1.18,
-    "col_nnz_avg": 7.83,
-    "col_nnz_stddev": 0.37,
-    "half_bandwidth": 23,
-    "normalized_bandwidth": 0.8846,
-    "staircase_score": 0.3055,
-    "row_length_gini": 0.0859,
-    "num_connected_components": 1,
-    "coupling_density": 3.0128e-01
-  },
-  "pre_registered_prediction": {
-    "expected_solver": "DualSimplex",
-    "expected_backend": "CPU",
-    "rationale": "Dense quality rows and compact dimensions favor sparse Dual Simplex with fast basis factorization over iterative first-order GPU solvers."
-  },
-  "reference_solution": {
-    "has_reference": false,
-    "objective": 0.0000e+00,
-    "source": ""
-  }
+  "instances": [
+    {
+      "instance_name": "Crude Oil Blending (Large)",
+      "file_name": "Large.mps",
+      "scale": "Large",
+      "dimensions": {
+        "rows": 155,
+        "columns": 260,
+        "nonzeros": 3630,
+        "density": 0.09007444168734491,
+        "density_pct": "9.01%"
+      },
+      "variable_types": {
+        "continuous": 260,
+        "integer": 0,
+        "binary": 0,
+        "integrality_ratio": 0.0
+      },
+      "structural_metrics": {
+        "staircase_score": 0.4440771349862259,
+        "row_gini_index": 0.09241979916466736,
+        "row_nnz_mean": 23.419354838709676,
+        "row_nnz_stddev": 5.884776387608454,
+        "col_nnz_mean": 13.961538461538462,
+        "col_nnz_stddev": 0.19230769230769232,
+        "dynamic_range": 156.0
+      },
+      "ranges": {
+        "min_abs_coeff": 1.0,
+        "max_abs_coeff": 156.0,
+        "min_rhs": 0.0,
+        "max_rhs": 23914.0,
+        "min_bound": 0.0,
+        "max_bound": 12846.0
+      },
+      "pre_registered_prediction": {
+        "predicted_solver": "DualSimplex",
+        "predicted_backend": "CPU"
+      },
+      "reference_solution": {
+        "solver": "HiGHS-1.8.1",
+        "status": "Optimal",
+        "objective": -5548348.006458127,
+        "independent_verification_passed": true,
+        "simplex_iterations": 96,
+        "mip_nodes": -1,
+        "wallclock_sec": 0.004586684000059904
+      }
+    },
+    {
+      "instance_name": "Crude Oil Blending (Medium)",
+      "file_name": "Medium.mps",
+      "scale": "Medium",
+      "dimensions": {
+        "rows": 66,
+        "columns": 78,
+        "nonzeros": 774,
+        "density": 0.15034965034965034,
+        "density_pct": "15.03%"
+      },
+      "variable_types": {
+        "continuous": 78,
+        "integer": 0,
+        "binary": 0,
+        "integrality_ratio": 0.0
+      },
+      "structural_metrics": {
+        "staircase_score": 0.4470284237726098,
+        "row_gini_index": 0.08879492600422845,
+        "row_nnz_mean": 11.727272727272727,
+        "row_nnz_stddev": 2.699862255439545,
+        "col_nnz_mean": 9.923076923076923,
+        "col_nnz_stddev": 0.2664693550105965,
+        "dynamic_range": 130.0
+      },
+      "ranges": {
+        "min_abs_coeff": 1.0,
+        "max_abs_coeff": 130.0,
+        "min_rhs": 0.0,
+        "max_rhs": 23914.0,
+        "min_bound": 0.0,
+        "max_bound": 14113.0
+      },
+      "pre_registered_prediction": {
+        "predicted_solver": "DualSimplex",
+        "predicted_backend": "CPU"
+      },
+      "reference_solution": {
+        "solver": "HiGHS-1.8.1",
+        "status": "Optimal",
+        "objective": -2858452.9000000004,
+        "independent_verification_passed": true,
+        "simplex_iterations": 36,
+        "mip_nodes": -1,
+        "wallclock_sec": 0.001182035000056203
+      }
+    },
+    {
+      "instance_name": "Crude Oil Blending (Small)",
+      "file_name": "Small.mps",
+      "scale": "Small",
+      "dimensions": {
+        "rows": 26,
+        "columns": 18,
+        "nonzeros": 141,
+        "density": 0.30128205128205127,
+        "density_pct": "30.13%"
+      },
+      "variable_types": {
+        "continuous": 18,
+        "integer": 0,
+        "binary": 0,
+        "integrality_ratio": 0.0
+      },
+      "structural_metrics": {
+        "staircase_score": 0.44680851063829785,
+        "row_gini_index": 0.08592471358428799,
+        "row_nnz_mean": 5.423076923076923,
+        "row_nnz_stddev": 1.1823404729953382,
+        "col_nnz_mean": 7.833333333333333,
+        "col_nnz_stddev": 0.37267799624996495,
+        "dynamic_range": 120.0
+      },
+      "ranges": {
+        "min_abs_coeff": 1.0,
+        "max_abs_coeff": 120.0,
+        "min_rhs": 0.0,
+        "max_rhs": 17781.0,
+        "min_bound": 0.0,
+        "max_bound": 14348.0
+      },
+      "pre_registered_prediction": {
+        "predicted_solver": "DualSimplex",
+        "predicted_backend": "CPU"
+      },
+      "reference_solution": {
+        "solver": "HiGHS-1.8.1",
+        "status": "Optimal",
+        "objective": -1710944.499999999,
+        "independent_verification_passed": true,
+        "simplex_iterations": 15,
+        "mip_nodes": -1,
+        "wallclock_sec": 0.0003708519998326665
+      }
+    }
+  ]
 }

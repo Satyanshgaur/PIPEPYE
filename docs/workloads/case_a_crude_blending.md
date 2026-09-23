@@ -67,7 +67,7 @@ The workload generator parameterizes instances deterministically using a fixed p
 
 ## Empirical Benchmark Results
 
-Benchmarked using [`benchmarks/bench_industrial.cpp`](file:///home/satyansh/pipepye/benchmarks/bench_industrial.cpp) on an AMD Ryzen 9 7900X (CPU) and NVIDIA GeForce RTX 3080 (GPU):
+Benchmarked using [`benchmarks/bench_industrial.cpp`](file:///home/sleepytiger/PIPEPYE/benchmarks/bench_industrial.cpp) on an AMD Ryzen 9 7900X (CPU) and NVIDIA GeForce RTX 3080 (GPU):
 
 | Instance | Simplex Time | Simplex Pivots | PDHG CPU Time | PDHG CPU Iters | PDHG GPU Time | PDHG GPU Iters | Winner | Prediction Status |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |

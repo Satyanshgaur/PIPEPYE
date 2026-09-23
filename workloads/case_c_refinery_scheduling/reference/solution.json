@@ -1,5 +1,68 @@
 {
-  "objective": -6.645986e+03,
-  "nodes": 31,
-  "status": "OPTIMAL"
+  "Large": {
+    "mps_file": "Large.mps",
+    "solver": "HiGHS-1.8.1",
+    "model_status": "Infeasible",
+    "objective": Infinity,
+    "recomputed_objective": 0.0,
+    "objective_discrepancy": Infinity,
+    "independent_verification": {
+      "passed": false,
+      "max_variable_bound_violation": 0.0,
+      "max_row_bound_violation": 192.0,
+      "max_integrality_violation": 0.0,
+      "num_integer_variables": 576
+    },
+    "performance": {
+      "simplex_iterations": 750,
+      "ipm_iterations": -1,
+      "mip_nodes": 1,
+      "wallclock_time_sec": 0.04911035700024513,
+      "highs_run_time_sec": 0.04902386665344238
+    }
+  },
+  "Medium": {
+    "mps_file": "Medium.mps",
+    "solver": "HiGHS-1.8.1",
+    "model_status": "Optimal",
+    "objective": 84193.61483282885,
+    "recomputed_objective": 84193.61483282887,
+    "objective_discrepancy": 1.4551915228366852e-11,
+    "independent_verification": {
+      "passed": true,
+      "max_variable_bound_violation": 4.064304448547773e-12,
+      "max_row_bound_violation": 2.2851054382044822e-11,
+      "max_integrality_violation": 1.247890679678676e-13,
+      "num_integer_variables": 180
+    },
+    "performance": {
+      "simplex_iterations": 22821,
+      "ipm_iterations": -1,
+      "mip_nodes": 45,
+      "wallclock_time_sec": 4.643054015999951,
+      "highs_run_time_sec": 4.643004417419434
+    }
+  },
+  "Small": {
+    "mps_file": "Small.mps",
+    "solver": "HiGHS-1.8.1",
+    "model_status": "Optimal",
+    "objective": -6645.985999999998,
+    "recomputed_objective": -6645.985999999999,
+    "objective_discrepancy": 9.094947017729282e-13,
+    "independent_verification": {
+      "passed": true,
+      "max_variable_bound_violation": 2.280754460464519e-14,
+      "max_row_bound_violation": 2.280754460464519e-14,
+      "max_integrality_violation": 0.0,
+      "num_integer_variables": 36
+    },
+    "performance": {
+      "simplex_iterations": 42,
+      "ipm_iterations": -1,
+      "mip_nodes": 1,
+      "wallclock_time_sec": 0.009711957000035909,
+      "highs_run_time_sec": 0.009637594223022461
+    }
+  }
 }

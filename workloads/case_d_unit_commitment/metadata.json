@@ -1,48 +1,167 @@
 {
-  "problem_name": "Unit_Commitment",
-  "instance_id": "UNIT_COMMIT_Small",
-  "generator_version": "1.0.0",
-  "random_seed": 42,
-  "scale": "Small",
-  "dimensions": {
-    "rows": 254,
-    "cols": 120,
-    "nnz": 580,
-    "density": 1.902887e-02
+  "workload_case": "case_d_unit_commitment",
+  "name": "Power System Unit Commitment & Economic Dispatch",
+  "category": "Wholesale Electricity Markets & Transmission Grids",
+  "formulation_class": "MILP",
+  "mathematical_structure": "Mixed-Integer Linear Program with inter-temporal dynamic ramping envelope and hourly spinning reserve coupling",
+  "provenance": {
+    "benchmark": "Carrion & Arroyo (2006) Efficient Thermal Unit Commitment & Wood-Wollenberg (2013)",
+    "references": [
+      "Wood, A. J., Wollenberg, B. F., & Sheble, G. B. (2013). Power Generation, Operation, and Control (3rd ed.). Wiley.",
+      "Carrion, M., & Arroyo, J. M. (2006). A Computationally Efficient Mixed-Integer Linear Formulation for Thermal Unit Commitment. IEEE Trans. Power Syst., 21(3), 1371-1378.",
+      "Ostrowski, J., Anjos, M. F., & Vannelli, A. (2012). Tight Mixed Integer Linear Programming Formulations for UC. IEEE Trans. Power Syst., 27(1), 39-46."
+    ]
   },
-  "variable_types": {
-    "continuous": 60,
-    "integer": 0,
-    "binary": 60
+  "pre_registered_strategy": {
+    "hardware": "CPU",
+    "hardware_rationale": "Combinatorial binary search over 50% integer variables requires low-latency branch handling and frequent CPU cache hits on basis LU structures.",
+    "algorithm": "BranchAndBound with Warm-Started Dual Simplex",
+    "algorithm_rationale": "Hourly ramping constraints link adjacent periods, but bounding a generator commitment variable u_{g,t} in {0,1} only shifts bounds, which Dual Simplex exploits to eliminate > 90% of re-optimization pivots."
   },
-  "ranges": {
-    "min_abs_coeff": 1.000000e+00,
-    "max_abs_coeff": 2.560000e+02,
-    "min_rhs": 0.0000,
-    "max_rhs": 562.5000,
-    "min_bound": 0.0000,
-    "max_bound": 300.0000
-  },
-  "structural_statistics": {
-    "row_nnz_avg": 2.28,
-    "row_nnz_stddev": 0.88,
-    "col_nnz_avg": 4.83,
-    "col_nnz_stddev": 1.91,
-    "half_bandwidth": 144,
-    "normalized_bandwidth": 0.5669,
-    "staircase_score": 0.9934,
-    "row_length_gini": 0.1124,
-    "num_connected_components": 1,
-    "coupling_density": 1.9029e-02
-  },
-  "pre_registered_prediction": {
-    "expected_solver": "BranchAndBound",
-    "expected_backend": "CPU",
-    "rationale": "Time-indexed generator commitment requires discrete branching; continuous dispatch subproblems are efficiently resolved via warm-started Dual Simplex."
-  },
-  "reference_solution": {
-    "has_reference": false,
-    "objective": 0.0000e+00,
-    "source": ""
-  }
+  "instances": [
+    {
+      "instance_name": "Power System Unit Commitment & Economic Dispatch (Large)",
+      "file_name": "Large.mps",
+      "scale": "Large",
+      "dimensions": {
+        "rows": 3896,
+        "columns": 1920,
+        "nonzeros": 9520,
+        "density": 0.0012726728268309378,
+        "density_pct": "0.13%"
+      },
+      "variable_types": {
+        "continuous": 960,
+        "integer": 0,
+        "binary": 960,
+        "integrality_ratio": 0.5
+      },
+      "structural_metrics": {
+        "staircase_score": 1.0,
+        "row_gini_index": 0.17704001518471868,
+        "row_nnz_mean": 2.4435318275154003,
+        "row_nnz_stddev": 2.7904932204286137,
+        "col_nnz_mean": 4.958333333333333,
+        "col_nnz_stddev": 1.9786183450972943,
+        "dynamic_range": 299.0
+      },
+      "ranges": {
+        "min_abs_coeff": 1.0,
+        "max_abs_coeff": 299.0,
+        "min_rhs": 0.0,
+        "max_rhs": 2329.0,
+        "min_bound": 0.0,
+        "max_bound": 299.0
+      },
+      "pre_registered_prediction": {
+        "predicted_solver": "BranchAndBound",
+        "predicted_backend": "CPU"
+      },
+      "reference_solution": {
+        "solver": "HiGHS-1.8.1",
+        "status": "Optimal",
+        "objective": 2566229.5,
+        "independent_verification_passed": true,
+        "simplex_iterations": 4009,
+        "mip_nodes": 1,
+        "wallclock_sec": 1.5045404069996948
+      }
+    },
+    {
+      "instance_name": "Power System Unit Commitment & Economic Dispatch (Medium)",
+      "file_name": "Medium.mps",
+      "scale": "Medium",
+      "dimensions": {
+        "rows": 988,
+        "columns": 480,
+        "nonzeros": 2360,
+        "density": 0.00497638326585695,
+        "density_pct": "0.50%"
+      },
+      "variable_types": {
+        "continuous": 240,
+        "integer": 0,
+        "binary": 240,
+        "integrality_ratio": 0.5
+      },
+      "structural_metrics": {
+        "staircase_score": 1.0,
+        "row_gini_index": 0.15480683455705768,
+        "row_nnz_mean": 2.388663967611336,
+        "row_nnz_stddev": 1.7199569939888915,
+        "col_nnz_mean": 4.916666666666667,
+        "col_nnz_stddev": 1.9561157657175838,
+        "dynamic_range": 256.0
+      },
+      "ranges": {
+        "min_abs_coeff": 1.0,
+        "max_abs_coeff": 256.0,
+        "min_rhs": 0.0,
+        "max_rhs": 1165.0,
+        "min_bound": 0.0,
+        "max_bound": 256.0
+      },
+      "pre_registered_prediction": {
+        "predicted_solver": "BranchAndBound",
+        "predicted_backend": "CPU"
+      },
+      "reference_solution": {
+        "solver": "HiGHS-1.8.1",
+        "status": "Optimal",
+        "objective": 671250.7999999999,
+        "independent_verification_passed": true,
+        "simplex_iterations": 2044,
+        "mip_nodes": 1,
+        "wallclock_sec": 0.3728621739992377
+      }
+    },
+    {
+      "instance_name": "Power System Unit Commitment & Economic Dispatch (Small)",
+      "file_name": "Small.mps",
+      "scale": "Small",
+      "dimensions": {
+        "rows": 254,
+        "columns": 120,
+        "nonzeros": 580,
+        "density": 0.019028871391076115,
+        "density_pct": "1.90%"
+      },
+      "variable_types": {
+        "continuous": 60,
+        "integer": 0,
+        "binary": 60,
+        "integrality_ratio": 0.5
+      },
+      "structural_metrics": {
+        "staircase_score": 1.0,
+        "row_gini_index": 0.1124083627477599,
+        "row_nnz_mean": 2.283464566929134,
+        "row_nnz_stddev": 0.8775201080790571,
+        "col_nnz_mean": 4.833333333333333,
+        "col_nnz_stddev": 1.907587190376599,
+        "dynamic_range": 256.0
+      },
+      "ranges": {
+        "min_abs_coeff": 1.0,
+        "max_abs_coeff": 256.0,
+        "min_rhs": 0.0,
+        "max_rhs": 582.0,
+        "min_bound": 0.0,
+        "max_bound": 256.0
+      },
+      "pre_registered_prediction": {
+        "predicted_solver": "BranchAndBound",
+        "predicted_backend": "CPU"
+      },
+      "reference_solution": {
+        "solver": "HiGHS-1.8.1",
+        "status": "Optimal",
+        "objective": 204174.4,
+        "independent_verification_passed": true,
+        "simplex_iterations": 57,
+        "mip_nodes": 1,
+        "wallclock_sec": 0.014192266999998537
+      }
+    }
+  ]
 }

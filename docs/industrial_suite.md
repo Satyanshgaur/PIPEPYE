@@ -24,22 +24,22 @@ The suite comprises four canonical workload families representing distinct mathe
 └───────────────────────────────┴─────────────────────────────────────────────┘
 ```
 
-1. [**Case A: Crude Oil Blending (LP)**](file:///home/satyansh/pipepye/docs/workloads/case_a_crude_blending.md)
+1. [**Case A: Crude Oil Blending (LP)**](file:///home/sleepytiger/PIPEPYE/docs/workloads/case_a_crude_blending.md)
    - Linear program with compact dimensions ($18 - 260$ variables).
    - High nonzero density ($9\% - 30\%$) and dense product quality rows.
    - Ideal test for dense basis factorization and CPU Simplex vertex tracking.
 
-2. [**Case B: Multi-Period Production & Inventory Planning (LP)**](file:///home/satyansh/pipepye/docs/workloads/case_b_multi_period_planning.md)
+2. [**Case B: Multi-Period Production & Inventory Planning (LP)**](file:///home/sleepytiger/PIPEPYE/docs/workloads/case_b_multi_period_planning.md)
    - Large-scale linear program with block-angular staircase structure.
    - Staircase score $> 0.996$, scaling from $890$ to $39,975$ nonzeros.
    - Ideal test for evaluating parallel GPU PDHG SpMV scalability across time horizons.
 
-3. [**Case C: Refinery Unit Scheduling (MILP)**](file:///home/satyansh/pipepye/docs/workloads/case_c_refinery_scheduling.md)
+3. [**Case C: Refinery Unit Scheduling (MILP)**](file:///home/sleepytiger/PIPEPYE/docs/workloads/case_c_refinery_scheduling.md)
    - Mixed-integer linear program with $40\% - 43\%$ binary mode selection variables.
    - Semicontinuous processing ranges coupled with storage inventory balances.
    - Evaluates Branch-and-Bound tree search and Dual Simplex basis warm-starting.
 
-4. [**Case D: Power System Unit Commitment & Economic Dispatch (MILP)**](file:///home/satyansh/pipepye/docs/workloads/case_d_unit_commitment.md)
+4. [**Case D: Power System Unit Commitment & Economic Dispatch (MILP)**](file:///home/sleepytiger/PIPEPYE/docs/workloads/case_d_unit_commitment.md)
    - Mixed-integer linear program with exactly $50\%$ binary generator status variables.
    - Stringent inter-temporal dynamic ramping constraints and hourly reserve requirements.
    - Tests Dual Simplex warm-start pivot reduction on dense B&B search trees.
@@ -98,16 +98,16 @@ The metadata format records structural metrics, generation seeds, variable count
 ## Parametric Generators
 
 All instances are generated deterministically via C++ generator classes in `include/pipepye/workloads/`:
-- [`CrudeBlendingGenerator`](file:///home/satyansh/pipepye/include/pipepye/workloads/case_a_crude_blending.hpp): Generates crude feeds, product demands, and random bounded quality assay matrices.
-- [`MultiPeriodPlanningGenerator`](file:///home/satyansh/pipepye/include/pipepye/workloads/case_b_multi_period_planning.hpp): Generates multi-period production lines with inventory propagation balances.
-- [`RefinerySchedulingGenerator`](file:///home/satyansh/pipepye/include/pipepye/workloads/case_c_refinery_scheduling.hpp): Generates processing units with disjunctive binary modes and intermediate tank balances.
-- [`UnitCommitmentGenerator`](file:///home/satyansh/pipepye/include/pipepye/workloads/case_d_unit_commitment.hpp): Generates thermal generators, hourly loads, spinning reserves, and ramping rate constraints.
+- [`CrudeBlendingGenerator`](file:///home/sleepytiger/PIPEPYE/include/pipepye/workloads/case_a_crude_blending.hpp): Generates crude feeds, product demands, and random bounded quality assay matrices.
+- [`MultiPeriodPlanningGenerator`](file:///home/sleepytiger/PIPEPYE/include/pipepye/workloads/case_b_multi_period_planning.hpp): Generates multi-period production lines with inventory propagation balances.
+- [`RefinerySchedulingGenerator`](file:///home/sleepytiger/PIPEPYE/include/pipepye/workloads/case_c_refinery_scheduling.hpp): Generates processing units with disjunctive binary modes and intermediate tank balances.
+- [`UnitCommitmentGenerator`](file:///home/sleepytiger/PIPEPYE/include/pipepye/workloads/case_d_unit_commitment.hpp): Generates thermal generators, hourly loads, spinning reserves, and ramping rate constraints.
 
 ---
 
 ## MPS Serialization & Roundtrip Capability
 
-The suite extends [`MPSParser`](file:///home/satyansh/pipepye/include/pipepye/model/mps_parser.hpp) with full write capability:
+The suite extends [`MPSParser`](file:///home/sleepytiger/PIPEPYE/include/pipepye/model/mps_parser.hpp) with full write capability:
 - `MPSParser::write_file(const std::string& path, const PreparedLP& lp)`
 - Supports standard fixed-column 8-character MPS syntax: `NAME`, `ROWS`, `COLUMNS`, `RHS`, `RANGES`, `BOUNDS`, `ENDATA`.
 - Full integer support: writes `'MARKER'` cards with `'INTORG'` and `'INTEND'` blocks for integer/binary columns, as well as `BV`, `UI`, `LI`, `FX`, `FR`, `UP`, and `LO` bound types.
@@ -116,7 +116,7 @@ The suite extends [`MPSParser`](file:///home/satyansh/pipepye/include/pipepye/mo
 
 ## Structure-Aware Solver Selection Architecture
 
-The decision engine in [`include/pipepye/analysis/solver_selector.hpp`](file:///home/satyansh/pipepye/include/pipepye/analysis/solver_selector.hpp) analyzes structural features before routing:
+The decision engine in [`include/pipepye/analysis/solver_selector.hpp`](file:///home/sleepytiger/PIPEPYE/include/pipepye/analysis/solver_selector.hpp) analyzes structural features before routing:
 
 ```mermaid
 flowchart TD
