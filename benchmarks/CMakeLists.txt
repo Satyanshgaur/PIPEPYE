@@ -142,3 +142,16 @@ set_target_properties(pipepye_bench_industrial PROPERTIES
     CXX_STANDARD_REQUIRED ON
 )
 
+# Phase 7 Branch-and-Bound MILP Benchmark Harness
+add_executable(pipepye_bench_milp
+    bench_milp.cpp
+)
+target_link_libraries(pipepye_bench_milp
+    PRIVATE
+        pipepye_core
+)
+set_target_properties(pipepye_bench_milp PROPERTIES
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+

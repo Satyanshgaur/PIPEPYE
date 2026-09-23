@@ -35,6 +35,7 @@ add_executable(test_core
     test_mps_writer.cpp
     test_workload_generators.cpp
     test_branch_and_bound.cpp
+    test_milp_phase7.cpp
     test_solver_selector.cpp
 )
 
