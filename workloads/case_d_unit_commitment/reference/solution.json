@@ -1,5 +1,68 @@
 {
-  "objective": 2.041744e+05,
-  "nodes": 49,
-  "status": "OPTIMAL"
+  "Large": {
+    "mps_file": "Large.mps",
+    "solver": "HiGHS-1.8.1",
+    "model_status": "Optimal",
+    "objective": 2566229.5,
+    "recomputed_objective": 2566229.5,
+    "objective_discrepancy": 0.0,
+    "independent_verification": {
+      "passed": true,
+      "max_variable_bound_violation": 7.560174708487466e-12,
+      "max_row_bound_violation": 4.1532237966228935e-12,
+      "max_integrality_violation": 3.530509218307998e-14,
+      "num_integer_variables": 960
+    },
+    "performance": {
+      "simplex_iterations": 4009,
+      "ipm_iterations": -1,
+      "mip_nodes": 1,
+      "wallclock_time_sec": 1.5045404069996948,
+      "highs_run_time_sec": 1.504418134689331
+    }
+  },
+  "Medium": {
+    "mps_file": "Medium.mps",
+    "solver": "HiGHS-1.8.1",
+    "model_status": "Optimal",
+    "objective": 671250.7999999999,
+    "recomputed_objective": 671250.7999999999,
+    "objective_discrepancy": 0.0,
+    "independent_verification": {
+      "passed": true,
+      "max_variable_bound_violation": 0.0,
+      "max_row_bound_violation": 0.0,
+      "max_integrality_violation": 0.0,
+      "num_integer_variables": 240
+    },
+    "performance": {
+      "simplex_iterations": 2044,
+      "ipm_iterations": -1,
+      "mip_nodes": 1,
+      "wallclock_time_sec": 0.3728621739992377,
+      "highs_run_time_sec": 0.3728010654449463
+    }
+  },
+  "Small": {
+    "mps_file": "Small.mps",
+    "solver": "HiGHS-1.8.1",
+    "model_status": "Optimal",
+    "objective": 204174.4,
+    "recomputed_objective": 204174.40000000002,
+    "objective_discrepancy": 2.9103830456733704e-11,
+    "independent_verification": {
+      "passed": true,
+      "max_variable_bound_violation": 0.0,
+      "max_row_bound_violation": 0.0,
+      "max_integrality_violation": 0.0,
+      "num_integer_variables": 60
+    },
+    "performance": {
+      "simplex_iterations": 57,
+      "ipm_iterations": -1,
+      "mip_nodes": 1,
+      "wallclock_time_sec": 0.014192266999998537,
+      "highs_run_time_sec": 0.014143943786621094
+    }
+  }
 }
