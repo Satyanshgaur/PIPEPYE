@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnClearFile = document.getElementById("btn-clear-file");
     const sampleSelect = document.getElementById("sample-select");
     const maxItersInput = document.getElementById("max-iters");
+    const milpStrategySelect = document.getElementById("milp-strategy-select");
     const btnSolve = document.getElementById("btn-solve");
     const btnSpinner = document.getElementById("btn-spinner");
     const executionProgress = document.getElementById("execution-progress");
@@ -164,6 +165,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 120);
 
         const maxIters = parseInt(maxItersInput.value) || 3000;
+        const milpStrategy = milpStrategySelect ? milpStrategySelect.value : "advanced";
 
         let requestPromise;
         if (currentFile) {
@@ -171,6 +173,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const formData = new FormData();
             formData.append("file", currentFile);
             formData.append("max_iters", maxIters);
+            formData.append("milp_config", milpStrategy);
             requestPromise = fetch("/api/solve", {
                 method: "POST",
                 body: formData
@@ -182,7 +185,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     filepath: currentSample.abs_path,
-                    max_iters: maxIters
+                    max_iters: maxIters,
+                    milp_config: milpStrategy
                 })
             });
         }
@@ -405,24 +409,143 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("co-time").textContent = `${(co.total_crossover_time_ms || 0).toFixed(2)} ms`;
         document.getElementById("co-obj").textContent = formatSci(co.final_objective, 6);
 
-        // Phase 5: MILP Branch-and-Bound
-        const milp = data.phase5_milp || {};
+        // Phase 7: Advanced MILP Branch-and-Bound (with Phase 5 compatibility)
+        const milp7 = data.phase7_milp || {};
+        const milp5 = data.phase5_milp || {};
+        const isMilp = milp7.is_milp !== undefined ? milp7.is_milp : (milp5.is_milp || false);
+        const milpExecuted = milp7.executed !== undefined ? milp7.executed : (milp5.executed || false);
+
         const milpCardApplicable = document.getElementById("milp-applicable");
         const milpCardPlaceholder = document.getElementById("milp-not-applicable");
 
-        if (milp.is_milp && milp.executed) {
+        if (isMilp && milpExecuted) {
             milpCardApplicable.style.display = "block";
             milpCardPlaceholder.style.display = "none";
-            document.getElementById("milp-warm-pivots").textContent = (milp.warm_pivots || 0).toLocaleString();
-            document.getElementById("milp-warm-nodes").textContent = (milp.warm_nodes_explored || 0).toLocaleString();
-            document.getElementById("milp-warm-time").textContent = `${(milp.warm_time_ms || 0).toFixed(2)} ms`;
 
-            document.getElementById("milp-cold-pivots").textContent = (milp.cold_pivots || 0).toLocaleString();
-            document.getElementById("milp-cold-nodes").textContent = (milp.cold_nodes_explored || 0).toLocaleString();
-            document.getElementById("milp-cold-time").textContent = `${(milp.cold_time_ms || 0).toFixed(2)} ms`;
+            const cfgName = milp7.config_name || "advanced";
+            const cfgDisplayNames = {
+                "advanced": "Advanced (Cuts + Heuristics + Pseudocost)",
+                "default": "Best-Bound Search (Standard)",
+                "cuts": "Gomory Cuts Only",
+                "heuristics": "Primal Heuristics Only",
+                "pseudocost": "Pseudocost Branching",
+                "depth_first": "Depth-First Search (LIFO)",
+                "cold": "Cold-Start Baseline"
+            };
+            const warmLabel = document.getElementById("milp-warm-label");
+            if (warmLabel) {
+                warmLabel.textContent = `PipePye [${cfgDisplayNames[cfgName] || cfgName}]`;
+            }
 
-            document.getElementById("milp-reduction-pct").textContent = `${(milp.pivot_reduction_pct || 0).toFixed(1)} % Pivot Reduction`;
-            document.getElementById("milp-best-obj").textContent = formatSci(milp.integer_objective, 6);
+            const warmPivots = milp7.warm_pivots !== undefined ? milp7.warm_pivots : (milp5.warm_pivots || 0);
+            const warmNodes = milp7.warm_nodes_explored !== undefined ? milp7.warm_nodes_explored : (milp5.warm_nodes_explored || 0);
+            const warmTime = milp7.warm_time_ms !== undefined ? milp7.warm_time_ms : (milp5.warm_time_ms || 0);
+
+            const coldPivots = milp7.cold_pivots !== undefined ? milp7.cold_pivots : (milp5.cold_pivots || 0);
+            const coldNodes = milp7.cold_nodes_explored !== undefined ? milp7.cold_nodes_explored : (milp5.cold_nodes_explored || 0);
+            const coldTime = milp7.cold_time_ms !== undefined ? milp7.cold_time_ms : (milp5.cold_time_ms || 0);
+
+            const reductionPct = milp7.pivot_reduction_pct !== undefined ? milp7.pivot_reduction_pct : (milp5.pivot_reduction_pct || 0);
+            const bestObj = milp7.integer_objective !== undefined ? milp7.integer_objective : milp5.integer_objective;
+
+            document.getElementById("milp-warm-pivots").textContent = warmPivots.toLocaleString();
+            document.getElementById("milp-warm-nodes").textContent = warmNodes.toLocaleString();
+            document.getElementById("milp-warm-time").textContent = `${warmTime.toFixed(2)} ms`;
+
+            document.getElementById("milp-cold-pivots").textContent = coldPivots.toLocaleString();
+            document.getElementById("milp-cold-nodes").textContent = coldNodes.toLocaleString();
+            document.getElementById("milp-cold-time").textContent = `${coldTime.toFixed(2)} ms`;
+
+            document.getElementById("milp-reduction-pct").textContent = `${reductionPct.toFixed(1)} % Pivot Reduction`;
+            document.getElementById("milp-best-obj").textContent = formatSci(bestObj, 6);
+
+            // Phase 7 Telemetry Grid Elements
+            const treeStatsEl = document.getElementById("milp-tree-stats");
+            if (treeStatsEl) {
+                treeStatsEl.textContent = `${(milp7.active_tree_size || 0).toLocaleString()} / ${(milp7.peak_tree_size || 0).toLocaleString()}`;
+            }
+
+            const nodesSecEl = document.getElementById("milp-nodes-sec");
+            if (nodesSecEl) {
+                nodesSecEl.textContent = `${(milp7.nodes_per_sec || 0).toFixed(1)} nodes/s`;
+            }
+
+            const cutsAddedEl = document.getElementById("milp-cuts-added");
+            if (cutsAddedEl) {
+                cutsAddedEl.textContent = (milp7.root_cuts_added || 0).toLocaleString();
+            }
+
+            const heurCountEl = document.getElementById("milp-heuristics-count");
+            if (heurCountEl) {
+                heurCountEl.textContent = (milp7.heuristic_solutions_found || 0).toLocaleString();
+            }
+
+            const gapEl = document.getElementById("milp-gap");
+            if (gapEl) {
+                if (milp7.mip_gap !== null && milp7.mip_gap !== undefined) {
+                    gapEl.textContent = (milp7.mip_gap * 100).toFixed(2) + "%";
+                    gapEl.className = "telemetry-val mono font-bold " + (milp7.mip_gap <= 1e-4 ? "text-green" : "text-primary");
+                } else {
+                    gapEl.textContent = "-";
+                }
+            }
+
+            const bestBoundEl = document.getElementById("milp-best-bound");
+            if (bestBoundEl) {
+                bestBoundEl.textContent = formatSci(milp7.best_dual_bound, 6);
+            }
+
+            const prunedBreakdownEl = document.getElementById("milp-pruned-breakdown");
+            if (prunedBreakdownEl) {
+                prunedBreakdownEl.textContent = `Bound: ${milp7.nodes_pruned_bound || 0} | Infeasible: ${milp7.nodes_pruned_infeasible || 0} | Integral: ${milp7.nodes_pruned_integral || 0}`;
+            }
+
+            const rootBoundCutsEl = document.getElementById("milp-root-bound-cuts");
+            if (rootBoundCutsEl) {
+                rootBoundCutsEl.textContent = formatSci(milp7.root_bound_after_cuts, 6);
+            }
+
+            const timeIncumbentEl = document.getElementById("milp-time-incumbent");
+            if (timeIncumbentEl) {
+                timeIncumbentEl.textContent = milp7.time_to_first_incumbent_ms !== null && milp7.time_to_first_incumbent_ms !== undefined ?
+                    `${milp7.time_to_first_incumbent_ms.toFixed(2)} ms` : "None";
+            }
+
+            const milestonesEl = document.getElementById("milp-milestones");
+            if (milestonesEl) {
+                const t10 = milp7.time_to_gap_10pct_ms != null ? `${milp7.time_to_gap_10pct_ms.toFixed(1)}ms` : "-";
+                const t1 = milp7.time_to_gap_1pct_ms != null ? `${milp7.time_to_gap_1pct_ms.toFixed(1)}ms` : "-";
+                const t01 = milp7.time_to_gap_01pct_ms != null ? `${milp7.time_to_gap_01pct_ms.toFixed(1)}ms` : "-";
+                milestonesEl.textContent = `10%: ${t10} | 1%: ${t1} | 0.1%: ${t01}`;
+            }
+
+            const timingBreakdownEl = document.getElementById("milp-timing-breakdown");
+            if (timingBreakdownEl) {
+                const cTime = (milp7.cut_time_ms || 0).toFixed(2);
+                const hTime = (milp7.heuristic_time_ms || 0).toFixed(2);
+                const lTime = (milp7.lp_relaxation_time_ms || 0).toFixed(2);
+                timingBreakdownEl.textContent = `Cuts: ${cTime}ms | Heuristics: ${hTime}ms | Relax: ${lTime}ms`;
+            }
+
+            // Gap History Table
+            const gapHistorySec = document.getElementById("milp-gap-history-section");
+            const gapHistoryBody = document.getElementById("milp-gap-history-body");
+            if (gapHistorySec && gapHistoryBody) {
+                if (milp7.gap_history && milp7.gap_history.length > 0) {
+                    gapHistorySec.style.display = "block";
+                    gapHistoryBody.innerHTML = milp7.gap_history.map(g => `
+                        <tr>
+                            <td class="mono">${g.node}</td>
+                            <td class="mono">${g.time_ms.toFixed(1)} ms</td>
+                            <td class="mono">${formatSci(g.bound, 5)}</td>
+                            <td class="mono">${formatSci(g.obj, 5)}</td>
+                            <td class="mono text-green font-bold">${(g.gap * 100).toFixed(2)}%</td>
+                        </tr>
+                    `).join("");
+                } else {
+                    gapHistorySec.style.display = "none";
+                }
+            }
         } else {
             milpCardApplicable.style.display = "none";
             milpCardPlaceholder.style.display = "block";
@@ -451,9 +574,10 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             // PipePye vs HiGHS comparison table
-            const isMilp = data.phase5_milp?.is_milp;
+            const isMilpForHighs = (milp7.is_milp || milp5.is_milp);
+            const isMilpExecuted = (milp7.executed || milp5.executed);
             document.getElementById("comp-pipepye-status").textContent = 
-                (isMilp && data.phase5_milp?.executed) ? "OPTIMAL" : 
+                (isMilpForHighs && isMilpExecuted) ? "OPTIMAL" : 
                 (data.phase4_dual_simplex?.status || "OPTIMAL");
             document.getElementById("comp-highs-status").textContent = refVerif.model_status || "Optimal";
 
@@ -473,15 +597,15 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             // Pivots / Iterations
-            const pipePivots = isMilp ? (data.phase5_milp?.warm_pivots || 0) : (data.phase4_dual_simplex?.pivots || 0);
+            const pipePivots = isMilpForHighs ? (milp7.warm_pivots || milp5.warm_pivots || 0) : (data.phase4_dual_simplex?.pivots || 0);
             document.getElementById("comp-pipepye-pivots").textContent = pipePivots.toLocaleString();
             document.getElementById("comp-highs-iters").textContent = (refVerif.highs_simplex_iterations || 0).toLocaleString();
 
             // Nodes
-            const pipeNodes = isMilp ? (data.phase5_milp?.warm_nodes_explored || 0) : 0;
+            const pipeNodes = isMilpForHighs ? (milp7.warm_nodes_explored || milp5.warm_nodes_explored || 0) : 0;
             const highsNodes = refVerif.highs_mip_nodes >= 0 ? refVerif.highs_mip_nodes : 0;
-            document.getElementById("comp-pipepye-nodes").textContent = isMilp ? pipeNodes.toLocaleString() : "N/A (Continuous LP)";
-            document.getElementById("comp-highs-nodes").textContent = isMilp ? highsNodes.toLocaleString() : "N/A (Continuous LP)";
+            document.getElementById("comp-pipepye-nodes").textContent = isMilpForHighs ? pipeNodes.toLocaleString() : "N/A (Continuous LP)";
+            document.getElementById("comp-highs-nodes").textContent = isMilpForHighs ? highsNodes.toLocaleString() : "N/A (Continuous LP)";
 
             // Runtime
             const pipeTimeMs = data.executive_summary?.best_runtime_ms || 0;

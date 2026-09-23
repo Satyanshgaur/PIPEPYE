@@ -252,6 +252,16 @@ class PipePyeRequestHandler(BaseHTTPRequestHandler):
         tmp_mps_file = None
         mps_filepath = None
         max_iters = 3000
+        milp_config = "advanced"
+
+        # Check query parameters for optional defaults
+        parsed_qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        if "milp_config" in parsed_qs and parsed_qs["milp_config"]:
+            milp_config = parsed_qs["milp_config"][0].strip().lower()
+        if "max_iters" in parsed_qs and parsed_qs["max_iters"]:
+            val = parsed_qs["max_iters"][0].strip()
+            if val.isdigit():
+                max_iters = int(val)
 
         try:
             if "multipart/form-data" in content_type:
@@ -270,7 +280,18 @@ class PipePyeRequestHandler(BaseHTTPRequestHandler):
                         header_end = part.find(b"\r\n\r\n")
                         if header_end != -1:
                             file_bytes = part[header_end + 4:].rstrip(b"\r\n")
-                            break
+                    elif b'name="max_iters"' in part:
+                        header_end = part.find(b"\r\n\r\n")
+                        if header_end != -1:
+                            val_str = part[header_end + 4:].rstrip(b"\r\n").decode("utf-8", errors="ignore").strip()
+                            if val_str.isdigit():
+                                max_iters = int(val_str)
+                    elif b'name="milp_config"' in part:
+                        header_end = part.find(b"\r\n\r\n")
+                        if header_end != -1:
+                            val_str = part[header_end + 4:].rstrip(b"\r\n").decode("utf-8", errors="ignore").strip()
+                            if val_str:
+                                milp_config = val_str.lower()
 
                 if not file_bytes:
                     self._set_headers(400, "application/json")
@@ -294,6 +315,8 @@ class PipePyeRequestHandler(BaseHTTPRequestHandler):
                         mps_filepath = tmp.name
                 if "max_iters" in payload:
                     max_iters = int(payload["max_iters"])
+                if "milp_config" in payload:
+                    milp_config = str(payload["milp_config"]).strip().lower()
             else:
                 # Raw MPS text or binary
                 body = self.rfile.read(content_length)
@@ -307,8 +330,8 @@ class PipePyeRequestHandler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({"error": "Invalid file or filepath"}).encode())
                 return
 
-            # Execute real C++/CUDA PipePye binary
-            cmd = [str(RUNNER_BIN), mps_filepath, "--max-iters", str(max_iters)]
+            # Execute real C++/CUDA PipePye binary with Phase 7 MILP configuration
+            cmd = [str(RUNNER_BIN), mps_filepath, "--max-iters", str(max_iters), "--milp-config", milp_config]
             proc = subprocess.run(
                 cmd,
                 capture_output=True,

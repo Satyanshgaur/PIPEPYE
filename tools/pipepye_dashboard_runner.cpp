@@ -68,6 +68,7 @@ int main(int argc, char** argv) {
     std::string mps_path = argv[1];
     int max_iters = 3000;
     std::string out_json_path = "";
+    std::string milp_cfg_name = "advanced";
 
     for (int i = 2; i < argc; ++i) {
         std::string arg = argv[i];
@@ -75,6 +76,8 @@ int main(int argc, char** argv) {
             max_iters = std::stoi(argv[++i]);
         } else if (arg == "--out" && i + 1 < argc) {
             out_json_path = argv[++i];
+        } else if (arg == "--milp-config" && i + 1 < argc) {
+            milp_cfg_name = argv[++i];
         }
     }
 
@@ -190,12 +193,35 @@ int main(int argc, char** argv) {
     scalar_t best_objective = 0.0;
 
     if (is_milp) {
-        // Run MILP Branch-and-Bound with Warm vs Cold ablation
-        BranchAndBoundSolver bnb;
+        // Run MILP Branch-and-Bound with Phase 7 Advanced Features
         milp_run = true;
-        auto [w_res, c_res] = bnb.solve_warm_vs_cold(raw_lp);
-        milp_warm_res = w_res;
-        milp_cold_res = c_res;
+        MILPConfig warm_cfg;
+        if (milp_cfg_name == "advanced" || milp_cfg_name == "full") {
+            warm_cfg = MILPConfig::Advanced();
+        } else if (milp_cfg_name == "cuts") {
+            warm_cfg = MILPConfig::WithCuts();
+        } else if (milp_cfg_name == "heuristics") {
+            warm_cfg = MILPConfig::WithHeuristics();
+        } else if (milp_cfg_name == "pseudocost") {
+            warm_cfg = MILPConfig::PseudoCostBranching();
+        } else if (milp_cfg_name == "depth_first" || milp_cfg_name == "dfs") {
+            warm_cfg = MILPConfig::DepthFirst();
+        } else if (milp_cfg_name == "cold") {
+            warm_cfg = MILPConfig::ColdStartBaseline();
+        } else {
+            warm_cfg = MILPConfig::Default();
+        }
+        warm_cfg.time_limit_sec = 30.0;
+        warm_cfg.max_nodes = 2000;
+
+        BranchAndBoundSolver bnb_warm(warm_cfg);
+        milp_warm_res = bnb_warm.solve(raw_lp);
+
+        MILPConfig cold_cfg = MILPConfig::ColdStartBaseline();
+        cold_cfg.time_limit_sec = std::min(warm_cfg.time_limit_sec, 15.0);
+        cold_cfg.max_nodes = warm_cfg.max_nodes;
+        BranchAndBoundSolver bnb_cold(cold_cfg);
+        milp_cold_res = bnb_cold.solve(raw_lp);
 
         actual_winner_solver = "BranchAndBound";
         actual_winner_backend = "CPU";
@@ -466,7 +492,54 @@ int main(int argc, char** argv) {
          << "    \"note\": \"Crossover success denotes vertex basis recovery; runtime speedup depends on problem scale and initial PDHG precision.\"\n"
          << "  },\n";
 
-    // Phase 5: MILP Branch-and-Bound
+    // Phase 7: MILP Branch-and-Bound (with Phase 5 compatibility)
+    json << "  \"phase7_milp\": {\n"
+         << "    \"is_milp\": " << (is_milp ? "true" : "false") << ",\n"
+         << "    \"executed\": " << (milp_run ? "true" : "false") << ",\n"
+         << "    \"config_name\": \"" << escape_json(milp_cfg_name) << "\",\n"
+         << "    \"integer_objective\": " << (milp_run ? format_double(milp_warm_res.best_objective) : "null") << ",\n"
+         << "    \"best_dual_bound\": " << (milp_run ? format_double(milp_warm_res.best_bound) : "null") << ",\n"
+         << "    \"mip_gap\": " << (milp_run ? format_double(milp_warm_res.mip_gap) : "null") << ",\n"
+         << "    \"nodes_created\": " << (milp_run ? milp_warm_res.nodes_created : 0) << ",\n"
+         << "    \"nodes_explored\": " << (milp_run ? milp_warm_res.nodes_explored : 0) << ",\n"
+         << "    \"nodes_per_sec\": " << (milp_run ? format_double(milp_warm_res.nodes_per_second) : "0.0") << ",\n"
+         << "    \"peak_tree_size\": " << (milp_run ? milp_warm_res.peak_tree_size : 0) << ",\n"
+         << "    \"active_tree_size\": " << (milp_run ? milp_warm_res.active_tree_size : 0) << ",\n"
+         << "    \"nodes_pruned_bound\": " << (milp_run ? milp_warm_res.nodes_pruned_bound : 0) << ",\n"
+         << "    \"nodes_pruned_infeasible\": " << (milp_run ? milp_warm_res.nodes_pruned_infeasible : 0) << ",\n"
+         << "    \"nodes_pruned_integral\": " << (milp_run ? milp_warm_res.nodes_pruned_integral : 0) << ",\n"
+         << "    \"root_cuts_added\": " << (milp_run ? milp_warm_res.root_cuts_added : 0) << ",\n"
+         << "    \"root_bound_after_cuts\": " << (milp_run ? format_double(milp_warm_res.root_bound_after_cuts) : "null") << ",\n"
+         << "    \"heuristic_solutions_found\": " << (milp_run ? milp_warm_res.heuristic_solutions_found : 0) << ",\n"
+         << "    \"warm_pivots\": " << (milp_run ? milp_warm_res.total_pivots : 0) << ",\n"
+         << "    \"cold_pivots\": " << (milp_run ? milp_cold_res.total_pivots : 0) << ",\n"
+         << "    \"pivot_reduction_pct\": " << (milp_run && milp_cold_res.total_pivots > 0 ?
+                format_double(100.0 * (milp_cold_res.total_pivots - milp_warm_res.total_pivots) / milp_cold_res.total_pivots) : "0.0") << ",\n"
+         << "    \"warm_nodes_explored\": " << (milp_run ? milp_warm_res.nodes_explored : 0) << ",\n"
+         << "    \"cold_nodes_explored\": " << (milp_run ? milp_cold_res.nodes_explored : 0) << ",\n"
+         << "    \"warm_time_ms\": " << (milp_run ? format_double(milp_warm_res.total_time_ms) : "null") << ",\n"
+         << "    \"cold_time_ms\": " << (milp_run ? format_double(milp_cold_res.total_time_ms) : "null") << ",\n"
+         << "    \"time_to_first_incumbent_ms\": " << (milp_run ? format_double(milp_warm_res.time_to_first_incumbent_ms) : "null") << ",\n"
+         << "    \"time_to_gap_10pct_ms\": " << (milp_run ? format_double(milp_warm_res.time_to_gap_10pct_ms) : "null") << ",\n"
+         << "    \"time_to_gap_1pct_ms\": " << (milp_run ? format_double(milp_warm_res.time_to_gap_1pct_ms) : "null") << ",\n"
+         << "    \"time_to_gap_01pct_ms\": " << (milp_run ? format_double(milp_warm_res.time_to_gap_01pct_ms) : "null") << ",\n"
+         << "    \"cut_time_ms\": " << (milp_run ? format_double(milp_warm_res.cut_generation_time_ms) : "null") << ",\n"
+         << "    \"heuristic_time_ms\": " << (milp_run ? format_double(milp_warm_res.heuristic_time_ms) : "null") << ",\n"
+         << "    \"lp_relaxation_time_ms\": " << (milp_run ? format_double(milp_warm_res.lp_relaxation_time_ms) : "null") << ",\n"
+         << "    \"gap_history\": [\n";
+    if (milp_run) {
+        for (size_t k = 0; k < milp_warm_res.gap_history.size(); ++k) {
+            const auto& m = milp_warm_res.gap_history[k];
+            json << "        {\"node\": " << m.node << ", \"time_ms\": " << format_double(m.time_ms)
+                 << ", \"bound\": " << format_double(m.dual_bound) << ", \"obj\": " << format_double(m.incumbent_obj)
+                 << ", \"gap\": " << format_double(m.gap) << "}"
+                 << (k + 1 < milp_warm_res.gap_history.size() ? ",\n" : "\n");
+        }
+    }
+    json << "    ]\n"
+         << "  },\n";
+
+    // Phase 5 backward compatibility alias
     json << "  \"phase5_milp\": {\n"
          << "    \"is_milp\": " << (is_milp ? "true" : "false") << ",\n"
          << "    \"executed\": " << (milp_run ? "true" : "false") << ",\n"

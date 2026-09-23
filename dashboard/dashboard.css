@@ -915,3 +915,39 @@ select:focus, input[type="number"]:focus {
     background: rgba(15, 23, 42, 0.6);
     color: var(--text-primary);
 }
+
+/* Phase 7: MILP Search Strategy & Telemetry Grid */
+.milp-telemetry-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+}
+
+@media (max-width: 900px) {
+    .milp-telemetry-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.telemetry-box {
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.6rem 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.telemetry-label {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.telemetry-val {
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
