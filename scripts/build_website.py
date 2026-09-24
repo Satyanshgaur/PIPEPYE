@@ -1,4 +1,12 @@
-<!DOCTYPE html>
+#!/usr/bin/env python3
+"""
+PipePye Research Monograph Generator
+Generates website/index.html with the complete 15-section peer-reviewed research monograph structure.
+"""
+
+import os
+
+HTML_CONTENT = r"""<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -2056,3 +2064,14 @@ python3 dashboard/server.py --port 8080
   <script src="app.js"></script>
 </body>
 </html>
+"""
+
+def main():
+    repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    target_file = os.path.join(repo_root, "website", "index.html")
+    with open(target_file, "w", encoding="utf-8") as f:
+        f.write(HTML_CONTENT.strip() + "\n")
+    print(f"Successfully generated {target_file} with {len(HTML_CONTENT.splitlines())} lines.")
+
+if __name__ == "__main__":
+    main()

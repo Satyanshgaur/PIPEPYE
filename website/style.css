@@ -763,6 +763,168 @@ footer {
 }
 
 /* ==========================================================================
+   Badges, Terminal Output & TOC Cards
+   ========================================================================== */
+
+.badge-confirmed {
+  border-color: #2e7d32;
+  color: #2e7d32;
+}
+
+.badge-refuted {
+  border-color: #c62828;
+  color: #c62828;
+}
+
+.badge-cpu {
+  border-color: #1565c0;
+  color: #1565c0;
+}
+
+.badge-gpu {
+  border-color: #6a1b9a;
+  color: #6a1b9a;
+}
+
+.canvas-carbon .badge-confirmed {
+  border-color: #4caf50;
+  color: #81c784;
+}
+
+.canvas-carbon .badge-refuted {
+  border-color: #e57373;
+  color: #e57373;
+}
+
+.canvas-carbon .badge-cpu {
+  border-color: #64b5f6;
+  color: #90caf9;
+}
+
+.canvas-carbon .badge-gpu {
+  border-color: #ba68c8;
+  color: #ce93d8;
+}
+
+.terminal-block {
+  width: 100%;
+  max-width: 960px;
+  margin: var(--spacing-24) auto;
+  border: 1px solid var(--color-graphite);
+  background-color: #0d0d0d;
+  color: #ececec;
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.canvas-carbon .terminal-block {
+  border-color: var(--color-hairline-carbon);
+  background-color: #080808;
+}
+
+.terminal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background-color: #1a1a1a;
+  border-bottom: 1px solid #333333;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: #888888;
+  text-transform: uppercase;
+}
+
+.terminal-body {
+  padding: var(--spacing-20);
+  overflow-x: auto;
+}
+
+.terminal-body pre {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.toc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--spacing-16);
+  width: 100%;
+  max-width: 1080px;
+  margin: var(--spacing-32) auto;
+  text-align: left;
+}
+
+.toc-card {
+  border: 1px solid var(--color-hairline-light);
+  padding: var(--spacing-16) var(--spacing-20);
+  background-color: #fafafa;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.canvas-carbon .toc-card {
+  border-color: var(--color-hairline-carbon);
+  background-color: #161616;
+}
+
+.toc-card:hover {
+  border-color: var(--color-carbon);
+  background-color: #f0f0f0;
+}
+
+.canvas-carbon .toc-card:hover {
+  border-color: var(--color-plaster-white);
+  background-color: #222222;
+}
+
+.toc-num {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--color-muted-light);
+  text-transform: uppercase;
+}
+
+.canvas-carbon .toc-num {
+  color: var(--color-muted-dark);
+}
+
+.toc-title {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.01em;
+  color: var(--color-carbon);
+}
+
+.canvas-carbon .toc-title {
+  color: var(--color-plaster-white);
+}
+
+.toc-desc {
+  font-family: var(--font-body);
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--color-muted-light);
+}
+
+.canvas-carbon .toc-desc {
+  color: var(--color-muted-dark);
+}
+
+/* ==========================================================================
    Responsive Adaptations
    ========================================================================== */
 

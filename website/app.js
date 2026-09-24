@@ -41,11 +41,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const filter = btn.getAttribute('data-bench-filter');
 
         filterButtons.forEach(b => {
-          b.style.backgroundColor = 'transparent';
-          b.style.color = 'inherit';
+          b.classList.remove('active');
+          b.style.backgroundColor = '#fafafa';
+          b.style.color = 'var(--color-carbon)';
         });
-        btn.style.backgroundColor = 'currentColor';
-        btn.style.color = btn.closest('.canvas-carbon') ? '#111' : '#fff';
+        btn.classList.add('active');
+        btn.style.backgroundColor = 'var(--color-carbon)';
+        btn.style.color = '#ffffff';
 
         benchRows.forEach(row => {
           const rowClass = row.getAttribute('data-bench-class');

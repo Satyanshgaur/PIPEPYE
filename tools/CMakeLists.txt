@@ -43,3 +43,17 @@ set_target_properties(pipepye_dashboard_runner PROPERTIES
     CXX_STANDARD 20
     CXX_STANDARD_REQUIRED ON
 )
+
+add_executable(run_public_corpora
+    run_public_corpora.cpp
+)
+
+target_link_libraries(run_public_corpora
+    PRIVATE
+        pipepye_core
+)
+
+set_target_properties(run_public_corpora PROPERTIES
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
