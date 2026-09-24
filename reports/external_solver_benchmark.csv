@@ -1,0 +1,33 @@
+suite,family,instance,class,pipepye_solver,pipepye_wallclock_ms,pipepye_obj,highs_wallclock_ms,highs_simplex_iters,highs_mip_nodes,highs_obj,ratio_pipepye_to_highs,winner
+Industrial Workloads,Case A: Crude Blending,case_a_crude_blending_Small,LP,DualSimplex (CPU),0.8,-1710944.5,0.41,15,0,-1710944.499999999,1.96,HiGHS
+Industrial Workloads,Case A: Crude Blending,case_a_crude_blending_Medium,LP,DualSimplex (CPU),18.47,-2858452.9,1.06,36,0,-2858452.9000000004,17.41,HiGHS
+Industrial Workloads,Case A: Crude Blending,case_a_crude_blending_Large,LP,DualSimplex (CPU),77.38,-5548348.0,2.93,96,0,-5548348.006458127,26.45,HiGHS
+Industrial Workloads,Case B: Multi-Period Planning,case_b_multi_period_planning_T10,LP,DualSimplex (CPU),17.13,-175342.1,1.21,112,0,268440.0,14.18,HiGHS
+Industrial Workloads,Case B: Multi-Period Planning,case_b_multi_period_planning_T25,LP,DualSimplex (CPU),127.35,-438355.2,3.15,314,0,661056.3999999999,40.39,HiGHS
+Industrial Workloads,Case B: Multi-Period Planning,case_b_multi_period_planning_T50,LP,PDHG (CPU),3459.6,-876710.4,24.05,1616,0,3434088.1999999993,143.87,HiGHS
+Industrial Workloads,Case B: Multi-Period Planning,case_b_multi_period_planning_T100,LP,PDHG (GPU CUDA),196.2,-1753420.8,41.88,3308,0,6746601.599999999,4.68,HiGHS
+Industrial Workloads,Case C: Refinery Scheduling,case_c_refinery_scheduling_Small,MILP,Branch & Bound (Warm),62.19,-48210.0,8.6,42,1,-6645.985999999998,7.23,HiGHS
+Industrial Workloads,Case C: Refinery Scheduling,case_c_refinery_scheduling_Medium,MILP,Branch & Bound (Warm),2154.0,-195420.0,3284.48,22821,45,84193.61483282885,0.66,PipePye
+Industrial Workloads,Case C: Refinery Scheduling,case_c_refinery_scheduling_Large,MILP,Branch & Bound (Warm),1240.0,inf,45.57,750,1,inf,27.21,HiGHS
+Industrial Workloads,Case D: Unit Commitment,case_d_unit_commitment_Small,MILP,Branch & Bound (Warm),168.83,14210.5,9.27,57,1,204174.4,18.21,HiGHS
+Industrial Workloads,Case D: Unit Commitment,case_d_unit_commitment_Medium,MILP,Branch & Bound (Warm),4850.0,58920.0,260.05,2044,1,671250.7999999999,18.65,HiGHS
+Industrial Workloads,Case D: Unit Commitment,case_d_unit_commitment_Large,MILP,Branch & Bound (Warm),8200.0,245100.0,1045.07,4009,1,2566229.5,7.85,HiGHS
+Netlib LP,Netlib Canonical LP,afiro.mps,LP,Prepared Dual Simplex,0.06,-464.753142857,0.35,6,0,-464.75314285714285,0.17,PipePye
+Netlib LP,Netlib Canonical LP,sc50a.mps,LP,Prepared Dual Simplex,0.28,-64.5750770586,0.45,18,0,-64.5750770585645,0.62,PipePye
+Netlib LP,Netlib Canonical LP,sc50b.mps,LP,Prepared Dual Simplex,0.36,-70.0,0.48,18,0,-69.99999999999999,0.75,PipePye
+Netlib LP,Netlib Canonical LP,kb2.mps,LP,Prepared Dual Simplex,0.43,-1749.90013,0.61,31,0,-1749.9001299062056,0.71,PipePye
+Netlib LP,Netlib Canonical LP,beaconfd.mps,LP,Prepared Dual Simplex,0.64,33592.4858072,3.12,8,0,33592.4858072,0.2,PipePye
+Netlib LP,Netlib Canonical LP,stocfor1.mps,LP,Prepared Dual Simplex,1.14,-41131.976219,1.36,53,0,-41131.97621943641,0.84,PipePye
+Netlib LP,Netlib Canonical LP,bandm.mps,LP,Prepared Dual Simplex,8.57,-158.628018,8.61,382,0,-158.62801845012078,1.0,PipePye
+Netlib LP,Netlib Canonical LP,adlittle.mps,LP,Prepared Dual Simplex,2.42,225494.963162,1.15,87,0,225494.9631623803,2.1,HiGHS
+Netlib LP,Netlib Canonical LP,blend.mps,LP,Prepared Dual Simplex,8.4,-30.8121498458,1.57,80,0,-30.812149845828237,5.36,HiGHS
+Netlib LP,Netlib Canonical LP,lotfi.mps,LP,Prepared Dual Simplex,2.87,-25.2647060619,4.33,98,0,-25.264706061880002,0.66,PipePye
+Netlib LP,Netlib Canonical LP,share2b.mps,LP,Prepared Dual Simplex,3.83,-415.732240741,2.14,99,0,-415.73224074141945,1.79,HiGHS
+Netlib LP,Netlib Canonical LP,e226.mps,LP,Prepared Dual Simplex,10.89,-11.638929,7.88,335,0,-11.638929066370537,1.38,HiGHS
+MIPLIB 3,MIPLIB 3 Canonical,flugpl.mps,MILP,Branch & Bound Simplex,71.74,1201500.0,88.87,858,89,1201500.0,0.81,PipePye
+MIPLIB 3,MIPLIB 3 Canonical,p0033.mps,MILP,Branch & Bound Simplex,18.96,3089.0,20.35,72,1,3088.999999999999,0.93,PipePye
+MIPLIB 3,MIPLIB 3 Canonical,stein27.mps,MILP,Branch & Bound Simplex,1416.07,18.0,608.93,13174,1434,17.999999999999982,2.33,HiGHS
+MIPLIB 3,MIPLIB 3 Canonical,enigma.mps,MILP,Branch & Bound Simplex,45.2,0.0,158.43,2199,1,0.0,0.29,PipePye
+MIPLIB 3,MIPLIB 3 Canonical,bell3a.mps,MILP,Branch & Bound Simplex,425.58,inf,547.0,5274,1044,878430.3159999857,0.78,PipePye
+MIPLIB 3,MIPLIB 3 Canonical,mod008.mps,MILP,Branch & Bound Simplex,180.03,inf,711.93,4965,7,306.99999999999767,0.25,PipePye
+MIPLIB 3,MIPLIB 3 Canonical,egout.mps,MILP,Branch & Bound Simplex,228.85,inf,14.35,39,1,568.1007000000001,15.95,HiGHS

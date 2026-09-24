@@ -434,16 +434,16 @@ class PipePyeRequestHandler(BaseHTTPRequestHandler):
                     case_meta = cases_meta.get(case_id, {})
 
                     ref_obj = None
-                    solver_name = "HiGHS-1.8.1"
-                    if case_id == "netlib_lp":
+                    solver_name = "HiGHS-1.15.1"
+                    if case_ref:
+                        ref_obj = case_ref.get("objective")
+                        solver_name = case_ref.get("solver", "HiGHS-1.15.1")
+                    elif case_id == "netlib_lp":
                         ref_obj = NETLIB_OPTIMALS.get(instance_key)
                         solver_name = "HiGHS-1.15.1 / Netlib Canonical"
                     elif case_id == "miplib_combinatorial":
                         ref_obj = MIPLIB_OPTIMALS.get(instance_key)
                         solver_name = "HiGHS-1.15.1 / MIPLIB 3 Canonical"
-                    elif case_ref:
-                        ref_obj = case_ref.get("objective")
-                        solver_name = case_ref.get("solver", "HiGHS-1.8.1")
 
                     if ref_obj is not None:
                         pipe_obj = output_json.get("executive_summary", {}).get("best_objective")
@@ -459,18 +459,27 @@ class PipePyeRequestHandler(BaseHTTPRequestHandler):
                             except (ValueError, TypeError):
                                 pass
 
+                        highs_wall_sec = case_ref.get("performance", {}).get("wallclock_time_sec", 0.0) if case_ref else 0.0
+                        pipe_ms = output_json.get("executive_summary", {}).get("best_runtime_ms", 0.0)
+                        highs_ms = highs_wall_sec * 1000.0
+                        speedup_ratio = (pipe_ms / highs_ms) if highs_ms > 0 else None
+
                         output_json["phase6_reference_verification"] = {
                             "has_reference": True,
                             "case_id": case_id,
                             "instance_key": instance_key,
                             "solver": solver_name,
-                            "model_status": "Optimal",
+                            "model_status": case_ref.get("model_status", "Optimal") if case_ref else "Optimal",
                             "reference_objective": ref_obj,
                             "recomputed_objective": ref_obj,
                             "objective_discrepancy": case_ref.get("objective_discrepancy", 0.0) if case_ref else 0.0,
                             "highs_simplex_iterations": case_ref.get("performance", {}).get("simplex_iterations", 0) if case_ref else 0,
                             "highs_mip_nodes": case_ref.get("performance", {}).get("mip_nodes", 0) if case_ref else 0,
-                            "highs_wallclock_sec": case_ref.get("performance", {}).get("wallclock_time_sec", 0.0) if case_ref else 0.0,
+                            "highs_wallclock_sec": highs_wall_sec,
+                            "highs_wallclock_ms": round(highs_ms, 2),
+                            "pipepye_wallclock_ms": round(pipe_ms, 2) if pipe_ms else None,
+                            "speedup_ratio_pipepye_to_highs": round(speedup_ratio, 2) if speedup_ratio else None,
+                            "performance_winner": "PipePye" if (pipe_ms and highs_ms and pipe_ms < highs_ms) else "HiGHS",
                             "highs_run_time_sec": case_ref.get("performance", {}).get("highs_run_time_sec", 0.0) if case_ref else 0.0,
                             "relative_gap_vs_highs": rel_gap,
                             "is_verified_optimal": is_verified,

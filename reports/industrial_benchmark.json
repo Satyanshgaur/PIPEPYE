@@ -210,7 +210,7 @@
       "actual_winner_solver": "BranchAndBound",
       "actual_winner_backend": "CPU",
       "prediction_outcome": "CONFIRMED",
-      "pivot_reduction_pct": 97.6799
+      "pivot_reduction_pct": 90.85
     }
   ]
 }

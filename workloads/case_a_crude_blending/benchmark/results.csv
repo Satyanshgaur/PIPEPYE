@@ -1,4 +1,4 @@
 InstanceID,Scale,Rows,Cols,NNZ,PredictedSolver,ActualWinner,Outcome,TimeMs
-BLENDING_Small,Small,26,18,141,DualSimplex,DualSimplex,CONFIRMED,0
-BLENDING_Medium,Medium,66,78,774,DualSimplex,DualSimplex,CONFIRMED,0
-BLENDING_Large,Large,155,260,3630,DualSimplex,DualSimplex,CONFIRMED,0
+BLENDING_Small,Small,26,18,141,DualSimplex,DualSimplex,CONFIRMED,0.107878
+BLENDING_Medium,Medium,66,78,774,DualSimplex,DualSimplex,CONFIRMED,0.626881
+BLENDING_Large,Large,155,260,3630,DualSimplex,DualSimplex,CONFIRMED,2.871

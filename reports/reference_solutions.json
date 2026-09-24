@@ -292,5 +292,294 @@
         "highs_run_time_sec": 0.014143943786621094
       }
     }
+  },
+  "netlib_lp": {
+    "afiro": {
+      "mps_file": "afiro.mps",
+      "solver": "HiGHS-1.15.1",
+      "model_status": "Optimal",
+      "objective": -464.75314285714285,
+      "recomputed_objective": -464.75314285714285,
+      "objective_discrepancy": 0.0,
+      "performance": {
+        "simplex_iterations": 6,
+        "ipm_iterations": 0,
+        "mip_nodes": 0,
+        "wallclock_time_sec": 0.00035,
+        "highs_run_time_sec": 0.00035
+      }
+    },
+    "sc50a": {
+      "mps_file": "sc50a.mps",
+      "solver": "HiGHS-1.15.1",
+      "model_status": "Optimal",
+      "objective": -64.5750770585645,
+      "recomputed_objective": -64.5750770585645,
+      "objective_discrepancy": 0.0,
+      "performance": {
+        "simplex_iterations": 18,
+        "ipm_iterations": 0,
+        "mip_nodes": 0,
+        "wallclock_time_sec": 0.00045,
+        "highs_run_time_sec": 0.00045
+      }
+    },
+    "sc50b": {
+      "mps_file": "sc50b.mps",
+      "solver": "HiGHS-1.15.1",
+      "model_status": "Optimal",
+      "objective": -69.99999999999999,
+      "recomputed_objective": -69.99999999999999,
+      "objective_discrepancy": 0.0,
+      "performance": {
+        "simplex_iterations": 18,
+        "ipm_iterations": 0,
+        "mip_nodes": 0,
+        "wallclock_time_sec": 0.00047999999999999996,
+        "highs_run_time_sec": 0.00047999999999999996
+      }
+    },
+    "kb2": {
+      "mps_file": "kb2.mps",
+      "solver": "HiGHS-1.15.1",
+      "model_status": "Optimal",
+      "objective": -1749.9001299062056,
+      "recomputed_objective": -1749.9001299062056,
+      "objective_discrepancy": 0.0,
+      "performance": {
+        "simplex_iterations": 31,
+        "ipm_iterations": 0,
+        "mip_nodes": 0,
+        "wallclock_time_sec": 0.00061,
+        "highs_run_time_sec": 0.00061
+      }
+    },
+    "beaconfd": {
+      "mps_file": "beaconfd.mps",
+      "solver": "HiGHS-1.15.1",
+      "model_status": "Optimal",
+      "objective": 33592.4858072,
+      "recomputed_objective": 33592.4858072,
+      "objective_discrepancy": 0.0,
+      "performance": {
+        "simplex_iterations": 8,
+        "ipm_iterations": 0,
+        "mip_nodes": 0,
+        "wallclock_time_sec": 0.00312,
+        "highs_run_time_sec": 0.00312
+      }
+    },
+    "stocfor1": {
+      "mps_file": "stocfor1.mps",
+      "solver": "HiGHS-1.15.1",
+      "model_status": "Optimal",
+      "objective": -41131.97621943641,
+      "recomputed_objective": -41131.97621943641,
+      "objective_discrepancy": 0.0,
+      "performance": {
+        "simplex_iterations": 53,
+        "ipm_iterations": 0,
+        "mip_nodes": 0,
+        "wallclock_time_sec": 0.00136,
+        "highs_run_time_sec": 0.00136
+      }
+    },
+    "bandm": {
+      "mps_file": "bandm.mps",
+      "solver": "HiGHS-1.15.1",
+      "model_status": "Optimal",
+      "objective": -158.62801845012078,
+      "recomputed_objective": -158.62801845012078,
+      "objective_discrepancy": 0.0,
+      "performance": {
+        "simplex_iterations": 382,
+        "ipm_iterations": 0,
+        "mip_nodes": 0,
+        "wallclock_time_sec": 0.00861,
+        "highs_run_time_sec": 0.00861
+      }
+    },
+    "adlittle": {
+      "mps_file": "adlittle.mps",
+      "solver": "HiGHS-1.15.1",
+      "model_status": "Optimal",
+      "objective": 225494.9631623803,
+      "recomputed_objective": 225494.9631623803,
+      "objective_discrepancy": 0.0,
+      "performance": {
+        "simplex_iterations": 87,
+        "ipm_iterations": 0,
+        "mip_nodes": 0,
+        "wallclock_time_sec": 0.00115,
+        "highs_run_time_sec": 0.00115
+      }
+    },
+    "blend": {
+      "mps_file": "blend.mps",
+      "solver": "HiGHS-1.15.1",
+      "model_status": "Optimal",
+      "objective": -30.812149845828237,
+      "recomputed_objective": -30.812149845828237,
+      "objective_discrepancy": 0.0,
+      "performance": {
+        "simplex_iterations": 80,
+        "ipm_iterations": 0,
+        "mip_nodes": 0,
+        "wallclock_time_sec": 0.00157,
+        "highs_run_time_sec": 0.00157
+      }
+    },
+    "lotfi": {
+      "mps_file": "lotfi.mps",
+      "solver": "HiGHS-1.15.1",
+      "model_status": "Optimal",
+      "objective": -25.264706061880002,
+      "recomputed_objective": -25.264706061880002,
+      "objective_discrepancy": 0.0,
+      "performance": {
+        "simplex_iterations": 98,
+        "ipm_iterations": 0,
+        "mip_nodes": 0,
+        "wallclock_time_sec": 0.00433,
+        "highs_run_time_sec": 0.00433
+      }
+    },
+    "share2b": {
+      "mps_file": "share2b.mps",
+      "solver": "HiGHS-1.15.1",
+      "model_status": "Optimal",
+      "objective": -415.73224074141945,
+      "recomputed_objective": -415.73224074141945,
+      "objective_discrepancy": 0.0,
+      "performance": {
+        "simplex_iterations": 99,
+        "ipm_iterations": 0,
+        "mip_nodes": 0,
+        "wallclock_time_sec": 0.00214,
+        "highs_run_time_sec": 0.00214
+      }
+    },
+    "e226": {
+      "mps_file": "e226.mps",
+      "solver": "HiGHS-1.15.1",
+      "model_status": "Optimal",
+      "objective": -11.638929066370537,
+      "recomputed_objective": -11.638929066370537,
+      "objective_discrepancy": 0.0,
+      "performance": {
+        "simplex_iterations": 335,
+        "ipm_iterations": 0,
+        "mip_nodes": 0,
+        "wallclock_time_sec": 0.00788,
+        "highs_run_time_sec": 0.00788
+      }
+    }
+  },
+  "miplib_combinatorial": {
+    "flugpl": {
+      "mps_file": "flugpl.mps",
+      "solver": "HiGHS-1.15.1",
+      "model_status": "Optimal",
+      "objective": 1201500.0,
+      "recomputed_objective": 1201500.0,
+      "objective_discrepancy": 0.0,
+      "performance": {
+        "simplex_iterations": 858,
+        "ipm_iterations": 0,
+        "mip_nodes": 89,
+        "wallclock_time_sec": 0.08887,
+        "highs_run_time_sec": 0.08887
+      }
+    },
+    "p0033": {
+      "mps_file": "p0033.mps",
+      "solver": "HiGHS-1.15.1",
+      "model_status": "Optimal",
+      "objective": 3088.999999999999,
+      "recomputed_objective": 3088.999999999999,
+      "objective_discrepancy": 0.0,
+      "performance": {
+        "simplex_iterations": 72,
+        "ipm_iterations": 0,
+        "mip_nodes": 1,
+        "wallclock_time_sec": 0.02035,
+        "highs_run_time_sec": 0.02035
+      }
+    },
+    "stein27": {
+      "mps_file": "stein27.mps",
+      "solver": "HiGHS-1.15.1",
+      "model_status": "Optimal",
+      "objective": 17.999999999999982,
+      "recomputed_objective": 17.999999999999982,
+      "objective_discrepancy": 0.0,
+      "performance": {
+        "simplex_iterations": 13174,
+        "ipm_iterations": 0,
+        "mip_nodes": 1434,
+        "wallclock_time_sec": 0.60893,
+        "highs_run_time_sec": 0.60893
+      }
+    },
+    "enigma": {
+      "mps_file": "enigma.mps",
+      "solver": "HiGHS-1.15.1",
+      "model_status": "Optimal",
+      "objective": 0.0,
+      "recomputed_objective": 0.0,
+      "objective_discrepancy": 0.0,
+      "performance": {
+        "simplex_iterations": 2199,
+        "ipm_iterations": 0,
+        "mip_nodes": 1,
+        "wallclock_time_sec": 0.15843000000000002,
+        "highs_run_time_sec": 0.15843000000000002
+      }
+    },
+    "bell3a": {
+      "mps_file": "bell3a.mps",
+      "solver": "HiGHS-1.15.1",
+      "model_status": "Feasible",
+      "objective": 878430.3159999857,
+      "recomputed_objective": 878430.3159999857,
+      "objective_discrepancy": 0.0,
+      "performance": {
+        "simplex_iterations": 5274,
+        "ipm_iterations": 0,
+        "mip_nodes": 1044,
+        "wallclock_time_sec": 0.547,
+        "highs_run_time_sec": 0.547
+      }
+    },
+    "mod008": {
+      "mps_file": "mod008.mps",
+      "solver": "HiGHS-1.15.1",
+      "model_status": "Feasible",
+      "objective": 306.99999999999767,
+      "recomputed_objective": 306.99999999999767,
+      "objective_discrepancy": 0.0,
+      "performance": {
+        "simplex_iterations": 4965,
+        "ipm_iterations": 0,
+        "mip_nodes": 7,
+        "wallclock_time_sec": 0.71193,
+        "highs_run_time_sec": 0.71193
+      }
+    },
+    "egout": {
+      "mps_file": "egout.mps",
+      "solver": "HiGHS-1.15.1",
+      "model_status": "Feasible",
+      "objective": 568.1007000000001,
+      "recomputed_objective": 568.1007000000001,
+      "objective_discrepancy": 0.0,
+      "performance": {
+        "simplex_iterations": 39,
+        "ipm_iterations": 0,
+        "mip_nodes": 1,
+        "wallclock_time_sec": 0.01435,
+        "highs_run_time_sec": 0.01435
+      }
+    }
   }
 }
