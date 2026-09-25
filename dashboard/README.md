@@ -18,7 +18,7 @@ This dashboard allows users to select any `.mps` file directly from their Linux 
    - Executes Phase 1 sparse analysis (COO, CSR, CSC memory footprints, matrix density, kernel suitability).
    - Applies Phase 2 `ModelPipeline::prepare` (Presolve 5 reduction passes + Ruiz equilibration).
    - Computes Phase 5 structural moments (staircase score, row degree Gini index, half-bandwidth, degree statistics).
-   - Emits pre-registered solver recommendation with algorithmic rationale.
+   - Emits structure-aware solver recommendation with algorithmic rationale.
    - Executes Phase 3 First-Order PDHG on CPU and CUDA GPU (recording exact residual convergence logs).
    - Executes Phase 4 Sparse Dual Revised Simplex (pivots, bound flips, LU refactorizations, PFI eta updates).
    - Executes Phase 4 PDHG $\to$ Simplex basis crossover.
@@ -72,6 +72,6 @@ You can either:
 | **Phase 3** | PDHG Solvers | CPU vs CUDA GPU solve times, H2D/Kernel/D2H transfer breakdowns, real SVG residual convergence curves ($\log_{10}$) |
 | **Phase 4** | Dual Revised Simplex | Exact pivots, bound flips, LU refactorizations, PFI eta updates, FTRAN/BTRAN counts, solve time |
 | **Phase 4** | Basis Crossover | Active bounds detected, crashed basis partition (structural vs slack), simplex cleanup pivots, vertex recovery |
-| **Phase 5** | Structure & Prediction | Staircase score, row Gini index, half-bandwidth, pre-registered solver recommendation and rationale |
+| **Phase 5** | Structure & Prediction | Staircase score, row Gini index, half-bandwidth, calibrated solver recommendation and rationale |
 | **Phase 5** | MILP Branch-and-Bound | Dual warm-start vs cold-start tree exploration pivots, 88%–98% pivot reduction percentage |
 | **Audit** | Solution Verification | Independent check against original unpresolved model constraints ($\|Ax - b\|_\infty$, primal bounds) |

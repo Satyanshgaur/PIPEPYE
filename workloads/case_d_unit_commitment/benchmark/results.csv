@@ -1,4 +1,4 @@
 InstanceID,Scale,Rows,Cols,NNZ,PredictedSolver,ActualWinner,Outcome,TimeMs
-UNIT_COMMIT_Small,Small,254,120,580,BranchAndBound,BranchAndBound,CONFIRMED,10.1567
-UNIT_COMMIT_Medium,Medium,988,480,2360,BranchAndBound,BranchAndBound,CONFIRMED,834.223
-UNIT_COMMIT_Large,Large,3896,1920,9520,BranchAndBound,BranchAndBound,CONFIRMED,13568.6
+UNIT_COMMIT_Small,Small,254,120,580,BranchAndBound,BranchAndBound,CONFIRMED,9.41076
+UNIT_COMMIT_Medium,Medium,988,480,2360,BranchAndBound,BranchAndBound,CONFIRMED,801.943
+UNIT_COMMIT_Large,Large,3896,1920,9520,BranchAndBound,BranchAndBound,CONFIRMED,12042.1

@@ -1,7 +1,12 @@
 {
   "total_instances": 13,
-  "policy_a_optimal_pct": 53.8,
-  "policy_b_accuracy_pct": 100,
+  "class_aware_cpu_optimal_pct": 92.3,
+  "class_aware_gpu_optimal_pct": 53.8,
+  "structure_aware_accuracy_pct": 100.0,
+  "lp_subsuite_instances": 7,
+  "lp_cpu_optimal_pct": 85.7,
+  "lp_gpu_optimal_pct": 14.3,
+  "lp_structure_optimal_pct": 100.0,
   "confirmed_predictions": 13,
   "instances": [
     {
@@ -12,13 +17,13 @@
       "rows": 26,
       "cols": 18,
       "nnz": 141,
-      "staircase_score": 0.305522,
+      "staircase_score": 0.3,
       "predicted_solver": "DualSimplex",
       "predicted_backend": "CPU",
       "actual_winner_solver": "DualSimplex",
       "actual_winner_backend": "CPU",
       "prediction_outcome": "CONFIRMED",
-      "pivot_reduction_pct": 0
+      "pivot_reduction_pct": 0.0
     },
     {
       "case": "Crude_Blending",
@@ -28,13 +33,13 @@
       "rows": 66,
       "cols": 78,
       "nnz": 774,
-      "staircase_score": 0.192804,
+      "staircase_score": 0.2,
       "predicted_solver": "DualSimplex",
       "predicted_backend": "CPU",
       "actual_winner_solver": "DualSimplex",
       "actual_winner_backend": "CPU",
       "prediction_outcome": "CONFIRMED",
-      "pivot_reduction_pct": 0
+      "pivot_reduction_pct": 0.0
     },
     {
       "case": "Crude_Blending",
@@ -44,13 +49,13 @@
       "rows": 155,
       "cols": 260,
       "nnz": 3630,
-      "staircase_score": 0.128156,
+      "staircase_score": 0.1,
       "predicted_solver": "DualSimplex",
       "predicted_backend": "CPU",
       "actual_winner_solver": "DualSimplex",
       "actual_winner_backend": "CPU",
       "prediction_outcome": "CONFIRMED",
-      "pivot_reduction_pct": 0
+      "pivot_reduction_pct": 0.0
     },
     {
       "case": "Multi_Period_Planning",
@@ -60,13 +65,13 @@
       "rows": 160,
       "cols": 200,
       "nnz": 890,
-      "staircase_score": 0.996574,
+      "staircase_score": 1.0,
       "predicted_solver": "DualSimplex",
       "predicted_backend": "CPU",
       "actual_winner_solver": "DualSimplex",
       "actual_winner_backend": "CPU",
       "prediction_outcome": "CONFIRMED",
-      "pivot_reduction_pct": 0
+      "pivot_reduction_pct": 0.0
     },
     {
       "case": "Multi_Period_Planning",
@@ -76,13 +81,13 @@
       "rows": 400,
       "cols": 500,
       "nnz": 2240,
-      "staircase_score": 0.999497,
+      "staircase_score": 1.0,
       "predicted_solver": "DualSimplex",
       "predicted_backend": "CPU",
       "actual_winner_solver": "DualSimplex",
       "actual_winner_backend": "CPU",
       "prediction_outcome": "CONFIRMED",
-      "pivot_reduction_pct": 0
+      "pivot_reduction_pct": 0.0
     },
     {
       "case": "Multi_Period_Planning",
@@ -92,13 +97,13 @@
       "rows": 1900,
       "cols": 2500,
       "nnz": 19975,
-      "staircase_score": 0.999865,
+      "staircase_score": 1.0,
       "predicted_solver": "DualSimplex",
       "predicted_backend": "CPU",
       "actual_winner_solver": "DualSimplex",
       "actual_winner_backend": "CPU",
       "prediction_outcome": "CONFIRMED",
-      "pivot_reduction_pct": 0
+      "pivot_reduction_pct": 0.0
     },
     {
       "case": "Multi_Period_Planning",
@@ -108,13 +113,13 @@
       "rows": 3800,
       "cols": 5000,
       "nnz": 39975,
-      "staircase_score": 0.999967,
+      "staircase_score": 1.0,
       "predicted_solver": "PDHG_GPU",
       "predicted_backend": "GPU",
       "actual_winner_solver": "PDHG_GPU",
       "actual_winner_backend": "GPU",
       "prediction_outcome": "CONFIRMED",
-      "pivot_reduction_pct": 0
+      "pivot_reduction_pct": 0.0
     },
     {
       "case": "Refinery_Scheduling",
@@ -124,13 +129,13 @@
       "rows": 108,
       "cols": 90,
       "nnz": 262,
-      "staircase_score": 0.997055,
+      "staircase_score": 1.0,
       "predicted_solver": "BranchAndBound",
       "predicted_backend": "CPU",
       "actual_winner_solver": "BranchAndBound",
       "actual_winner_backend": "CPU",
       "prediction_outcome": "CONFIRMED",
-      "pivot_reduction_pct": 90.6755
+      "pivot_reduction_pct": 90.7
     },
     {
       "case": "Refinery_Scheduling",
@@ -140,13 +145,13 @@
       "rows": 480,
       "cols": 420,
       "nnz": 1316,
-      "staircase_score": 0.999218,
+      "staircase_score": 1.0,
       "predicted_solver": "BranchAndBound",
       "predicted_backend": "CPU",
       "actual_winner_solver": "BranchAndBound",
       "actual_winner_backend": "CPU",
       "prediction_outcome": "CONFIRMED",
-      "pivot_reduction_pct": 98.7591
+      "pivot_reduction_pct": 98.8
     },
     {
       "case": "Refinery_Scheduling",
@@ -156,13 +161,13 @@
       "rows": 1536,
       "cols": 1344,
       "nnz": 4289,
-      "staircase_score": 0.999797,
+      "staircase_score": 1.0,
       "predicted_solver": "BranchAndBound",
       "predicted_backend": "CPU",
       "actual_winner_solver": "BranchAndBound",
       "actual_winner_backend": "CPU",
       "prediction_outcome": "CONFIRMED",
-      "pivot_reduction_pct": 0
+      "pivot_reduction_pct": 0.0
     },
     {
       "case": "Unit_Commitment",
@@ -172,13 +177,13 @@
       "rows": 254,
       "cols": 120,
       "nnz": 580,
-      "staircase_score": 0.993391,
+      "staircase_score": 1.0,
       "predicted_solver": "BranchAndBound",
       "predicted_backend": "CPU",
       "actual_winner_solver": "BranchAndBound",
       "actual_winner_backend": "CPU",
       "prediction_outcome": "CONFIRMED",
-      "pivot_reduction_pct": 88.2998
+      "pivot_reduction_pct": 88.3
     },
     {
       "case": "Unit_Commitment",
@@ -188,13 +193,13 @@
       "rows": 988,
       "cols": 480,
       "nnz": 2360,
-      "staircase_score": 0.998439,
+      "staircase_score": 1.0,
       "predicted_solver": "BranchAndBound",
       "predicted_backend": "CPU",
       "actual_winner_solver": "BranchAndBound",
       "actual_winner_backend": "CPU",
       "prediction_outcome": "CONFIRMED",
-      "pivot_reduction_pct": 96.1924
+      "pivot_reduction_pct": 96.2
     },
     {
       "case": "Unit_Commitment",
@@ -204,13 +209,13 @@
       "rows": 3896,
       "cols": 1920,
       "nnz": 9520,
-      "staircase_score": 0.999622,
+      "staircase_score": 1.0,
       "predicted_solver": "BranchAndBound",
       "predicted_backend": "CPU",
       "actual_winner_solver": "BranchAndBound",
       "actual_winner_backend": "CPU",
       "prediction_outcome": "CONFIRMED",
-      "pivot_reduction_pct": 90.85
+      "pivot_reduction_pct": 91.2
     }
   ]
 }

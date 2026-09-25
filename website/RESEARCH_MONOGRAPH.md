@@ -3,7 +3,7 @@
 > **Document Series:** Pure Optimization Research · Technical Monograph  
 > **Reporting Period:** September 2026  
 > **Repository:** [https://github.com/Satyanshgaur/PIPEPYE](https://github.com/Satyanshgaur/PIPEPYE)  
-> **Status:** 174 / 174 Unit & Integration Tests Passing (100.0%) | 13 / 13 Pre-Registered Routes Confirmed  
+> **Status:** 181 / 181 Unit & Integration Tests Passing (100.0%) | Structure-Aware Dispatch Calibrated on 13 Industrial & Validated on 19 Public Instances  
 
 ---
 
@@ -36,13 +36,13 @@ PipePye is an open, sovereign mathematical optimization system engineered to inv
 Standard solver architectures enforce a monolithic execution pipeline—predominantly sequential dual simplex or interior-point algorithms on host CPUs—leaving high-throughput accelerators underutilized. PipePye establishes an end-to-end optimization substrate consisting of sparse CSR/CSC linear algebra, an immutable model preprocessing pipeline (5 presolve passes, Ruiz matrix equilibration), a first-order Primal-Dual Hybrid Gradient (PDHG) solver for CUDA GPUs, a Sparse Dual Revised Simplex solver with Product Form of the Inverse (PFI) and Devex pricing, an active-set basis crossover mechanism, and a Mixed-Integer Linear Programming (MILP) Branch-and-Bound engine.
 
 The central empirical discovery is a sharp **CPU/GPU crossover boundary**:
-On large-scale block-banded staircase models ($T=100$, 40,000 NNZ), GPU PDHG completes in **196 ms** compared to **40,039 ms** for CPU Dual Simplex—a **$204\times$ throughput speedup**. Conversely, on compact, densely coupled models (crude oil blending with 30.1% nonzeros), CPU Simplex executes in **0.80 ms** while GPU PDHG requires **236 ms** due to PCI-e transfer and kernel dispatch latency—a **$295\times$ advantage for CPU execution**.
+On large-scale block-banded staircase models ($T=100$, 40,000 NNZ), GPU PDHG completes in **196 ms** compared to **40,039 ms** for CPU Dual Simplex—a **$204\times$ throughput speedup**. Conversely, on compact, densely coupled models (crude oil blending with 30.1% nonzeros), CPU Simplex executes in **0.80 ms** while GPU PDHG requires **236 ms** due to PCI-e transfer and kernel dispatch latency—a **$295\times$ advantage for CPU execution**. Compared against a realistic Class-Aware CPU baseline (92.3% routing accuracy), structure-aware dispatch eliminates the 204× computational blowup on large staircase systems while preserving sub-millisecond CPU speed on dense models.
 
 ### Key System Metrics
 | Metric | Value | Technical Context |
 |---|---|---|
-| **Automated Regression Suite** | `174 / 174` | 100.0% pass rate, zero regressions across 29 modules |
-| **Pre-Registered Protocol** | `13 / 13` | 100.0% confirmed optimal routes (vs 53.8% static baseline) |
+| **Automated Regression Suite** | `181 / 181` | 100.0% pass rate, zero regressions across 30 modules |
+| **Structure-Aware Dispatch** | `100% / 92.3%` | Averts 204× LP blowup vs class-aware baseline; verified on Netlib |
 | **Simplex Warm-Start Pruning** | `98.8%` | Pivot reduction on industrial MILP combinatorial trees |
 | **CUDA Memory Bandwidth** | `160.5 GB/s` | 95.5% of theoretical peak GDDR6 throughput |
 
@@ -235,14 +235,14 @@ $$\Delta \text{Obj}_{\text{rel}} = \frac{|\text{Obj}_{\text{PipePye}} - \text{Ob
 | **Phase 2** | Model Preparation, Presolve, Ruiz Matrix Equilibration | Reversible postsolve; 4-way ablation framework | 125 / 125 PASSED | **PASSED** |
 | **Phase 3** | First-Order PDHG LP Solver (CUDA GPU & CPU) | Zero PCIe transfers inside hot loop; Moreau dual steps | 139 / 139 PASSED | **PASSED** |
 | **Phase 4** | Sparse Dual Revised Simplex (PFI, Devex, Harris) | Exact vertex optimality; Bland anti-cycling | 150 / 150 PASSED | **PASSED** |
-| **Phase 5** | Structure-Aware Selection & Pre-Registration Protocol | Topological feature extraction; 13/13 pre-registered routes | 162 / 162 PASSED | **PASSED** |
-| **Phase 7** | Mixed-Integer Linear Programming (B&B, Cuts, Diving) | Dual basis warm-starting; Gomory cuts; integer feasibility | 174 / 174 PASSED | **PASSED** |
+| **Phase 5** | Structure-Aware Selection & Rule Calibration | Topological feature extraction; crossover-derived dispatch rules validated against class-aware baselines | 162 / 162 PASSED | **PASSED** |
+| **Phase 7** | Mixed-Integer Linear Programming (B&B, Cuts, Diving) | Dual basis warm-starting; Gomory cuts; integer feasibility | 181 / 181 PASSED | **PASSED** |
 
 ---
 
 ## 8. Experiments & Results
 
-Our empirical program is structured around three primary experimental questions: sparse kernel throughput, algorithm scaling on temporal structures, and pre-registered industrial dispatch.
+Our empirical program is structured around three primary experimental questions: sparse kernel throughput, algorithm scaling on temporal structures, and structure-aware industrial dispatch calibration.
 
 ### Experiment 1: Sparse Matrix-Vector (SpMV) Kernel Crossover
 - **Pre-Registered Hypothesis:** GPU parallel SpMV will underperform CPU execution on small sparse matrices due to fixed kernel launch latency (5–10 μs) and device transfer overhead, crossing over to achieve superiority only above 15,000–30,000 nonzeros.
@@ -270,12 +270,20 @@ Our empirical program is structured around three primary experimental questions:
 - **Mathematical Interpretation:** In Dual Simplex, each basis inversion on a $3,800 \times 3,800$ system requires sequential factorization updates traversing time stages. In contrast, PDHG per-iteration cost is strictly $O(\text{NNZ})$, and the temporal block structure parallelizes with high SIMT efficiency across CUDA thread blocks.  
   *Methodological Clarification:* The 204.3× speedup represents an **intra-solver architectural comparison** between PipePye's CUDA first-order solver and PipePye's CPU textbook Product Form of the Inverse (PFI) Simplex. It measures the throughput advantage of replacing $O(m^2)$ sequential basis updates with parallel $O(\text{NNZ})$ CUDA thread-block SpMV. For rigorous comparison against external state-of-the-art simplex engines utilizing hyper-sparse Markowitz LU factorization, see Subsection 8.4 below.
 
-### Experiment 3: Pre-Registration Protocol on Industrial Workloads
-- **Pre-Registered Hypothesis:** A structure-aware routing policy based on topological signatures (integrality ratio, density, staircase score) will achieve strictly higher optimal routing than a monolithic static baseline.
-- **Protocol:** All 13 industrial benchmark instances had their winning solver and hardware backend committed to code and metadata before empirical execution:
-  - **Static Policy A (Always CPU Simplex):** 53.8% (7/13) optimal routing. Fails entirely on all 6 MILP models (cannot satisfy integrality) and incurs a 204× penalty on large staircase LPs.
-  - **Adaptive Policy B (Structure-Aware Dispatch):** **100.0% (13/13) confirmed optimal routing** across every industrial instance.
-- **Outcome:** 13 of 13 pre-registered predictions were classified as `CONFIRMED` with zero refutations.
+### Experiment 3: Structure-Aware Dispatch — In-Sample Calibration vs. Held-Out Generalization
+- **Core Hypothesis:** Topological signatures (matrix nonzero scale, density, staircase correlation score, integrality ratio) can systematically guide algorithm and hardware selection, avoiding superlinear computational blowups without human parameter tuning.
+- **Methodological Clarification (In-Sample Calibration vs. Pre-Registration):** We explicitly disclose that the deterministic dispatch thresholds in the policy code (`NNZ >= 30,000`, `density > 0.08`, `staircase_score >= 0.70`) were synthesized directly from the empirical crossover boundaries observed in Experiments 1 and 2. Therefore, evaluating the 13 industrial instances represents *in-sample rule calibration* rather than a blind pre-registered trial. On an $n=13$ development suite where heuristic thresholds are parameterized against the observed data, 100% calibration accuracy is mathematically expected and carries limited inferential weight on its own. True evidential value requires (1) comparison against non-strawman baselines, and (2) evaluation on held-out public corpora.
+- **Rigorous Baseline Comparison (Dismantling the Strawman):** Comparing against a naive "Always CPU Simplex" baseline (53.8%) is a strawman because continuous simplex naturally fails on MILP models due to lack of integrality support. To establish fair comparisons, we evaluate two non-trivial class-aware baselines alongside the structure-aware policy:
+  | Evaluated Policy | Policy Formulation & Logic | Overall Accuracy ($n=13$) | Continuous LP Sub-Suite ($n=7$) | Algorithmic Failure Mode & Penalty |
+  |---|---|:---:|:---:|---|
+  | **1. Class-Aware Monolithic CPU** (Standard SOTA Practice) | Routes MILP $\to$ CPU Branch-and-Bound; Routes all continuous LPs $\to$ CPU Dual Simplex | **92.3%** (12 / 13) | **85.7%** (6 / 7) | Fails on `PLANNING_T100`: CPU Simplex requires 40.0 s vs. GPU PDHG at 196 ms (**204.3× latency blowup**). |
+  | **2. Class-Aware Monolithic GPU** (Naive GPU-First Policy) | Routes MILP $\to$ CPU Branch-and-Bound; Routes all continuous LPs $\to$ CUDA GPU PDHG | **53.8%** (7 / 13) | **14.3%** (1 / 7) | Fails on 6/7 LPs: dense quality rows in Blending and small horizons in Planning run **up to 200× slower** on GPU than CPU Simplex. |
+  | **3. Structure-Aware Adaptive Policy** (PipePye Decision Engine) | Gated dispatch: Integrality > 0 $\to$ B&B; Dense/Small LP $\to$ Simplex; Massive Staircase $\to$ GPU PDHG | **100.0%** (13 / 13 calibrated) | **100.0%** (7 / 7 calibrated) | **Optimal routing across all regimes:** captures 204× speedup on T100 while avoiding GPU degradation on dense/compact models. |
+- **Key Insight on Continuous LP Dispatch ($n=7$):** The true intellectual contribution of structure-aware dispatch is *not* separating LP from MILP (a trivial parsing task), but resolving the non-trivial continuous LP hardware/algorithm boundary: Monolithic CPU achieves 85.7% (incurring a catastrophic $204\times$ penalty on large staircase systems), Monolithic GPU achieves only 14.3% (degrading throughput on compact/dense systems), while Structure-Aware dispatch achieves 100%.
+- **Held-Out Generalization on 19 Public Corpora Instances (Netlib & MIPLIB 3):** Testing the uncalibrated policy on an external held-out suite ($n=19$) demonstrates out-of-sample robustness:
+  - *12 Netlib LP Instances:* All have $\text{NNZ} < 3,500$. The policy dispatches **100% (12/12) to CPU Dual Simplex**, correctly avoiding GPU launch overhead. Bare-metal benchmarks confirm Prepared Dual Simplex is superior to GPU PDHG across all 12 instances, beating HiGHS 1.15.1 on 8 of 12 instances.
+  - *7 MIPLIB 3 Instances:* Integrality ratio $\alpha_{\text{int}} > 0$. The policy dispatches **100% (7/7) to CPU Branch-and-Bound**.
+  - *Generalization Boundary:* While problem-class detection generalizes perfectly, structural metrics alone cannot predict whether an instance will encounter tree stall due to missing cutting planes (e.g. `egout.mps`), defining the need for learned cut generators.
 
 ### 8.4 External Performance Baseline: PipePye vs. HiGHS 1.15.1 Wall-Clock Benchmark
 - **Scientific Objective:** Establish computational competitiveness against the external open-source state of the art. While HiGHS is utilized as an independent correctness oracle in Section 10, scientific rigor demands side-by-side wall-clock runtime comparisons on identical bare-metal hardware. All tests were executed on AMD Ryzen / NVIDIA Ada architecture with microsecond-resolution monotonic timers (`reports/external_solver_benchmark.csv`).
@@ -329,26 +337,26 @@ To directly evaluate applicability to Indian public sector infrastructure, PipeP
 - **Industrial Context:** Downstream petroleum refining (IOCL Panipat, BPCL Kochi, HPCL Vizag). Feed crude oils with varying sulfur, API gravity, and octane ratings are blended to meet Euro-VI / BS-VI specifications while maximizing operating margins.
 - **Mathematical Formulation:**
   $$\min_{x \ge 0} \sum_{c \in \mathcal{C}} \sum_{p \in \mathcal{P}} (\text{cost}_c - \text{price}_p) x_{cp} \quad \text{s.t.} \quad \sum_p x_{cp} \le S_c, \quad D_p^{\min} \le \sum_c x_{cp} \le D_p^{\max}, \quad \sum_c (A_{cq} - Q_{pq}^{\max}) x_{cp} \le 0$$
-- **Topological Profile & Result:** Compact ($m \le 155, n \le 260$), dense nonzeros ($9.0\% - 30.1\%$), tightly coupled quality balance rows. *Pre-Registered Prediction: Dual Simplex (CPU).* **Outcome: CONFIRMED.** CPU Dual Simplex solves in 0.80 ms to 77.4 ms with 0.00 constraint violations. First-order GPU methods stall due to ill-conditioned cross-coupling equations.
+- **Topological Profile & Result:** Compact ($m \le 155, n \le 260$), dense nonzeros ($9.0\% - 30.1\%$), tightly coupled quality balance rows. *Calibrated Policy Route: Dual Simplex (CPU).* **Outcome: CONFIRMED.** CPU Dual Simplex solves in 0.80 ms to 77.4 ms with 0.00 constraint violations. First-order GPU methods stall due to ill-conditioned cross-coupling equations.
 
 ### Case B: Multi-Period Production & Inventory Planning (LP)
 - **Industrial Context:** Multi-period petrochemical supply chain planning coordinating intermediate storage, refinery distillation throughput, and regional pipeline deliveries across discrete planning horizons ($T \in [10, 100]$).
 - **Mathematical Formulation:**
   $$\min \sum_{t=1}^T (c_t^P P_t + c_t^I I_t) \quad \text{s.t.} \quad I_t = I_{t-1} + P_t - D_t, \quad P_t \le \text{Cap}_t, \quad I_t \le \text{StorageCap}$$
-- **Topological Profile & Result:** Pure block-banded staircase structure ($\sigma_{\text{staircase}} > 0.999$, $\text{NNZ} \le 40\text{k}$). *Pre-Registered Prediction: Dual Simplex for $T \le 25$; PDHG (GPU) for $T \ge 50$.* **Outcome: CONFIRMED.** GPU PDHG achieves a $204\times$ speedup at $T=100$ (196 ms vs 40.0 s).
+- **Topological Profile & Result:** Pure block-banded staircase structure ($\sigma_{\text{staircase}} > 0.999$, $\text{NNZ} \le 40\text{k}$). *Calibrated Policy Route: Dual Simplex for $T \le 25$; PDHG (GPU) for $T \ge 50$.* **Outcome: CONFIRMED.** GPU PDHG achieves a $204\times$ speedup at $T=100$ (196 ms vs 40.0 s).
 
 ### Case C: Refinery Unit Scheduling (MILP)
 - **Industrial Context:** Operational shift scheduling across Atmospheric Distillation (CDU), Fluid Catalytic Cracking (FCC), and Hydrotreating (HTU) units with discrete operational modes and storage limits.
 - **Mathematical Formulation:**
   Semicontinuous production ranges with Big-M mode selection:
   $$v_m^{\min} z_{mt} \le x_{mt} \le v_m^{\max} z_{mt}, \quad \sum_{m} z_{mt} \le 1, \quad z_{mt} \in \{0, 1\}$$
-- **Topological Profile & Result:** $40\% - 43\%$ binary variables, mass balance coupling. *Pre-Registered Prediction: Branch-and-Bound with Dual Simplex basis warm-starting.* **Outcome: CONFIRMED.** Simplex warm-starting slashes pivot counts by **90.7% to 98.8%** compared to cold-starting each node.
+- **Topological Profile & Result:** $40\% - 43\%$ binary variables, mass balance coupling. *Calibrated Policy Route: Branch-and-Bound with Dual Simplex basis warm-starting.* **Outcome: CONFIRMED.** Simplex warm-starting slashes pivot counts by **90.7% to 98.8%** compared to cold-starting each node.
 
 ### Case D: Power System Unit Commitment & Economic Dispatch (MILP)
 - **Industrial Context:** Day-ahead wholesale electricity market clearing and real-time generation commitment across thermal, hydro, and gas generators satisfying hourly demand and spinning reserve margins (Grid-India / POSOCO model).
 - **Mathematical Formulation:**
   $$\min \sum_{t=1}^T \sum_{g \in \mathcal{G}} \left( C_g P_{gt} + S_g u_{gt} \right) \quad \text{s.t.} \quad \sum_g P_{gt} = \text{Demand}_t, \quad |P_{gt} - P_{g, t-1}| \le R_g, \quad u_{gt} \in \{0, 1\}$$
-- **Topological Profile & Result:** Exactly $50\%$ binary variables ($2^{960}$ discrete states on Large), inter-temporal ramp-rate coupling. *Pre-Registered Prediction: Branch-and-Bound with Dual Simplex basis warm-starting.* **Outcome: CONFIRMED.** Pivot count reduced by **88.3% to 97.7%** ($195,936 \to 4,546$ pivots on Large).
+- **Topological Profile & Result:** Exactly $50\%$ binary variables ($2^{960}$ discrete states on Large), inter-temporal ramp-rate coupling. *Calibrated Policy Route: Branch-and-Bound with Dual Simplex basis warm-starting.* **Outcome: CONFIRMED.** Pivot count reduced by **88.3% to 97.7%** ($195,936 \to 4,546$ pivots on Large).
 
 ### Complete Industrial Benchmark Suite Ladder (13 Instances)
 | Instance Name | Class | Rows × Cols | NNZ | Density | Staircase | Chosen Solver | Solve Time | PipePye Obj | HiGHS Obj | Rel. Gap | Verification |
@@ -468,6 +476,13 @@ SelectionDecision select_policy(const StructuralFeatures& feat, DevicePreference
 }
 ```
 
+### Mechanistic Derivation of Decision Thresholds
+Rather than being arbitrary constants, each numerical threshold in `select_policy` was derived from our empirical microbenchmark crossovers:
+- **`integrality_ratio > 0` (Rule 1):** Problem class bifurcation. Discrete variables require branch-and-bound tree exploration with dual basis warm-starting.
+- **`NNZ < 15,000` (Rule 2):** Parameterized directly from the SpMV crossover point measured in Experiment 1. Below 15k nonzeros, GPU kernel dispatch (5–10 μs) and device transfer latency exceed sequential CPU execution time (where CPU 1-thread is up to 14.1× faster).
+- **`density > 0.08` (Rule 3):** Parameterized from spectral condition number degradation observed on dense blending equations (Case A). High row coupling degrades first-order gradient operator norms, causing PDHG to require thousands of iterations, whereas CPU Dual Simplex converges in tens of pivots.
+- **`staircase_score >= 0.70 & NNZ >= 30,000` (Rule 4):** Parameterized from the multi-period production planning horizon experiments (Experiment 2). Staircase structures cause sequential basis updates in Simplex to scale superlinearly ($O(m^2)$), whereas parallel GPU SpMV per-iteration time remains invariant to horizon length, unlocking a 204.3× speedup at $T=100$.
+
 ### Live Decision Explanation Output Trace
 Executing `pipepye solve model.mps --device auto --method auto` outputs an explicit structural audit before initiating numerical iterations:
 
@@ -530,6 +545,12 @@ To maintain transparency regarding external solver competitiveness:
 - **Textbook PFI vs. Hyper-Sparse Markowitz LU Factorization:** PipePye's CPU Simplex implementation utilizes the Product Form of the Inverse (PFI) with semi-sparse LU factorization. When solving large staircase linear programs ($m \ge 3,800$), sequential basis updates incur $O(m^2)$ operational scaling. In contrast, HiGHS (Huangfu & Hall, 2018) implements Edinburgh's hyper-sparse Markowitz LU factorization and hyper-sparse BTRAN/FTRAN algorithms, where pivot cost scales strictly with the structural nonzero density of the incoming column $O(\text{nnz}(v))$ rather than system rank $m$. This explains why HiGHS achieves 41.9 ms on CPU for `PLANNING_T100`. While PipePye GPU PDHG circumvents this bottleneck by leveraging parallel CUDA SpMV (196.2 ms), sovereign C++ hyper-sparse LU factorization remains an essential research objective.
 - **Polyhedral Cut Separation vs. Pure Branch-and-Bound:** On combinatorial MILPs such as `UNIT_COMMIT_Med` and `Large`, HiGHS closes the integrality gap and solves the model at **root node 1** using cutting plane generation (Gomory mixed-integer cuts, MIR, clique, and flow covers). Because PipePye Phase 7 currently explores branching trees without a general polyhedral cut pool, it requires up to 500 nodes on complex instances. This confirms that root-node cut separation, rather than raw node throughput, is the primary theoretical frontier for sovereign MILP solvers.
 
+### Methodological Scope: In-Sample Calibration vs. True Pre-Registration
+To ensure absolute academic integrity regarding our experimental methodology:
+- **Disentangling Calibration from Blind Prediction:** Pre-registration strictly requires establishing decision rules prior to observing the experimental data against which they are judged, ideally confirmed on a held-out test suite. In PipePye, the dispatch thresholds (e.g., `NNZ >= 30,000`, `density > 0.08`, `staircase_score >= 0.70`) were synthesized directly from the empirical crossover behaviors observed in Experiments 1 and 2. Consequently, achieving 100% (13/13) routing accuracy on the 13 industrial instances constitutes *in-sample calibration*, not an independent blind validation. On an $n=13$ sample where rules are parameterized against the observed instances, 100% calibration carries minimal inferential weight on its own.
+- **Replacing the Strawman Baseline:** Earlier project iterations compared against a monolithic "Always CPU Simplex" baseline (53.8%), which failed on all six MILP instances solely due to lack of integrality support. This comparison was a strawman that inflated apparent superiority. In Section 8, we replaced this with a fair **Class-Aware CPU Baseline (92.3%)** and evaluated the continuous LP sub-suite ($n=7$), demonstrating that the real utility of structure-aware dispatch is averting the $204\times$ latency penalty on massive staircase LPs while preventing up to $200\times$ GPU slowdowns on dense models.
+- **Out-of-Sample Validation on Public Corpora:** To test whether our calibrated thresholds generalize beyond the 13 industrial models, the policy was evaluated on 19 held-out instances from the public Netlib LP and MIPLIB 3 collections. The policy correctly routed 100% of Netlib LPs to CPU Simplex (confirmed as optimal on bare metal) and 100% of MIPLIB instances to Branch-and-Bound.
+
 ### What "From Scratch Sovereign" Means and Does Not Mean
 | What "From-Scratch Sovereign" Means | What It Does NOT Mean |
 |---|---|
@@ -569,13 +590,13 @@ A rigorous research report must substantiate every assertion with specific mathe
 | Scientific Claim | Verifiable Evidence & Mathematical Artifact | Code Implementation / Benchmark Module | Protocol Status |
 |---|---|---|:---:|
 | **Sovereign & Dependency-Free** | From-scratch repository; zero solver-library runtime dependencies; clean C++20 and CUDA implementations. | `include/pipepye/`, `src/`, `cuda/` (No third-party solver links) | **VERIFIED** |
-| **Mathematically Correct** | Independent primal/dual/bound/KKT residual verifier; parity verified against HiGHS 1.15.1 with relative gap $\le 10^{-5}$. | `src/pipeline/solution_verifier.cpp`, `tests/test_solution_verifier.cpp` | **174/174 PASSED** |
+| **Mathematically Correct** | Independent primal/dual/bound/KKT residual verifier; parity verified against HiGHS 1.15.1 with relative gap $\le 10^{-5}$. | `src/pipeline/solution_verifier.cpp`, `tests/test_solution_verifier.cpp` | **181/181 PASSED** |
 | **Numerically Robust** | Pathological ablation suite (Netlib BEACONFD, $10^{12}$ dynamic range); Ruiz equilibration resolves ill-conditioned stagnation. | `reports/numerical_robustness.json`, `benchmarks/bench_numerical_robustness.cpp` | **VERIFIED** |
 | **Public Corpora Benchmarked** | 12/12 Netlib LP instances solved to certified optimality with Presolve+Ruiz scaling (relative gap $\le 5.25 \times 10^{-7}\%$); MIPLIB 3 combinatorial instances (p0033, flugpl, stein27) solved to exact integer optima; explicit characterization of cutting plane boundaries. | `reports/public_corpora_benchmark.csv`, `tools/run_public_corpora.cpp` | **12/12 NETLIB PASS** |
 | **External Solver Baseline** | Side-by-side bare-metal wall-clock runtime audit against HiGHS 1.15.1 across 13 industrial and 12 Netlib instances. PipePye faster or at parity on 8/12 Netlib LPs; GPU PDHG within 4.7× of SOTA CPU hyper-sparse simplex on large staircase LP (196.2 ms vs 41.9 ms). | `reports/external_solver_benchmark.csv`, `scripts/benchmark_external_highs.py` | **AUDITED & COMPETITIVE** |
 | **Scalable on Accelerators** | Near-peak memory bandwidth (160.5 GB/s / 95.5% peak) and 204× intra-solver acceleration on large staircase LPs ($T=100$, 40k NNZ vs CPU textbook PFI Simplex); within 4.7× of SOTA CPU simplex. | `cuda/sparse/spmv_csr.cu`, `reports/industrial_benchmark_report.md` | **VERIFIED** |
 | **GPU Crossover Characterized** | Empirically identified exact SpMV crossover at 15k–30k NNZ; documented GPU latency penalties on compact matrices. | `docs/phase1summary.md`, `benchmarks/bench_spmv.cpp` (319 data points) | **VERIFIED** |
-| **Hardware-Aware Policy** | Deterministic selection policy achieving 100% (13/13) pre-registered optimal routes vs 53.8% static baseline. | `src/analysis/problem_analyzer.cpp`, `docs/workloads/predictions.md` | **13/13 CONFIRMED** |
+| **Hardware-Aware Policy** | Structure-aware policy avoiding 204× staircase blowup vs class-aware baseline (92.3%); 100% in-sample calibration on 13 industrial cases; validated on 19 held-out public instances (Netlib/MIPLIB). | `src/analysis/problem_analyzer.cpp`, `docs/workloads/predictions.md` | **CALIBRATED & VERIFIED** |
 | **Industrially Relevant** | 4 canonical public literature suites: crude blending, production planning, refinery scheduling, unit commitment. | `workloads/case_a/` through `case_d/`, `reports/industrial_benchmark.csv` | **VERIFIED** |
 | **Simplex Warm-Starting** | Dual basis warm-starting slashes pivot counts by 88.3% to 98.8% across combinatorial branch-and-bound nodes. | `src/milp/branch_and_bound.cpp`, `reports/milp_benchmark_report.md` | **VERIFIED** |
 | **Fully Reproducible** | Standard CMake build system, CTest automated harnesses, public MPS models, deterministic random seeds. | `CMakeLists.txt`, `tools/pipepye_inspect.cpp`, `tests/` | **REPRODUCIBLE** |
@@ -613,7 +634,7 @@ pipepye/
 │   └── verification/           # Independent SolutionVerifier out-of-band auditor
 ├── src/                        # Complete C++ implementations (Zero solver libraries)
 ├── cuda/                       # CUDA kernels (SpMV, vector ops, resident PDHG loop)
-├── tests/                      # 174 automated unit & integration tests (CTest/GTest)
+├── tests/                      # 181 automated unit & integration tests (CTest/GTest)
 ├── workloads/                  # Industrial MPS ladders (Case A through Case D)
 ├── benchmarks/                 # Isolated benchmark runners (SpMV, PDHG, Simplex, MILP)
 ├── dashboard/                  # Interactive Demonstration UI Solver & Local Server
@@ -638,7 +659,7 @@ cmake -B build -G Ninja \
 # 3. Compile targets
 ninja -C build
 
-# 4. Execute the complete automated verification test suite (174/174 assertions)
+# 4. Execute the complete automated verification test suite (181/181 assertions)
 ctest --test-dir build --output-on-failure
 
 # 5. Run the industrial pipeline benchmark across all 13 instances

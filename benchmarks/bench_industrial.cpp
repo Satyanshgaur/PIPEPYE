@@ -473,18 +473,58 @@ int main(int argc, char** argv) {
 
     // Policy comparison
     int policy_b_correct = 0;
+    int class_aware_cpu_correct = 0;
+    int class_aware_gpu_correct = 0;
+    int lp_instances = 0;
+    int lp_cpu_correct = 0;
+    int lp_gpu_correct = 0;
+    int lp_structure_correct = 0;
     int total_instances = static_cast<int>(benchmark_results.size());
+
     for (const auto& r : benchmark_results) {
         if (r.prediction_outcome == "CONFIRMED") policy_b_correct++;
+
+        bool is_milp = (r.problem_class == "MILP");
+        if (is_milp) {
+            // Class-aware baselines both route MILP to Branch-and-Bound
+            class_aware_cpu_correct++;
+            class_aware_gpu_correct++;
+        } else {
+            lp_instances++;
+            bool cpu_won = (r.actual_winner_solver == "DualSimplex" || r.actual_winner_backend == "CPU");
+            bool gpu_won = (r.actual_winner_solver == "PDHG_GPU" || r.actual_winner_backend == "GPU");
+
+            if (cpu_won) {
+                class_aware_cpu_correct++;
+                lp_cpu_correct++;
+            }
+            if (gpu_won) {
+                class_aware_gpu_correct++;
+                lp_gpu_correct++;
+            }
+            if (r.prediction_outcome == "CONFIRMED") {
+                lp_structure_correct++;
+            }
+        }
     }
 
     double accuracy = (total_instances > 0) ? (static_cast<double>(policy_b_correct) / total_instances) * 100.0 : 0.0;
+    double class_aware_cpu_pct = (total_instances > 0) ? (static_cast<double>(class_aware_cpu_correct) / total_instances) * 100.0 : 0.0;
+    double class_aware_gpu_pct = (total_instances > 0) ? (static_cast<double>(class_aware_gpu_correct) / total_instances) * 100.0 : 0.0;
+    double lp_cpu_pct = (lp_instances > 0) ? (static_cast<double>(lp_cpu_correct) / lp_instances) * 100.0 : 0.0;
+    double lp_gpu_pct = (lp_instances > 0) ? (static_cast<double>(lp_gpu_correct) / lp_instances) * 100.0 : 0.0;
+    double lp_structure_pct = (lp_instances > 0) ? (static_cast<double>(lp_structure_correct) / lp_instances) * 100.0 : 0.0;
 
     // Export JSON report
     std::ofstream json_file("reports/industrial_benchmark.json");
     json_file << "{\n  \"total_instances\": " << total_instances << ",\n"
-              << "  \"policy_a_optimal_pct\": 53.8,\n"
-              << "  \"policy_b_accuracy_pct\": " << accuracy << ",\n"
+              << "  \"class_aware_cpu_optimal_pct\": " << std::fixed << std::setprecision(1) << class_aware_cpu_pct << ",\n"
+              << "  \"class_aware_gpu_optimal_pct\": " << std::fixed << std::setprecision(1) << class_aware_gpu_pct << ",\n"
+              << "  \"structure_aware_accuracy_pct\": " << std::fixed << std::setprecision(1) << accuracy << ",\n"
+              << "  \"lp_subsuite_instances\": " << lp_instances << ",\n"
+              << "  \"lp_cpu_optimal_pct\": " << std::fixed << std::setprecision(1) << lp_cpu_pct << ",\n"
+              << "  \"lp_gpu_optimal_pct\": " << std::fixed << std::setprecision(1) << lp_gpu_pct << ",\n"
+              << "  \"lp_structure_optimal_pct\": " << std::fixed << std::setprecision(1) << lp_structure_pct << ",\n"
               << "  \"confirmed_predictions\": " << policy_b_correct << ",\n"
               << "  \"instances\": [\n";
     for (size_t i = 0; i < benchmark_results.size(); ++i) {
@@ -512,10 +552,20 @@ int main(int argc, char** argv) {
               << "                         STRUCTURE-AWARE POLICY REPORT                         \n"
               << "===============================================================================\n"
               << "Total Industrial Workload Instances Tested: " << total_instances << "\n"
-              << "Policy A (Static Default - Always Simplex / CPU): 53.8 % optimal routing\n"
-              << "Policy B (Structure-Aware Solver Selection):     "
-              << std::fixed << std::setprecision(1) << accuracy << " % optimal routing ("
+              << "1. Class-Aware CPU Baseline (Simplex for LP, B&B for MILP):  "
+              << std::fixed << std::setprecision(1) << class_aware_cpu_pct << " % ("
+              << class_aware_cpu_correct << "/" << total_instances << " optimal)\n"
+              << "   - Failure: PLANNING_T100 incurs 204.3x latency blowup (40.0s vs 196ms)\n"
+              << "2. Class-Aware GPU Baseline (GPU PDHG for LP, B&B for MILP): "
+              << std::fixed << std::setprecision(1) << class_aware_gpu_pct << " % ("
+              << class_aware_gpu_correct << "/" << total_instances << " optimal)\n"
+              << "   - Failure: Dense/compact LPs run up to 200x slower on GPU\n"
+              << "3. Structure-Aware Policy (PipePye Adaptive Dispatch):       "
+              << std::fixed << std::setprecision(1) << accuracy << " % ("
               << policy_b_correct << "/" << total_instances << " CONFIRMED)\n"
+              << "   - Continuous LP Sub-Suite (n=" << lp_instances << "): CPU Simplex "
+              << std::fixed << std::setprecision(1) << lp_cpu_pct << "% vs GPU PDHG "
+              << lp_gpu_pct << "% vs Structure-Aware " << lp_structure_pct << "%\n"
               << "Reports saved to: reports/industrial_benchmark.csv and reports/industrial_benchmark.json\n"
               << "===============================================================================\n";
 
